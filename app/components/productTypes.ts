@@ -21,6 +21,25 @@ export type Product = {
   in_stock: boolean;
 };
 
+export type OrderStatus = "pending" | "paid" | "fulfilled" | "cancelled";
+
+export type Order = {
+  id: string;
+  merchant_id: string;
+  product_id: string | null;
+  quantity: number;
+  customer_name: string;
+  delivery_location: string;
+  total: number;
+  status: OrderStatus;
+  order_number: number;
+  created_at: string;
+};
+
+export type PublicOrder = {
+  order_number: number;
+};
+
 export function formatPrice(value: number | null | undefined) {
   if (typeof value !== "number") {
     return "";
@@ -30,4 +49,15 @@ export function formatPrice(value: number | null | undefined) {
     style: "currency",
     currency: "USD",
   }).format(value);
+}
+
+export function formatGhsPrice(value: number | null | undefined) {
+  if (typeof value !== "number") {
+    return "";
+  }
+
+  return `GHS ${new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)}`;
 }

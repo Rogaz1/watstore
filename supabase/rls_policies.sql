@@ -8,6 +8,31 @@ alter table public.merchants enable row level security;
 alter table public.products enable row level security;
 alter table public.orders enable row level security;
 
+-- Merchant onboarding fields. Existing projects can run these safely.
+alter table public.merchants
+  add column if not exists business_name text,
+  add column if not exists whatsapp_number text,
+  add column if not exists logo_url text;
+
+create unique index if not exists merchants_slug_key
+on public.merchants (slug)
+where slug is not null;
+
+create or replace function public.is_slug_available(requested_slug text)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select not exists (
+    select 1
+    from public.merchants
+    where slug = requested_slug
+  );
+$$;
+
+grant execute on function public.is_slug_available(text) to authenticated;
+
 -- MERCHANTS: a merchant can only see/edit their own row, matched via user_id
 drop policy if exists "Merchants can read own merchant row" on public.merchants;
 drop policy if exists "Merchants can insert own merchant row" on public.merchants;
@@ -129,3 +154,95 @@ from pg_policies
 where schemaname = 'public'
   and tablename in ('merchants', 'products', 'orders')
 order by tablename, policyname;
+
+-- Product media bucket for merchant uploads. Files are stored under:
+-- {merchant_id}/{generated-file-name}
+insert into storage.buckets (id, name, public)
+values ('product-media', 'product-media', true)
+on conflict (id) do update
+set public = excluded.public;
+
+drop policy if exists "Merchants can upload own product media" on storage.objects;
+drop policy if exists "Merchants can update own product media" on storage.objects;
+drop policy if exists "Merchants can delete own product media" on storage.objects;
+
+create policy "Merchants can upload own product media"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'product-media'
+  and (storage.foldername(name))[1] in (
+    select id::text from public.merchants where user_id = auth.uid()
+  )
+);
+
+create policy "Merchants can update own product media"
+on storage.objects
+for update
+to authenticated
+using (
+  bucket_id = 'product-media'
+  and (storage.foldername(name))[1] in (
+    select id::text from public.merchants where user_id = auth.uid()
+  )
+)
+with check (
+  bucket_id = 'product-media'
+  and (storage.foldername(name))[1] in (
+    select id::text from public.merchants where user_id = auth.uid()
+  )
+);
+
+create policy "Merchants can delete own product media"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'product-media'
+  and (storage.foldername(name))[1] in (
+    select id::text from public.merchants where user_id = auth.uid()
+  )
+);
+
+-- Merchant logo bucket. Setup uploads happen before a merchant row exists, so
+-- logo files are stored under {auth_user_id}/{generated-file-name}.
+insert into storage.buckets (id, name, public)
+values ('merchant-logos', 'merchant-logos', true)
+on conflict (id) do update
+set public = excluded.public;
+
+drop policy if exists "Merchants can upload own logo" on storage.objects;
+drop policy if exists "Merchants can update own logo" on storage.objects;
+drop policy if exists "Merchants can delete own logo" on storage.objects;
+
+create policy "Merchants can upload own logo"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'merchant-logos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+create policy "Merchants can update own logo"
+on storage.objects
+for update
+to authenticated
+using (
+  bucket_id = 'merchant-logos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+)
+with check (
+  bucket_id = 'merchant-logos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+create policy "Merchants can delete own logo"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'merchant-logos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);

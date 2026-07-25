@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getPostAuthDestination } from "./merchantProfile";
 
 type AuthMode = "login" | "signup";
 
@@ -30,18 +31,33 @@ export function AuthForm({ mode }: AuthFormProps) {
       password,
     };
 
-    const { error } = isSignup
+    const { data, error } = isSignup
       ? await supabase.auth.signUp(credentials)
       : await supabase.auth.signInWithPassword(credentials);
 
-    setIsLoading(false);
-
     if (error) {
+      setIsLoading(false);
       setMessage(error.message);
       return;
     }
 
-    router.replace("/dashboard");
+    try {
+      const {
+        data: { user },
+      } = data.user
+        ? { data: { user: data.user } }
+        : await supabase.auth.getUser();
+      const destination = await getPostAuthDestination(user);
+
+      router.replace(destination);
+    } catch (profileError) {
+      setMessage(
+        profileError instanceof Error
+          ? profileError.message
+          : "Unable to check your store setup.",
+      );
+      setIsLoading(false);
+    }
   }
 
   return (

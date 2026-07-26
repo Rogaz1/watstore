@@ -4,6 +4,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
 import { formatGhsPrice } from "@/app/components/productTypes";
 import {
   buildProductMedia,
@@ -279,9 +280,7 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
       setMessage("");
 
       const { data: merchantData, error: merchantError } = await supabase
-        .from("merchants")
-        .select("id,business_name,slug,whatsapp_number,logo_url")
-        .eq("slug", slug)
+        .rpc("get_public_merchant_by_slug", { requested_slug: slug })
         .maybeSingle();
 
       if (!isMounted) {
@@ -294,13 +293,21 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
         return;
       }
 
+      const publicMerchant = merchantData as PublicMerchant;
+      setMerchant(publicMerchant);
+
+      if (!publicMerchant.is_available) {
+        setIsLoading(false);
+        return;
+      }
+
       const { data: productData, error: productError } = await supabase
         .from("products")
         .select(
           "id,merchant_id,name,sale_price,original_price,photo_urls,video_url,short_description,long_description,key_benefits,in_stock",
         )
         .eq("id", productId)
-        .eq("merchant_id", merchantData.id)
+        .eq("merchant_id", publicMerchant.id)
         .maybeSingle();
 
       if (!isMounted) {
@@ -313,7 +320,6 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
         return;
       }
 
-      setMerchant(merchantData);
       setProduct(productData as PublicProduct);
       setIsLoading(false);
     }
@@ -355,11 +361,19 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
   }
 
   if (!merchant || !product) {
+    if (merchant && !merchant.is_available) {
+      return <StoreUnavailableScreen />;
+    }
+
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fbfaf7] px-5 text-center text-[#1f2933]">
         <p className="text-base font-medium">{message || "Product not found."}</p>
       </main>
     );
+  }
+
+  if (!merchant.is_available) {
+    return <StoreUnavailableScreen />;
   }
 
   return (

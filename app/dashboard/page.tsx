@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { ExpiredAccessScreen } from "../components/ExpiredAccessScreen";
 import { getMerchantForUser } from "../components/merchantProfile";
 import {
   formatGhsPrice,
@@ -15,6 +16,10 @@ import {
   OrderStatus,
   Product,
 } from "../components/productTypes";
+import {
+  getSubscriptionAccess,
+  refreshMerchantSubscription,
+} from "../components/subscription";
 import { useRequireUser } from "../components/useRequireUser";
 
 type DashboardTab = "products" | "orders";
@@ -77,14 +82,29 @@ export default function DashboardPage() {
         return;
       }
 
-      setMerchant(merchantData);
+      const { merchant: refreshedMerchant, access } =
+        await refreshMerchantSubscription(merchantData);
+
+      if (!isMounted) {
+        return;
+      }
+
+      setMerchant(refreshedMerchant);
+
+      if (!access.canAccess) {
+        setProducts([]);
+        setOrders([]);
+        setIsLoadingProducts(false);
+        setIsLoadingOrders(false);
+        return;
+      }
 
       const { data: productData, error: productError } = await supabase
         .from("products")
         .select(
           "id,merchant_id,name,sale_price,original_price,photo_urls,video_url,short_description,long_description,key_benefits,in_stock",
         )
-        .eq("merchant_id", merchantData.id)
+        .eq("merchant_id", refreshedMerchant.id)
         .order("name", { ascending: true });
 
       if (!isMounted) {
@@ -105,7 +125,7 @@ export default function DashboardPage() {
         .select(
           "id,merchant_id,product_id,quantity,customer_name,delivery_location,total,status,order_number,created_at",
         )
-        .eq("merchant_id", merchantData.id)
+        .eq("merchant_id", refreshedMerchant.id)
         .order("created_at", { ascending: false });
 
       if (!isMounted) {
@@ -137,7 +157,7 @@ export default function DashboardPage() {
       const { data: orderProducts, error: orderProductsError } = await supabase
         .from("products")
         .select("id,name,photo_urls")
-        .eq("merchant_id", merchantData.id)
+        .eq("merchant_id", refreshedMerchant.id)
         .in("id", productIds);
 
       if (!isMounted) {
@@ -249,6 +269,21 @@ export default function DashboardPage() {
     );
   }
 
+  if (merchant) {
+    const subscriptionAccess = getSubscriptionAccess(merchant);
+
+    if (!subscriptionAccess.canAccess) {
+      return (
+        <ExpiredAccessScreen
+          merchant={merchant}
+          expiredFrom={subscriptionAccess.expiredFrom}
+        />
+      );
+    }
+  }
+
+  const subscriptionAccess = merchant ? getSubscriptionAccess(merchant) : null;
+
   return (
     <main className="min-h-screen bg-[#f5f2ea] text-[#1f2933]">
       <header className="border-b border-[#d8d2c4] bg-white">
@@ -270,6 +305,14 @@ export default function DashboardPage() {
       </header>
 
       <section className="mx-auto w-full max-w-5xl px-6 py-10">
+        {subscriptionAccess?.canAccess &&
+        merchant?.subscription_status === "trial" &&
+        subscriptionAccess.daysRemaining !== null ? (
+          <div className="mb-5 rounded-md border border-[#d8d2c4] bg-white px-4 py-3 text-sm font-medium text-[#52606d] shadow-sm">
+            Free trial — {subscriptionAccess.daysRemaining} days remaining
+          </div>
+        ) : null}
+
         <div className="rounded-lg border border-[#d8d2c4] bg-white p-8 shadow-sm">
           <div className="flex flex-col gap-5 border-b border-[#e2ded6] pb-6 sm:flex-row sm:items-center sm:justify-between">
             <div>

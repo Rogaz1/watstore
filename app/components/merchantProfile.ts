@@ -3,11 +3,14 @@ import type { User } from "@supabase/supabase-js";
 import type { Merchant } from "./productTypes";
 
 export async function getMerchantForUser(userId: string) {
-  return supabase
-    .from("merchants")
-    .select("id,user_id,business_name,slug,whatsapp_number,logo_url")
-    .eq("user_id", userId)
-    .maybeSingle();
+  void userId;
+
+  const response = await supabase.rpc("get_current_merchant_profile").maybeSingle();
+
+  return {
+    ...response,
+    data: response.data as Merchant | null,
+  };
 }
 
 export async function getPostAuthDestination(user: User | null) {

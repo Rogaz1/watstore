@@ -5,7 +5,15 @@ export type Merchant = {
   slug?: string | null;
   whatsapp_number?: string | null;
   logo_url?: string | null;
+  trial_start_date?: string | null;
+  subscription_status?: SubscriptionStatus | null;
+  billing_cycle_months?: number | null;
+  last_payment_date?: string | null;
+  subscription_expired_from?: SubscriptionExpiredFrom | null;
 };
+
+export type SubscriptionStatus = "trial" | "active" | "expired";
+export type SubscriptionExpiredFrom = "trial" | "active";
 
 export type Product = {
   id: string;

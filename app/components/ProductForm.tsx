@@ -6,8 +6,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { ExpiredAccessScreen } from "./ExpiredAccessScreen";
 import { getMerchantForUser } from "./merchantProfile";
 import { Merchant, Product } from "./productTypes";
+import {
+  getSubscriptionAccess,
+  refreshMerchantSubscription,
+} from "./subscription";
 import { useRequireUser } from "./useRequireUser";
 
 const PRODUCT_MEDIA_BUCKET = "product-media";
@@ -88,7 +93,14 @@ export function ProductForm({ productId }: ProductFormProps) {
         return;
       }
 
-      setMerchant(merchantData);
+      const { merchant: refreshedMerchant } =
+        await refreshMerchantSubscription(merchantData);
+
+      if (!isMounted) {
+        return;
+      }
+
+      setMerchant(refreshedMerchant);
 
       if (!productId) {
         setIsLoading(false);
@@ -101,7 +113,7 @@ export function ProductForm({ productId }: ProductFormProps) {
           "id,merchant_id,name,sale_price,original_price,photo_urls,video_url,short_description,long_description,key_benefits,in_stock",
         )
         .eq("id", productId)
-        .eq("merchant_id", merchantData.id)
+        .eq("merchant_id", refreshedMerchant.id)
         .single();
 
       if (!isMounted) {
@@ -260,6 +272,19 @@ export function ProductForm({ productId }: ProductFormProps) {
         <p className="text-sm font-medium text-[#52606d]">Loading product...</p>
       </main>
     );
+  }
+
+  if (merchant) {
+    const subscriptionAccess = getSubscriptionAccess(merchant);
+
+    if (!subscriptionAccess.canAccess) {
+      return (
+        <ExpiredAccessScreen
+          merchant={merchant}
+          expiredFrom={subscriptionAccess.expiredFrom}
+        />
+      );
+    }
   }
 
   return (

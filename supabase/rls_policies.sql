@@ -12,7 +12,39 @@ alter table public.orders enable row level security;
 alter table public.merchants
   add column if not exists business_name text,
   add column if not exists whatsapp_number text,
-  add column if not exists logo_url text;
+  add column if not exists logo_url text,
+  add column if not exists subscription_expired_from text;
+
+alter table public.merchants
+  alter column trial_start_date set default now(),
+  alter column subscription_status set default 'trial';
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'merchants_subscription_status_check'
+  ) then
+    alter table public.merchants
+      add constraint merchants_subscription_status_check
+      check (subscription_status in ('trial', 'active', 'expired'));
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'merchants_billing_cycle_months_check'
+  ) then
+    alter table public.merchants
+      add constraint merchants_billing_cycle_months_check
+      check (billing_cycle_months is null or billing_cycle_months in (1, 12));
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'merchants_subscription_expired_from_check'
+  ) then
+    alter table public.merchants
+      add constraint merchants_subscription_expired_from_check
+      check (subscription_expired_from is null or subscription_expired_from in ('trial', 'active'));
+  end if;
+end $$;
 
 create unique index if not exists merchants_slug_key
 on public.merchants (slug)
@@ -47,6 +79,237 @@ $$;
 
 grant execute on function public.is_slug_available(text) to authenticated;
 
+create or replace function public.refresh_merchant_subscription(
+  requested_merchant_id uuid
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  selected_merchant public.merchants%rowtype;
+  expiry_date timestamptz;
+  expired_from text;
+begin
+  select *
+  into selected_merchant
+  from public.merchants
+  where id = requested_merchant_id;
+
+  if not found then
+    raise exception 'Merchant not found.';
+  end if;
+
+  if selected_merchant.subscription_status = 'expired' then
+    return jsonb_build_object(
+      'subscription_status', 'expired',
+      'subscription_expired_from', selected_merchant.subscription_expired_from
+    );
+  end if;
+
+  if selected_merchant.subscription_status = 'trial' then
+    expiry_date := selected_merchant.trial_start_date + interval '30 days';
+    expired_from := 'trial';
+  elsif selected_merchant.subscription_status = 'active' then
+    if selected_merchant.billing_cycle_months not in (1, 12)
+      or selected_merchant.last_payment_date is null then
+      expiry_date := now();
+    else
+      expiry_date := selected_merchant.last_payment_date
+        + (selected_merchant.billing_cycle_months * interval '30 days');
+    end if;
+    expired_from := 'active';
+  else
+    expiry_date := now();
+    expired_from := 'trial';
+  end if;
+
+  if now() >= expiry_date then
+    update public.merchants
+    set subscription_status = 'expired',
+        subscription_expired_from = expired_from
+    where id = requested_merchant_id;
+
+    return jsonb_build_object(
+      'subscription_status', 'expired',
+      'subscription_expired_from', expired_from
+    );
+  end if;
+
+  return jsonb_build_object(
+    'subscription_status', selected_merchant.subscription_status,
+    'subscription_expired_from', selected_merchant.subscription_expired_from
+  );
+end;
+$$;
+
+grant execute on function public.refresh_merchant_subscription(uuid) to anon, authenticated;
+
+create table if not exists public.admin_users (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+alter table public.admin_users enable row level security;
+revoke all on public.admin_users from anon, authenticated;
+
+-- Add your admin account once, replacing the UUID with your auth.users.id:
+-- insert into public.admin_users (user_id)
+-- values ('00000000-0000-0000-0000-000000000000')
+-- on conflict (user_id) do nothing;
+
+create or replace function public.get_admin_renewals()
+returns table (
+  id uuid,
+  business_name text,
+  slug text,
+  billing_cycle_months integer,
+  last_payment_date timestamp,
+  expiry_date timestamp
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1
+    from public.admin_users
+    where user_id = auth.uid()
+  ) then
+    raise exception 'Not authorized.';
+  end if;
+
+  return query
+  select
+    merchants.id,
+    merchants.business_name,
+    merchants.slug,
+    merchants.billing_cycle_months,
+    merchants.last_payment_date,
+    (
+      merchants.last_payment_date
+      + (merchants.billing_cycle_months * interval '30 days')
+    )::timestamp as expiry_date
+  from public.merchants
+  where merchants.subscription_status = 'active'
+    and merchants.billing_cycle_months in (1, 12)
+    and merchants.last_payment_date is not null
+  order by expiry_date asc;
+end;
+$$;
+
+grant execute on function public.get_admin_renewals() to authenticated;
+
+create or replace function public.get_current_merchant_profile()
+returns table (
+  id uuid,
+  user_id uuid,
+  business_name text,
+  slug text,
+  whatsapp_number text,
+  logo_url text,
+  trial_start_date timestamp,
+  subscription_status text,
+  billing_cycle_months integer,
+  last_payment_date timestamp,
+  subscription_expired_from text
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    id,
+    user_id,
+    business_name,
+    slug,
+    whatsapp_number,
+    logo_url,
+    trial_start_date,
+    subscription_status,
+    billing_cycle_months,
+    last_payment_date,
+    subscription_expired_from
+  from public.merchants
+  where user_id = auth.uid()
+  limit 1;
+$$;
+
+grant execute on function public.get_current_merchant_profile() to authenticated;
+
+create or replace function public.is_own_merchant(check_merchant_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.merchants
+    where id = check_merchant_id
+      and user_id = auth.uid()
+  );
+$$;
+
+grant execute on function public.is_own_merchant(uuid) to authenticated;
+
+create or replace function public.get_public_merchant_by_slug(requested_slug text)
+returns table (
+  id uuid,
+  business_name text,
+  slug text,
+  whatsapp_number text,
+  logo_url text,
+  is_available boolean
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  selected_merchant public.merchants%rowtype;
+begin
+  select *
+  into selected_merchant
+  from public.merchants
+  where merchants.slug = requested_slug;
+
+  if not found then
+    return;
+  end if;
+
+  perform public.refresh_merchant_subscription(selected_merchant.id);
+
+  return query
+  select
+    merchants.id,
+    merchants.business_name,
+    merchants.slug,
+    merchants.whatsapp_number,
+    merchants.logo_url,
+    merchants.subscription_status <> 'expired' as is_available
+  from public.merchants
+  where merchants.id = selected_merchant.id;
+end;
+$$;
+
+grant execute on function public.get_public_merchant_by_slug(text) to anon, authenticated;
+
+-- Keep storefront-safe merchant columns public, but prevent direct browser
+-- queries from reading subscription and billing internals. Table-level SELECT
+-- would expose every column, so revoke it and grant back only safe columns.
+revoke select on public.merchants from anon, authenticated;
+grant select (
+  id,
+  business_name,
+  slug,
+  whatsapp_number,
+  logo_url
+) on public.merchants to anon, authenticated;
+
 create or replace function public.create_public_order(
   requested_product_id uuid,
   requested_quantity integer,
@@ -60,6 +323,7 @@ set search_path = public
 as $$
 declare
   selected_product public.products%rowtype;
+  selected_merchant public.merchants%rowtype;
   next_order_number integer;
   order_total numeric;
 begin
@@ -86,6 +350,17 @@ begin
 
   if selected_product.in_stock is not true then
     raise exception 'Product is currently unavailable.';
+  end if;
+
+  perform public.refresh_merchant_subscription(selected_product.merchant_id);
+
+  select *
+  into selected_merchant
+  from public.merchants
+  where id = selected_product.merchant_id;
+
+  if selected_merchant.subscription_status = 'expired' then
+    raise exception 'This store is temporarily unavailable.';
   end if;
 
   perform pg_advisory_xact_lock(hashtext(selected_product.merchant_id::text));
@@ -195,9 +470,7 @@ create policy "Merchants can read own products"
 on public.products
 for select
 to authenticated
-using (
-  merchant_id in (select id from public.merchants where user_id = auth.uid())
-);
+using (public.is_own_merchant(merchant_id));
 
 create policy "Anyone can read public products"
 on public.products
@@ -223,28 +496,20 @@ create policy "Merchants can insert own products"
 on public.products
 for insert
 to authenticated
-with check (
-  merchant_id in (select id from public.merchants where user_id = auth.uid())
-);
+with check (public.is_own_merchant(merchant_id));
 
 create policy "Merchants can update own products"
 on public.products
 for update
 to authenticated
-using (
-  merchant_id in (select id from public.merchants where user_id = auth.uid())
-)
-with check (
-  merchant_id in (select id from public.merchants where user_id = auth.uid())
-);
+using (public.is_own_merchant(merchant_id))
+with check (public.is_own_merchant(merchant_id));
 
 create policy "Merchants can delete own products"
 on public.products
 for delete
 to authenticated
-using (
-  merchant_id in (select id from public.merchants where user_id = auth.uid())
-);
+using (public.is_own_merchant(merchant_id));
 
 -- ORDERS: same pattern as products
 drop policy if exists "Merchants can read own orders" on public.orders;
@@ -257,28 +522,20 @@ create policy "Merchants can read own orders"
 on public.orders
 for select
 to authenticated
-using (
-  merchant_id in (select id from public.merchants where user_id = auth.uid())
-);
+using (public.is_own_merchant(merchant_id));
 
 create policy "Merchants can update own orders"
 on public.orders
 for update
 to authenticated
-using (
-  merchant_id in (select id from public.merchants where user_id = auth.uid())
-)
-with check (
-  merchant_id in (select id from public.merchants where user_id = auth.uid())
-);
+using (public.is_own_merchant(merchant_id))
+with check (public.is_own_merchant(merchant_id));
 
 create policy "Merchants can delete own orders"
 on public.orders
 for delete
 to authenticated
-using (
-  merchant_id in (select id from public.merchants where user_id = auth.uid())
-);
+using (public.is_own_merchant(merchant_id));
 
 -- Public order creation is handled by the create_public_order RPC above so
 -- order numbers are generated server-side and scoped per merchant.
@@ -314,9 +571,7 @@ for insert
 to authenticated
 with check (
   bucket_id = 'product-media'
-  and (storage.foldername(name))[1] in (
-    select id::text from public.merchants where user_id = auth.uid()
-  )
+  and public.is_own_merchant(((storage.foldername(name))[1])::uuid)
 );
 
 create policy "Merchants can update own product media"
@@ -325,15 +580,11 @@ for update
 to authenticated
 using (
   bucket_id = 'product-media'
-  and (storage.foldername(name))[1] in (
-    select id::text from public.merchants where user_id = auth.uid()
-  )
+  and public.is_own_merchant(((storage.foldername(name))[1])::uuid)
 )
 with check (
   bucket_id = 'product-media'
-  and (storage.foldername(name))[1] in (
-    select id::text from public.merchants where user_id = auth.uid()
-  )
+  and public.is_own_merchant(((storage.foldername(name))[1])::uuid)
 );
 
 create policy "Merchants can delete own product media"
@@ -342,9 +593,7 @@ for delete
 to authenticated
 using (
   bucket_id = 'product-media'
-  and (storage.foldername(name))[1] in (
-    select id::text from public.merchants where user_id = auth.uid()
-  )
+  and public.is_own_merchant(((storage.foldername(name))[1])::uuid)
 );
 
 -- Merchant logo bucket. Setup uploads happen before a merchant row exists, so

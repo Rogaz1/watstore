@@ -4,14 +4,84 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Truck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
 import { formatGhsPrice } from "@/app/components/productTypes";
-import type { PublicMerchant, PublicProduct } from "@/app/components/publicStoreTypes";
+import type {
+  PublicMerchant,
+  PublicProduct,
+} from "@/app/components/publicStoreTypes";
 
 type StorefrontClientProps = {
   slug: string;
 };
+
+function ProductCard({
+  product,
+  slug,
+}: {
+  product: PublicProduct;
+  slug: string;
+}) {
+  const thumbnail = product.photo_urls?.[0];
+  const card = (
+    <article className="flex h-[248px] flex-col overflow-hidden rounded-lg border border-[#E7E4DF] bg-white">
+      <div className="h-36 w-full bg-[#FAF9F7]">
+        {thumbnail ? (
+          <img
+            className={`h-full w-full object-cover ${
+              product.in_stock ? "" : "opacity-35"
+            }`}
+            src={thumbnail}
+            alt={product.name}
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center text-xs font-medium text-[#78716C]">
+            No photo
+          </span>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col justify-between p-3">
+        <h2
+          className="text-sm font-semibold leading-5"
+          style={{
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}
+        >
+          {product.name}
+        </h2>
+        {product.in_stock ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold">
+              {formatGhsPrice(product.sale_price)}
+            </span>
+            {product.original_price ? (
+              <span className="text-xs text-[#78716C] line-through">
+                {formatGhsPrice(product.original_price)}
+              </span>
+            ) : null}
+          </div>
+        ) : (
+          <p className="mt-3 text-sm font-medium text-[#78716C]">Unavailable</p>
+        )}
+      </div>
+    </article>
+  );
+
+  if (!product.in_stock) {
+    return card;
+  }
+
+  return (
+    <Link className="transition hover:opacity-90" href={`/store/${slug}/${product.id}`}>
+      {card}
+    </Link>
+  );
+}
 
 export function StorefrontClient({ slug }: StorefrontClientProps) {
   const [merchant, setMerchant] = useState<PublicMerchant | null>(null);
@@ -82,15 +152,15 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#fbfaf7] px-5 text-[#1f2933]">
-        <p className="text-sm font-medium text-[#52606d]">Loading store...</p>
+      <main className="flex min-h-screen items-center justify-center bg-white px-5 text-[#1C1917]">
+        <p className="text-sm font-medium text-[#78716C]">Loading store...</p>
       </main>
     );
   }
 
   if (!merchant) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#fbfaf7] px-5 text-center text-[#1f2933]">
+      <main className="flex min-h-screen items-center justify-center bg-white px-5 text-center text-[#1C1917]">
         <p className="text-base font-medium">{message || "Store not found."}</p>
       </main>
     );
@@ -101,93 +171,55 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
   }
 
   return (
-    <main className="min-h-screen bg-[#fbfaf7] px-4 pb-10 text-[#1f2933]">
-      <header className="mx-auto flex w-full max-w-5xl items-center gap-3 py-6">
+    <main className="min-h-screen bg-white px-4 pb-10 text-[#1C1917]">
+      <header className="mx-auto flex w-full max-w-5xl items-center gap-3 py-7">
         {merchant.logo_url ? (
           <img
-            className="h-12 w-12 rounded-md border border-[#ded7c8] object-cover"
+            className="h-14 w-14 shrink-0 rounded-md border border-[#E7E4DF] object-cover"
             src={merchant.logo_url}
             alt={`${merchant.business_name ?? "Store"} logo`}
           />
         ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-md border border-[#ded7c8] bg-white text-lg font-semibold">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md border border-[#E7E4DF] bg-[#FAF9F7] text-lg font-semibold">
             {(merchant.business_name ?? "S").charAt(0)}
           </div>
         )}
-        <h1 className="min-w-0 truncate text-2xl font-semibold">
-          {merchant.business_name}
-        </h1>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-2xl font-semibold">
+            {merchant.business_name}
+          </h1>
+          {merchant.tagline ? (
+            <p className="mt-1 truncate text-sm text-[#78716C]">
+              {merchant.tagline}
+            </p>
+          ) : null}
+          {merchant.delivery_info ? (
+            <p className="mt-2 flex min-w-0 items-center gap-1.5 text-xs font-medium text-[#78716C]">
+              <Truck aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate">
+                {merchant.delivery_info}
+              </span>
+            </p>
+          ) : null}
+        </div>
       </header>
 
       <section className="mx-auto w-full max-w-5xl">
         {message && !products.length ? (
-          <p className="py-10 text-center text-sm text-[#8f2d20]">{message}</p>
+          <p className="py-10 text-center text-sm text-[#B94A2C]">{message}</p>
         ) : null}
 
         {!products.length && !message ? (
-          <p className="py-16 text-center text-base font-medium text-[#52606d]">
-            No products available yet — check back soon!
+          <p className="py-16 text-center text-base font-medium text-[#78716C]">
+            No products available yet - check back soon!
           </p>
         ) : null}
 
         {products.length ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {products.map((product) => {
-              const thumbnail = product.photo_urls?.[0];
-
-              return (
-                <Link
-                  className={`flex h-[260px] flex-col overflow-hidden rounded-lg border border-[#ded7c8] bg-white shadow-sm transition hover:border-[#2f6f6c] ${
-                    product.in_stock ? "" : "opacity-55"
-                  }`}
-                  href={`/store/${slug}/${product.id}`}
-                  key={product.id}
-                >
-                  <div className="h-36 w-full bg-[#f1eee6]">
-                    {thumbnail ? (
-                      <img
-                        className="h-full w-full object-cover"
-                        src={thumbnail}
-                        alt={product.name}
-                      />
-                    ) : (
-                      <span className="flex h-full w-full items-center justify-center text-xs font-medium text-[#7b8794]">
-                        No photo
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-1 flex-col justify-between p-3">
-                    <h2
-                      className="text-sm font-semibold leading-5"
-                      style={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {product.name}
-                    </h2>
-                    {product.in_stock ? (
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-semibold">
-                          {formatGhsPrice(product.sale_price)}
-                        </span>
-                        {product.original_price ? (
-                          <span className="text-xs text-[#7b8794] line-through">
-                            {formatGhsPrice(product.original_price)}
-                          </span>
-                        ) : null}
-                      </div>
-                    ) : (
-                      <p className="mt-3 text-sm font-semibold text-[#8f2d20]">
-                        Out of stock
-                      </p>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} slug={slug} />
+            ))}
           </div>
         ) : null}
       </section>

@@ -11,6 +11,8 @@ alter table public.orders enable row level security;
 -- Merchant onboarding fields. Existing projects can run these safely.
 alter table public.merchants
   add column if not exists business_name text,
+  add column if not exists tagline text,
+  add column if not exists delivery_info text,
   add column if not exists whatsapp_number text,
   add column if not exists logo_url text,
   add column if not exists subscription_expired_from text;
@@ -207,6 +209,8 @@ returns table (
   id uuid,
   user_id uuid,
   business_name text,
+  tagline text,
+  delivery_info text,
   slug text,
   whatsapp_number text,
   logo_url text,
@@ -224,6 +228,8 @@ as $$
     id,
     user_id,
     business_name,
+    tagline,
+    delivery_info,
     slug,
     whatsapp_number,
     logo_url,
@@ -260,6 +266,8 @@ create or replace function public.get_public_merchant_by_slug(requested_slug tex
 returns table (
   id uuid,
   business_name text,
+  tagline text,
+  delivery_info text,
   slug text,
   whatsapp_number text,
   logo_url text,
@@ -287,6 +295,8 @@ begin
   select
     merchants.id,
     merchants.business_name,
+    merchants.tagline,
+    merchants.delivery_info,
     merchants.slug,
     merchants.whatsapp_number,
     merchants.logo_url,
@@ -305,6 +315,8 @@ revoke select on public.merchants from anon, authenticated;
 grant select (
   id,
   business_name,
+  tagline,
+  delivery_info,
   slug,
   whatsapp_number,
   logo_url

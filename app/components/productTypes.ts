@@ -2,6 +2,8 @@ export type Merchant = {
   id: string;
   user_id: string;
   business_name?: string | null;
+  tagline?: string | null;
+  delivery_info?: string | null;
   slug?: string | null;
   whatsapp_number?: string | null;
   logo_url?: string | null;
@@ -49,14 +51,7 @@ export type PublicOrder = {
 };
 
 export function formatPrice(value: number | null | undefined) {
-  if (typeof value !== "number") {
-    return "";
-  }
-
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(value);
+  return formatGhsPrice(value);
 }
 
 export function formatGhsPrice(value: number | null | undefined) {

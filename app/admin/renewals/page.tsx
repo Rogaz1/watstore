@@ -67,35 +67,35 @@ export default function RenewalsPage() {
   }, [router]);
 
   return (
-    <main className="min-h-screen bg-[#f5f2ea] px-6 py-10 text-[#1f2933]">
-      <section className="mx-auto w-full max-w-5xl rounded-lg border border-[#d8d2c4] bg-white p-8 shadow-sm">
-        <div className="border-b border-[#e2ded6] pb-6">
-          <p className="mb-2 text-sm font-medium uppercase tracking-[0.18em] text-[#5d6b5c]">
+      <main className="min-h-screen bg-white px-6 py-10 text-[#1C1917]">
+        <section className="mx-auto w-full max-w-5xl rounded-lg border border-[#E7E4DF] bg-white p-8 shadow-sm">
+          <div className="border-b border-[#E7E4DF] pb-6">
+            <p className="mb-2 text-sm font-medium uppercase text-[#78716C]">
             Admin
           </p>
           <h1 className="text-2xl font-semibold">Active merchant renewals</h1>
         </div>
 
         {isLoading ? (
-          <p className="py-10 text-sm font-medium text-[#52606d]">
+              <p className="py-10 text-sm font-medium text-[#78716C]">
             Loading renewals...
           </p>
         ) : null}
 
         {message ? (
-          <p className="mt-6 rounded-md border border-[#d99b8f] bg-[#fff4f1] px-3 py-2 text-sm text-[#8f2d20]">
+              <p className="mt-6 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm text-[#B94A2C]">
             {message}
           </p>
         ) : null}
 
         {!isLoading && !merchants.length && !message ? (
-          <p className="py-10 text-sm font-medium text-[#52606d]">
+              <p className="py-10 text-sm font-medium text-[#78716C]">
             No active merchants with renewal dates.
           </p>
         ) : null}
 
         {merchants.length ? (
-          <div className="divide-y divide-[#e2ded6]">
+              <div className="divide-y divide-[#E7E4DF]">
             {merchants.map((merchant) => {
               return (
                 <article
@@ -104,12 +104,12 @@ export default function RenewalsPage() {
                 >
                   <div>
                     <h2 className="font-semibold">{merchant.business_name}</h2>
-                    <p className="text-sm text-[#52606d]">/store/{merchant.slug}</p>
+                      <p className="text-sm text-[#78716C]">/store/{merchant.slug}</p>
                   </div>
                   <p className="text-sm">
                     {merchant.billing_cycle_months === 12 ? "Yearly" : "Monthly"}
                   </p>
-                  <p className="text-sm text-[#52606d]">
+                    <p className="text-sm text-[#78716C]">
                     Paid{" "}
                     {new Intl.DateTimeFormat("en-US", {
                       dateStyle: "medium",

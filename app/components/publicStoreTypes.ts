@@ -2,7 +2,13 @@ import type { Merchant, Product } from "./productTypes";
 
 export type PublicMerchant = Pick<
   Merchant,
-  "id" | "business_name" | "slug" | "whatsapp_number" | "logo_url"
+  | "id"
+  | "business_name"
+  | "tagline"
+  | "delivery_info"
+  | "slug"
+  | "whatsapp_number"
+  | "logo_url"
 > & {
   is_available: boolean;
 };

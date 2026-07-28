@@ -27,8 +27,12 @@ export function useRequireUser() {
         return;
       }
 
-      setUser(session.user);
-      setIsCheckingAuth(false);
+      setUser((currentUser) =>
+        currentUser?.id === session.user.id ? currentUser : session.user,
+      );
+      setIsCheckingAuth((currentValue) =>
+        currentValue ? false : currentValue,
+      );
     }
 
     loadSession();
@@ -41,8 +45,12 @@ export function useRequireUser() {
         return;
       }
 
-      setUser(session.user);
-      setIsCheckingAuth(false);
+      setUser((currentUser) =>
+        currentUser?.id === session.user.id ? currentUser : session.user,
+      );
+      setIsCheckingAuth((currentValue) =>
+        currentValue ? false : currentValue,
+      );
     });
 
     return () => {

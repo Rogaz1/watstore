@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { ExpiredAccessScreen } from "./ExpiredAccessScreen";
 import { getMerchantForUser } from "./merchantProfile";
@@ -44,6 +44,7 @@ function makeMediaItem(file: File): MediaItem {
 export function ProductForm({ productId }: ProductFormProps) {
   const router = useRouter();
   const { user, isCheckingAuth } = useRequireUser();
+  const userId = user?.id;
   const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [name, setName] = useState("");
   const [salePrice, setSalePrice] = useState("");
@@ -51,9 +52,8 @@ export function ProductForm({ productId }: ProductFormProps) {
   const [images, setImages] = useState<MediaItem[]>([]);
   const [video, setVideo] = useState<MediaItem | null>(null);
   const [shortDescription, setShortDescription] = useState("");
-  const [keyBenefits, setKeyBenefits] = useState<string[]>(
-    Array.from({ length: MAX_BENEFITS }, () => ""),
-  );
+  const [keyBenefits, setKeyBenefits] = useState<string[]>([]);
+  const [benefitInput, setBenefitInput] = useState("");
   const [longDescription, setLongDescription] = useState("");
   const [inStock, setInStock] = useState(true);
   const [isLoading, setIsLoading] = useState(Boolean(productId));
@@ -69,11 +69,11 @@ export function ProductForm({ productId }: ProductFormProps) {
   );
 
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       return;
     }
 
-    const currentUser = user;
+    const currentUserId = userId;
     let isMounted = true;
 
     async function loadMerchantAndProduct() {
@@ -81,7 +81,7 @@ export function ProductForm({ productId }: ProductFormProps) {
       setMessage("");
 
       const { data: merchantData, error: merchantError } =
-        await getMerchantForUser(currentUser.id);
+        await getMerchantForUser(currentUserId);
 
       if (!isMounted) {
         return;
@@ -151,11 +151,7 @@ export function ProductForm({ productId }: ProductFormProps) {
           : null,
       );
       setShortDescription(loadedProduct.short_description ?? "");
-      setKeyBenefits(
-        Array.from({ length: MAX_BENEFITS }, (_, index) => {
-          return loadedProduct.key_benefits?.[index] ?? "";
-        }),
-      );
+      setKeyBenefits((loadedProduct.key_benefits ?? []).filter(Boolean).slice(0, MAX_BENEFITS));
       setLongDescription(loadedProduct.long_description ?? "");
       setInStock(loadedProduct.in_stock);
       setIsLoading(false);
@@ -166,7 +162,7 @@ export function ProductForm({ productId }: ProductFormProps) {
     return () => {
       isMounted = false;
     };
-  }, [productId, router, user]);
+  }, [productId, router, userId]);
 
   function handleImageFiles(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
@@ -187,6 +183,26 @@ export function ProductForm({ productId }: ProductFormProps) {
       next.splice(toIndex, 0, item);
       return next;
     });
+  }
+
+  function addBenefit() {
+    const nextBenefit = benefitInput.trim();
+
+    if (!nextBenefit || keyBenefits.length >= MAX_BENEFITS) {
+      return;
+    }
+
+    setKeyBenefits((current) => [...current, nextBenefit]);
+    setBenefitInput("");
+  }
+
+  function handleBenefitKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== "Enter") {
+      return;
+    }
+
+    event.preventDefault();
+    addBenefit();
   }
 
   async function uploadMedia(item: MediaItem, merchantId: string) {
@@ -235,9 +251,7 @@ export function ProductForm({ productId }: ProductFormProps) {
         photo_urls: photoUrls,
         video_url: videoUrl,
         short_description: shortDescription.trim() || null,
-        key_benefits: keyBenefits
-          .map((benefit) => benefit.trim())
-          .filter(Boolean),
+        key_benefits: keyBenefits.map((benefit) => benefit.trim()).filter(Boolean),
         long_description: longDescription.trim() || null,
         in_stock: inStock,
       };
@@ -268,8 +282,8 @@ export function ProductForm({ productId }: ProductFormProps) {
 
   if (isCheckingAuth || isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f5f2ea] px-6 text-[#1f2933]">
-        <p className="text-sm font-medium text-[#52606d]">Loading product...</p>
+      <main className="flex min-h-screen items-center justify-center bg-[#FFFFFF] px-6 text-[#1C1917]">
+        <p className="text-sm font-medium text-[#78716C]">Loading product...</p>
       </main>
     );
   }
@@ -288,19 +302,19 @@ export function ProductForm({ productId }: ProductFormProps) {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f2ea] text-[#1f2933]">
-      <header className="border-b border-[#d8d2c4] bg-white">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#5d6b5c]">
+    <main className="min-h-screen bg-[#FFFFFF] text-[#1C1917]">
+      <header className="sticky top-0 z-10 border-b border-[#E7E4DF] bg-white">
+        <div className="mx-auto flex w-full max-w-5xl min-w-0 items-center justify-between gap-4 px-6 py-5">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium uppercase text-[#78716C]">
               Watstore
             </p>
-            <h1 className="text-2xl font-semibold">
+            <h1 className="truncate text-2xl font-semibold">
               {isEditing ? "Edit Product" : "Add Product"}
             </h1>
           </div>
           <Link
-            className="rounded-md border border-[#c3bbab] px-4 py-2 text-sm font-medium transition hover:border-[#2f6f6c] hover:text-[#2f6f6c]"
+            className="shrink-0 rounded-md border border-[#E7E4DF] px-4 py-2 text-sm font-medium transition hover:border-[#1C1917]"
             href="/dashboard"
           >
             Cancel
@@ -315,7 +329,7 @@ export function ProductForm({ productId }: ProductFormProps) {
         <label className="block">
           <span className="mb-2 block text-sm font-medium">Name</span>
           <input
-            className="h-12 w-full rounded-md border border-[#cfc7b7] bg-white px-3 outline-none transition focus:border-[#2f6f6c] focus:ring-2 focus:ring-[#2f6f6c]/20"
+            className="h-12 w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
             value={name}
             onChange={(event) => setName(event.target.value)}
             required
@@ -326,7 +340,7 @@ export function ProductForm({ productId }: ProductFormProps) {
           <label className="block">
             <span className="mb-2 block text-sm font-medium">Sale price</span>
             <input
-              className="h-12 w-full rounded-md border border-[#cfc7b7] bg-white px-3 outline-none transition focus:border-[#2f6f6c] focus:ring-2 focus:ring-[#2f6f6c]/20"
+              className="h-12 w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
               type="number"
               min="0"
               step="0.01"
@@ -337,10 +351,10 @@ export function ProductForm({ productId }: ProductFormProps) {
           </label>
           <label className="block">
             <span className="mb-2 block text-sm font-medium">
-              Original price <span className="text-[#6b7280]">(optional)</span>
+              Original price <span className="text-[#78716C]">(optional)</span>
             </span>
             <input
-              className="h-12 w-full rounded-md border border-[#cfc7b7] bg-white px-3 outline-none transition focus:border-[#2f6f6c] focus:ring-2 focus:ring-[#2f6f6c]/20"
+              className="h-12 w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
               type="number"
               min="0"
               step="0.01"
@@ -350,7 +364,7 @@ export function ProductForm({ productId }: ProductFormProps) {
           </label>
         </div>
 
-        <section className="rounded-lg border border-[#d8d2c4] bg-white p-5">
+        <section className="rounded-lg border border-[#E7E4DF] bg-white p-5">
           <div className="mb-4">
             <h2 className="text-lg font-semibold">Photo/video upload</h2>
           </div>
@@ -360,7 +374,7 @@ export function ProductForm({ productId }: ProductFormProps) {
                 Product photos
               </span>
               <input
-                className="block w-full rounded-md border border-[#cfc7b7] bg-white px-3 py-3 text-sm"
+                className="block w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-3 text-sm"
                 type="file"
                 accept="image/*"
                 multiple
@@ -369,10 +383,10 @@ export function ProductForm({ productId }: ProductFormProps) {
             </label>
             <label className="block">
               <span className="mb-2 block text-sm font-medium">
-                Product video <span className="text-[#6b7280]">(optional)</span>
+                Product video <span className="text-[#78716C]">(optional)</span>
               </span>
               <input
-                className="block w-full rounded-md border border-[#cfc7b7] bg-white px-3 py-3 text-sm"
+                className="block w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-3 text-sm"
                 type="file"
                 accept="video/*"
                 onChange={handleVideoFile}
@@ -381,10 +395,10 @@ export function ProductForm({ productId }: ProductFormProps) {
           </div>
 
           {images.length ? (
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {images.map((image, index) => (
                 <div
-                  className="rounded-md border border-[#d8d2c4] bg-[#fbfaf7] p-3"
+                  className="group relative aspect-square overflow-hidden rounded-md border border-[#E7E4DF] bg-[#FAF9F7]"
                   draggable
                   key={image.id}
                   onDragStart={() => setDraggedIndex(index)}
@@ -397,16 +411,19 @@ export function ProductForm({ productId }: ProductFormProps) {
                   }}
                 >
                   <img
-                    className="h-32 w-full rounded-md object-cover"
+                    className="h-full w-full object-cover"
                     src={image.previewUrl}
                     alt={name || "Product photo"}
                   />
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="text-sm text-[#52606d]">
-                      Photo {index + 1}
+                  {index === 0 ? (
+                    <span className="absolute bottom-2 left-2 rounded-full bg-[#1C1917]/80 px-2 py-1 text-[10px] font-semibold text-white">
+                      Cover
                     </span>
+                  ) : null}
+                  <div className="absolute inset-x-2 top-2 flex justify-end opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
                     <button
-                      className="text-sm font-medium text-[#8f2d20] hover:underline"
+                      aria-label="Remove photo"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-lg leading-none text-[#B94A2C] shadow-sm"
                       type="button"
                       onClick={() =>
                         setImages((current) =>
@@ -414,23 +431,28 @@ export function ProductForm({ productId }: ProductFormProps) {
                         )
                       }
                     >
-                      Remove
+                      x
                     </button>
                   </div>
                 </div>
               ))}
             </div>
           ) : null}
+          {images.length ? (
+            <p className="mt-3 text-xs text-[#78716C]">
+              Drag to reorder. First photo is cover.
+            </p>
+          ) : null}
 
           {video ? (
-            <div className="mt-5 rounded-md border border-[#d8d2c4] bg-[#fbfaf7] p-3">
+            <div className="mt-5 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] p-3">
               <video
                 className="max-h-64 w-full rounded-md bg-black"
                 controls
                 src={video.previewUrl}
               />
               <button
-                className="mt-3 text-sm font-medium text-[#8f2d20] hover:underline"
+                className="mt-3 text-sm font-medium text-[#B94A2C] hover:underline"
                 type="button"
                 onClick={() => setVideo(null)}
               >
@@ -445,7 +467,7 @@ export function ProductForm({ productId }: ProductFormProps) {
             Short description
           </span>
           <textarea
-            className="min-h-28 w-full rounded-md border border-[#cfc7b7] bg-white px-3 py-3 outline-none transition focus:border-[#2f6f6c] focus:ring-2 focus:ring-[#2f6f6c]/20"
+            className="min-h-28 w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
             value={shortDescription}
             onChange={(event) => setShortDescription(event.target.value)}
           />
@@ -453,22 +475,51 @@ export function ProductForm({ productId }: ProductFormProps) {
 
         <section>
           <h2 className="mb-2 text-sm font-medium">Key benefits</h2>
-          <div className="grid gap-3">
+          <div className="grid gap-2">
             {keyBenefits.map((benefit, index) => (
-              <input
-                className="h-11 w-full rounded-md border border-[#cfc7b7] bg-white px-3 outline-none transition focus:border-[#2f6f6c] focus:ring-2 focus:ring-[#2f6f6c]/20"
-                key={index}
-                placeholder={`Benefit ${index + 1}`}
-                value={benefit}
-                onChange={(event) =>
-                  setKeyBenefits((current) =>
-                    current.map((item, itemIndex) =>
-                      itemIndex === index ? event.target.value : item,
-                    ),
-                  )
-                }
-              />
+              <div
+                className="flex min-w-0 items-center gap-3 rounded-md bg-[#FAF9F7] px-3 py-3 text-sm"
+                key={`${benefit}-${index}`}
+              >
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1DA851] text-xs font-bold text-white">
+                  ✓
+                </span>
+                <span className="min-w-0 flex-1">{benefit}</span>
+                <button
+                  aria-label="Remove benefit"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-lg leading-none text-[#78716C] hover:text-[#B94A2C]"
+                  type="button"
+                  onClick={() =>
+                    setKeyBenefits((current) =>
+                      current.filter((_, itemIndex) => itemIndex !== index),
+                    )
+                  }
+                >
+                  x
+                </button>
+              </div>
             ))}
+            <div className="flex min-w-0 gap-2">
+              <input
+                className="h-11 min-w-0 flex-1 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
+                placeholder="Add a benefit and press Enter"
+                value={benefitInput}
+                onChange={(event) => setBenefitInput(event.target.value)}
+                onKeyDown={handleBenefitKeyDown}
+                disabled={keyBenefits.length >= MAX_BENEFITS}
+              />
+              <button
+                className="h-11 shrink-0 rounded-md bg-[#1C1917] px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-[#78716C]"
+                type="button"
+                disabled={keyBenefits.length >= MAX_BENEFITS || !benefitInput.trim()}
+                onClick={addBenefit}
+              >
+                Add
+              </button>
+            </div>
+            <p className="text-xs text-[#78716C]">
+              {keyBenefits.length}/{MAX_BENEFITS} benefits added.
+            </p>
           </div>
         </section>
 
@@ -477,21 +528,21 @@ export function ProductForm({ productId }: ProductFormProps) {
             Long description
           </span>
           <textarea
-            className="min-h-44 w-full rounded-md border border-[#cfc7b7] bg-white px-3 py-3 outline-none transition focus:border-[#2f6f6c] focus:ring-2 focus:ring-[#2f6f6c]/20"
+            className="min-h-44 w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
             value={longDescription}
             onChange={(event) => setLongDescription(event.target.value)}
           />
         </label>
 
-        <label className="flex items-center justify-between rounded-lg border border-[#d8d2c4] bg-white p-5">
-          <span>
+        <label className="flex min-w-0 items-center justify-between gap-4 rounded-lg border border-[#E7E4DF] bg-white p-5">
+          <span className="min-w-0 flex-1">
             <span className="block font-medium">In stock</span>
-            <span className="block text-sm text-[#52606d]">
+            <span className="block text-sm text-[#78716C]">
               Available for customers once storefront pages are added.
             </span>
           </span>
           <input
-            className="h-5 w-5 accent-[#2f6f6c]"
+            className="h-5 w-5 shrink-0 accent-[#1C1917]"
             type="checkbox"
             checked={inStock}
             onChange={(event) => setInStock(event.target.checked)}
@@ -499,20 +550,20 @@ export function ProductForm({ productId }: ProductFormProps) {
         </label>
 
         {message ? (
-          <p className="rounded-md border border-[#d99b8f] bg-[#fff4f1] px-3 py-2 text-sm text-[#8f2d20]">
+          <p className="rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm text-[#B94A2C]">
             {message}
           </p>
         ) : null}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
           <Link
-            className="flex h-12 items-center justify-center rounded-md border border-[#c3bbab] px-5 font-medium transition hover:border-[#2f6f6c] hover:text-[#2f6f6c]"
+            className="flex h-12 items-center justify-center rounded-md border border-[#E7E4DF] px-5 font-medium transition hover:border-[#1C1917]"
             href="/dashboard"
           >
             Cancel
           </Link>
           <button
-            className="h-12 rounded-md bg-[#2f6f6c] px-5 font-medium text-white transition hover:bg-[#285f5c] disabled:cursor-not-allowed disabled:bg-[#9fb9b7]"
+            className="h-12 rounded-md bg-[#1C1917] px-5 font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#78716C]"
             type="submit"
             disabled={isSaving || !canSave}
           >

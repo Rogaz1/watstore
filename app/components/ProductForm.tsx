@@ -388,7 +388,7 @@ export function ProductForm({ productId }: ProductFormProps) {
         throw error;
       }
 
-      router.push("/dashboard");
+      router.push("/dashboard?tab=products");
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Unable to save product.",
@@ -425,7 +425,7 @@ export function ProductForm({ productId }: ProductFormProps) {
         <div className="mx-auto flex h-[76px] w-full max-w-xl min-w-0 items-center gap-3 px-5">
           <Link
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#111111] transition hover:bg-[#F8F8F8]"
-            href="/dashboard"
+            href="/dashboard?tab=products"
             aria-label="Back to dashboard"
           >
             <ChevronLeft aria-hidden="true" className="h-5 w-5" strokeWidth={1.5} />
@@ -752,7 +752,7 @@ export function ProductForm({ productId }: ProductFormProps) {
         <div className="grid grid-cols-2 gap-3 pb-4">
           <Link
             className="flex items-center justify-center rounded-2xl border border-[#E5E5E5] px-5 py-[15px] text-sm font-semibold transition hover:bg-[#F8F8F8]"
-            href="/dashboard"
+            href="/dashboard?tab=products"
           >
             Cancel
           </Link>

@@ -4,6 +4,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Store } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
 import { formatGhsPrice } from "@/app/components/productTypes";
@@ -171,37 +172,37 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
   }
 
   return (
-    <main className="min-h-screen bg-[#F4F4F5] px-5 pb-8 pt-12 text-[#111111] sm:px-7">
-      <header className="mx-auto flex w-full max-w-5xl flex-col items-center text-center">
-        {merchant.logo_url ? (
-          <img
-            className="h-12 w-12 shrink-0 rounded-xl border border-[#E5E5E5] object-cover"
-            src={merchant.logo_url}
-            alt={`${merchant.business_name ?? "Store"} logo`}
-          />
-        ) : (
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#111111] text-lg font-bold text-white">
-            {(merchant.business_name ?? "S").charAt(0)}
+    <main className="min-h-screen bg-[#F4F4F5] pb-8 text-[#111111]">
+      <header className="bg-white px-5 pb-7 pt-16 sm:px-7">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center text-center">
+          <div className="h-[52px] w-[52px] shrink-0 overflow-hidden rounded-2xl bg-[#111111] text-white">
+            {merchant.logo_url ? (
+              <img
+                className="block h-full w-full object-cover"
+                src={merchant.logo_url}
+                alt={`${merchant.business_name ?? "Store"} logo`}
+                style={{ width: 52, height: 52, maxWidth: 52, maxHeight: 52 }}
+              />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center">
+                <Store aria-hidden="true" className="h-6 w-6" strokeWidth={1.8} />
+              </span>
+            )}
           </div>
-        )}
-        <div className="mt-3 min-w-0">
-          <h1 className="truncate text-lg font-bold leading-none">
-            {merchant.business_name}
-          </h1>
-          {merchant.tagline ? (
-            <p className="mt-2 truncate text-[11px] font-medium text-[#888888]">
-              {merchant.tagline}
-            </p>
-          ) : null}
-          {merchant.delivery_info ? (
-            <p className="mt-1 truncate text-[11px] font-medium text-[#888888]">
-              {merchant.delivery_info}
-            </p>
-          ) : null}
+          <div className="mt-3 min-w-0 max-w-[260px] overflow-hidden">
+            <h1 className="truncate text-[18px] font-bold leading-none">
+              {merchant.business_name}
+            </h1>
+            {merchant.tagline ? (
+              <p className="mt-1.5 block max-w-full overflow-hidden truncate whitespace-nowrap text-[11px] font-medium text-[#888888]">
+                {merchant.tagline}
+              </p>
+            ) : null}
+          </div>
         </div>
       </header>
 
-      <section className="mx-auto mt-8 w-full max-w-5xl">
+      <section className="mx-auto w-full max-w-5xl px-5 pt-4 sm:px-7">
         {message && !products.length ? (
           <p className="py-10 text-center text-sm text-[#B91C1C]">{message}</p>
         ) : null}

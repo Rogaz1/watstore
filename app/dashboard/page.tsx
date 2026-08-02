@@ -76,41 +76,41 @@ const sellingTips = [
     ],
   },
   {
-    title: "Your short description",
+    title: "Your Short Description",
     items: [
       "This is the first thing buyers read - make it about the benefit, not just what the product is",
       "Keep it to one or two sentences",
     ],
   },
   {
-    title: "Key benefits",
+    title: "Key Benefits",
     items: [
       "List specific, concrete benefits, not vague claims",
       "3-4 short bullet points work better than one long paragraph",
     ],
   },
   {
-    title: "Full description",
+    title: "Full Description",
     items: [
       "Break it into short paragraphs, not one big block of text",
       "Answer the obvious questions: what it's made of, how to use it, who it's for",
     ],
   },
   {
-    title: "Delivery info",
+    title: "Delivery Info",
     items: [
       "Be specific and honest about delivery areas and timing - this is one of the biggest things that makes buyers hesitate to order",
       "Keep it short - one clear line works better than a long explanation",
     ],
   },
   {
-    title: "FAQ",
+    title: "Frequently Asked Questions",
     items: [
       "Add answers to the questions you get asked most often on WhatsApp - this saves you time and helps hesitant buyers order without needing to ask first",
     ],
   },
   {
-    title: "Building trust",
+    title: "Building Trust",
     items: [
       "Be honest in your descriptions - buyers who feel misled won't come back, even if you get the one sale",
       "Respond quickly to WhatsApp messages - buyers often compare a few sellers and go with whoever answers first",
@@ -133,7 +133,12 @@ type OrderWithProduct = Order & {
   product?: ProductSummary;
 };
 
-const orderStatuses: OrderStatus[] = ["pending", "paid", "fulfilled", "cancelled"];
+const orderStatuses: OrderStatus[] = [
+  "pending",
+  "paid",
+  "fulfilled",
+  "cancelled",
+];
 const orderFilters: { label: string; value: OrderFilter }[] = [
   { label: "All", value: "all" },
   { label: "Pending", value: "pending" },
@@ -141,6 +146,15 @@ const orderFilters: { label: string; value: OrderFilter }[] = [
   { label: "Fulfilled", value: "fulfilled" },
   { label: "Cancelled", value: "cancelled" },
 ];
+
+function isDashboardTab(value: string | null): value is DashboardTab {
+  return (
+    value === "home" ||
+    value === "products" ||
+    value === "orders" ||
+    value === "settings"
+  );
+}
 
 function normalizeSlug(value: string) {
   return value
@@ -204,7 +218,9 @@ function getPlanName(merchant: Merchant | null) {
   }
 
   if (merchant.subscription_status === "active") {
-    return merchant.billing_cycle_months === 12 ? "Yearly Plan" : "Monthly Plan";
+    return merchant.billing_cycle_months === 12
+      ? "Yearly Plan"
+      : "Monthly Plan";
   }
 
   return "Expired Plan";
@@ -342,7 +358,9 @@ function StatCard({
 
   return (
     <div className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
-      <p className="text-[9.5px] font-bold uppercase tracking-[0.08em] text-[#888888]">{label}</p>
+      <p className="text-[9.5px] font-bold uppercase tracking-[0.08em] text-[#888888]">
+        {label}
+      </p>
       <p
         className={`mt-1 text-[22px] font-bold leading-none ${
           highlight ? "text-[#25D366]" : "text-[#1A1A18]"
@@ -368,8 +386,13 @@ function HomeRecentOrderCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="flex min-w-0 items-center gap-1.5 text-[13px] font-bold">
-            <User aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[#888888]" />
-            <span className="min-w-0 flex-1 truncate">{order.customer_name}</span>
+            <User
+              aria-hidden="true"
+              className="h-3.5 w-3.5 shrink-0 text-[#888888]"
+            />
+            <span className="min-w-0 flex-1 truncate">
+              {order.customer_name}
+            </span>
           </p>
         </div>
         <div className="flex shrink-0 items-center justify-end gap-2">
@@ -414,7 +437,9 @@ function HomeRecentOrderCard({
       <div className="mt-2 flex items-center justify-between gap-3">
         <p className="flex min-w-0 flex-1 items-center gap-1.5 text-[11px] font-medium text-[#888888]">
           <MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
-          <span className="min-w-0 flex-1 truncate">{order.delivery_location}</span>
+          <span className="min-w-0 flex-1 truncate">
+            {order.delivery_location}
+          </span>
         </p>
         <button
           className="shrink-0 text-xs font-bold text-[#25D366]"
@@ -442,8 +467,13 @@ function OrderSummaryCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="flex min-w-0 items-center gap-1.5 text-[13px] font-bold">
-            <User aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[#888888]" />
-            <span className="min-w-0 flex-1 truncate">{order.customer_name}</span>
+            <User
+              aria-hidden="true"
+              className="h-3.5 w-3.5 shrink-0 text-[#888888]"
+            />
+            <span className="min-w-0 flex-1 truncate">
+              {order.customer_name}
+            </span>
           </p>
         </div>
         <div className="flex shrink-0 items-center justify-end gap-2">
@@ -503,7 +533,9 @@ function OrderSummaryCard({
 
       <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-[#888888]">
         <MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
-        <span className="min-w-0 flex-1 truncate">{order.delivery_location}</span>
+        <span className="min-w-0 flex-1 truncate">
+          {order.delivery_location}
+        </span>
       </div>
     </article>
   );
@@ -514,6 +546,7 @@ export default function DashboardPage() {
   const { user, isCheckingAuth } = useRequireUser();
   const userId = user?.id;
   const [activeTab, setActiveTab] = useState<DashboardTab>("home");
+  const [hasResolvedInitialTab, setHasResolvedInitialTab] = useState(false);
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
   const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -544,6 +577,16 @@ export default function DashboardPage() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+  useEffect(() => {
+    const requestedTab = new URLSearchParams(window.location.search).get("tab");
+
+    if (isDashboardTab(requestedTab)) {
+      setActiveTab(requestedTab);
+    }
+
+    setHasResolvedInitialTab(true);
+  }, []);
 
   useEffect(() => {
     if (!isSellingTipsOpen) {
@@ -724,6 +767,23 @@ export default function DashboardPage() {
     window.setTimeout(() => setStoreLinkCopied(false), 3200);
   }
 
+  function handleTabChange(tab: DashboardTab) {
+    setActiveTab(tab);
+
+    const url = new URL(window.location.href);
+    if (tab === "home") {
+      url.searchParams.delete("tab");
+    } else {
+      url.searchParams.set("tab", tab);
+    }
+
+    window.history.replaceState(
+      null,
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+  }
+
   async function handleDelete(product: Product) {
     if (!merchant) {
       return;
@@ -768,11 +828,15 @@ export default function DashboardPage() {
     }
 
     setOrders((current) =>
-      current.map((item) => (item.id === order.id ? { ...item, status } : item)),
+      current.map((item) =>
+        item.id === order.id ? { ...item, status } : item,
+      ),
     );
   }
 
-  async function handleSettingsLogoChange(event: ChangeEvent<HTMLInputElement>) {
+  async function handleSettingsLogoChange(
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
     const file = event.target.files?.[0] ?? null;
     event.target.value = "";
 
@@ -871,7 +935,11 @@ export default function DashboardPage() {
     const normalizedSlug = normalizeSlug(settingsSlug);
     const digitsOnlyWhatsapp = settingsWhatsappNumber.replace(/\D/g, "");
 
-    if (!settingsBusinessName.trim() || !normalizedSlug || !digitsOnlyWhatsapp) {
+    if (
+      !settingsBusinessName.trim() ||
+      !normalizedSlug ||
+      !digitsOnlyWhatsapp
+    ) {
       return;
     }
 
@@ -903,7 +971,9 @@ export default function DashboardPage() {
         throw error;
       }
 
-      setMerchant((current) => (current ? { ...current, ...payload } : current));
+      setMerchant((current) =>
+        current ? { ...current, ...payload } : current,
+      );
       setSettingsSlug(normalizedSlug);
       setSettingsWhatsappNumber(digitsOnlyWhatsapp);
       setSettingsLogoFile(null);
@@ -1016,10 +1086,12 @@ export default function DashboardPage() {
     "Hi, I need help with my Watstore account.",
   );
 
-  if (isCheckingAuth) {
+  if (isCheckingAuth || !hasResolvedInitialTab) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-6 text-[#1A1A18]">
-        <p className="text-sm font-medium text-[#888888]">Checking session...</p>
+        <p className="text-sm font-medium text-[#888888]">
+          Checking session...
+        </p>
       </main>
     );
   }
@@ -1040,13 +1112,14 @@ export default function DashboardPage() {
   const subscriptionAccess = merchant ? getSubscriptionAccess(merchant) : null;
   const planName = getPlanName(merchant);
   const daysRemaining = subscriptionAccess?.daysRemaining;
-  const showProminentSubscription =
-    merchant?.subscription_status === "trial";
+  const showProminentSubscription = merchant?.subscription_status === "trial";
   const expiryLabel = subscriptionAccess?.expiryDate
     ? formatDateLabel(subscriptionAccess.expiryDate)
     : "Not recorded";
   const activePlanCycle =
-    merchant?.subscription_status === "active" ? merchant.billing_cycle_months : null;
+    merchant?.subscription_status === "active"
+      ? merchant.billing_cycle_months
+      : null;
   const activeHomePlanName =
     activePlanCycle === 12 ? "Annual Plan" : "Monthly Plan";
 
@@ -1090,7 +1163,10 @@ export default function DashboardPage() {
                     type="button"
                     onClick={handleSignOut}
                   >
-                    <LogOut aria-hidden="true" className="h-5 w-5 shrink-0 text-[#888888]" />
+                    <LogOut
+                      aria-hidden="true"
+                      className="h-5 w-5 shrink-0 text-[#888888]"
+                    />
                     <span className="min-w-0 flex-1 truncate">Log out</span>
                   </button>
                   <div className="mx-5 h-px bg-[#EDECEA]" />
@@ -1118,7 +1194,9 @@ export default function DashboardPage() {
                       aria-hidden="true"
                       className="h-5 w-5 shrink-0 text-[#888888]"
                     />
-                    <span className="min-w-0 flex-1 truncate">Selling Tips</span>
+                    <span className="min-w-0 flex-1 truncate">
+                      Selling Tips
+                    </span>
                   </button>
                   <div className="mx-5 h-px bg-[#EDECEA]" />
                   <a
@@ -1172,14 +1250,16 @@ export default function DashboardPage() {
 
       {isSellingTipsOpen ? (
         <section className="fixed inset-0 z-[100] flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-white text-[#1A1A18]">
-            <header className="shrink-0 border-b border-[#EDECEA] px-5 py-4">
-              <div className="mx-auto flex w-full max-w-2xl min-w-0 items-center justify-between gap-4">
+          <header className="shrink-0 border-b border-[#EDECEA] px-5 py-4">
+            <div className="mx-auto flex w-full max-w-2xl min-w-0 items-center justify-between gap-4">
               <div className="flex min-w-0 items-center gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7F5F2] text-[#1A1A18]">
                   <BookOpen aria-hidden="true" className="h-[18px] w-[18px]" />
                 </span>
                 <div className="min-w-0">
-                  <h2 className="truncate text-[18px] font-bold">Selling Tips</h2>
+                  <h2 className="truncate text-[18px] font-bold">
+                    Selling Tips
+                  </h2>
                   <p className="mt-0.5 truncate text-xs font-medium text-[#888888]">
                     Simple ways to improve your product pages
                   </p>
@@ -1193,10 +1273,10 @@ export default function DashboardPage() {
               >
                 <X aria-hidden="true" className="h-4 w-4" />
               </button>
-              </div>
-            </header>
-            <div className="min-h-0 flex-1 overflow-y-scroll px-5 py-5 [-webkit-overflow-scrolling:touch]">
-              <div className="mx-auto w-full max-w-2xl pb-8">
+            </div>
+          </header>
+          <div className="min-h-0 flex-1 overflow-y-scroll px-5 py-5 [-webkit-overflow-scrolling:touch]">
+            <div className="mx-auto w-full max-w-2xl pb-8">
               <div className="grid gap-3">
                 {sellingTips.map((section) => (
                   <article
@@ -1219,7 +1299,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             </div>
-            </div>
+          </div>
         </section>
       ) : null}
 
@@ -1227,7 +1307,7 @@ export default function DashboardPage() {
         {activeTab === "home" ? (
           <section className="grid gap-6">
             <div>
-                <h1 className="text-[26px] font-bold leading-none sm:text-[30px]">
+              <h1 className="text-[26px] font-bold leading-none sm:text-[30px]">
                 Your Store Today
               </h1>
               <p className="mt-2 text-sm font-medium text-[#888888]">
@@ -1289,12 +1369,14 @@ export default function DashboardPage() {
             </div>
 
             <section>
-            <div className="mb-3 flex min-w-0 items-center justify-between gap-4">
-                <h2 className="min-w-0 flex-1 truncate text-[15px] font-bold">Recent orders</h2>
+              <div className="mb-3 flex min-w-0 items-center justify-between gap-4">
+                <h2 className="min-w-0 flex-1 truncate text-[15px] font-bold">
+                  Recent orders
+                </h2>
                 <button
                   className="inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#25D366]"
                   type="button"
-                  onClick={() => setActiveTab("orders")}
+                  onClick={() => handleTabChange("orders")}
                 >
                   View all
                   <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -1310,7 +1392,7 @@ export default function DashboardPage() {
                     <HomeRecentOrderCard
                       key={order.id}
                       order={order}
-                      onDetails={() => setActiveTab("orders")}
+                      onDetails={() => handleTabChange("orders")}
                     />
                   ))}
                 </div>
@@ -1333,8 +1415,9 @@ export default function DashboardPage() {
         {activeTab === "products" ? (
           <section className="-mx-4 -my-6 grid min-h-[calc(100vh-9rem)] gap-4 bg-[#F7F5F2] px-4 py-6 sm:-mx-6 sm:px-6">
             <div className="flex min-w-0 items-center justify-between gap-3">
-                <p className="min-w-0 flex-1 truncate text-xs font-medium text-[#999999]">
-                {products.length} {products.length === 1 ? "product" : "products"}
+              <p className="min-w-0 flex-1 truncate text-xs font-medium text-[#999999]">
+                {products.length}{" "}
+                {products.length === 1 ? "product" : "products"}
               </p>
               <Link
                 className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-[#1A1A18] px-4 text-xs font-bold text-white transition hover:bg-[#2E2E2C] active:scale-[0.99]"
@@ -1553,7 +1636,9 @@ export default function DashboardPage() {
                     <input
                       className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1A1A18] outline-none placeholder:text-[#888888]"
                       value={settingsBusinessName}
-                      onChange={(event) => setSettingsBusinessName(event.target.value)}
+                      onChange={(event) =>
+                        setSettingsBusinessName(event.target.value)
+                      }
                       required
                     />
                   </div>
@@ -1581,7 +1666,9 @@ export default function DashboardPage() {
                 </label>
 
                 <label className="block min-w-0 max-w-full">
-                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">Store URL</span>
+                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
+                    Store URL
+                  </span>
                   <div className="flex h-12 max-w-full overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
                       <Globe className="h-4 w-4" />
@@ -1624,7 +1711,9 @@ export default function DashboardPage() {
                       className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1A1A18] outline-none placeholder:text-[#888888]"
                       inputMode="tel"
                       value={settingsWhatsappNumber}
-                      onChange={(event) => setSettingsWhatsappNumber(event.target.value)}
+                      onChange={(event) =>
+                        setSettingsWhatsappNumber(event.target.value)
+                      }
                       required
                     />
                   </div>
@@ -1643,14 +1732,18 @@ export default function DashboardPage() {
 
                 <section>
                   <label className="block">
-                    <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">Store Logo</span>
+                    <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
+                      Store Logo
+                    </span>
                     <span className="flex min-h-14 min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-[#E5E5E5] bg-[#F4F3F0] px-3 py-3">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#EDECEA] bg-white text-[#888888]">
                         <ImageIcon className="h-5 w-5" />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-bold text-[#1A1A18]">
-                          {settingsLogoPreviewUrl ? "Change Logo" : "Upload Logo"}
+                          {settingsLogoPreviewUrl
+                            ? "Change Logo"
+                            : "Upload Logo"}
                         </span>
                         <span className="block text-xs font-medium text-[#888888]">
                           PNG, JPG accepted
@@ -1798,7 +1891,9 @@ export default function DashboardPage() {
                       autoComplete="new-password"
                       minLength={6}
                       value={confirmNewPassword}
-                      onChange={(event) => setConfirmNewPassword(event.target.value)}
+                      onChange={(event) =>
+                        setConfirmNewPassword(event.target.value)
+                      }
                     />
                   </div>
                 </label>
@@ -1834,8 +1929,18 @@ export default function DashboardPage() {
                 </ul>
               </div>
               {[
-                { name: "Monthly" as const, cycle: 1, price: "GHS 49", suffix: "/month" },
-                { name: "Annual" as const, cycle: 12, price: "GHS 399", suffix: "/year" },
+                {
+                  name: "Monthly" as const,
+                  cycle: 1,
+                  price: "GHS 49",
+                  suffix: "/month",
+                },
+                {
+                  name: "Annual" as const,
+                  cycle: 12,
+                  price: "GHS 399",
+                  suffix: "/year",
+                },
               ].map((plan) => {
                 const isActivePlan = activePlanCycle === plan.cycle;
                 const intent = isActivePlan ? "renew" : "upgrade";
@@ -1856,7 +1961,7 @@ export default function DashboardPage() {
                     ) : null}
                     {isActivePlan ? (
                       <div className="mb-4 flex min-w-0 items-center justify-between gap-3 rounded-full border border-[#EDECEA] bg-white px-3 py-2">
-                <p className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-medium text-[#888888]">
+                        <p className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-medium text-[#888888]">
                           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
                           <span className="min-w-0 flex-1 truncate">
                             {plan.name} Plan · Active
@@ -1888,7 +1993,8 @@ export default function DashboardPage() {
                       >
                         <MessageCircle className="h-4 w-4 shrink-0" />
                         <span className="min-w-0 truncate">
-                          {isActivePlan ? "Renew Early" : "Upgrade"} - Message Us
+                          {isActivePlan ? "Renew Early" : "Upgrade"} - Message
+                          Us
                         </span>
                       </a>
                     ) : null}
@@ -1930,7 +2036,7 @@ export default function DashboardPage() {
               >
                 <MessageCircle className="h-4 w-4 shrink-0" />
                 <span className="min-w-0 truncate">
-                Need help? Message us on WhatsApp
+                  Need help? Message us on WhatsApp
                 </span>
               </a>
             </section>
@@ -1939,46 +2045,50 @@ export default function DashboardPage() {
       </section>
 
       {!isSellingTipsOpen ? (
-      <nav className="fixed bottom-0 left-0 right-0 z-30 w-full border-t border-[#EDECEA] bg-white px-2 py-2">
-        <div
-          className="grid w-full grid-cols-4 items-stretch"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-          }}
-        >
-          {(["home", "products", "orders", "settings"] as DashboardTab[]).map(
-            (tab) => {
-              const active = activeTab === tab;
+        <nav className="fixed bottom-0 left-0 right-0 z-30 w-full border-t border-[#EDECEA] bg-white px-2 py-2">
+          <div
+            className="grid w-full grid-cols-4 items-stretch"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+            }}
+          >
+            {(["home", "products", "orders", "settings"] as DashboardTab[]).map(
+              (tab) => {
+                const active = activeTab === tab;
 
-              return (
-                <button
-                  className={`flex h-14 min-w-0 flex-col items-center justify-center gap-1 text-[11px] font-semibold capitalize transition sm:text-xs ${
-                    active ? "text-[#1A1A18]" : "text-[#888888]"
-                  }`}
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab === "home" ? <HomeIcon active={active} /> : null}
-                  {tab === "products" ? <ProductsIcon active={active} /> : null}
-                  {tab === "orders" ? <OrdersIcon active={active} /> : null}
-                  {tab === "settings" ? <SettingsIcon active={active} /> : null}
-                  <span>
-                    {tab === "home"
-                      ? "Home"
-                      : tab === "products"
-                        ? "Products"
-                        : tab === "orders"
-                          ? "Orders"
-                          : "Settings"}
-                  </span>
-                </button>
-              );
-            },
-          )}
-        </div>
-      </nav>
+                return (
+                  <button
+                    className={`flex h-14 min-w-0 flex-col items-center justify-center gap-1 text-[11px] font-semibold capitalize transition sm:text-xs ${
+                      active ? "text-[#1A1A18]" : "text-[#888888]"
+                    }`}
+                    key={tab}
+                    type="button"
+                    onClick={() => handleTabChange(tab)}
+                  >
+                    {tab === "home" ? <HomeIcon active={active} /> : null}
+                    {tab === "products" ? (
+                      <ProductsIcon active={active} />
+                    ) : null}
+                    {tab === "orders" ? <OrdersIcon active={active} /> : null}
+                    {tab === "settings" ? (
+                      <SettingsIcon active={active} />
+                    ) : null}
+                    <span>
+                      {tab === "home"
+                        ? "Home"
+                        : tab === "products"
+                          ? "Products"
+                          : tab === "orders"
+                            ? "Orders"
+                            : "Settings"}
+                    </span>
+                  </button>
+                );
+              },
+            )}
+          </div>
+        </nav>
       ) : null}
     </main>
   );

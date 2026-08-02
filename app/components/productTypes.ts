@@ -28,7 +28,13 @@ export type Product = {
   short_description: string | null;
   long_description: string | null;
   key_benefits: string[] | null;
+  faqs?: ProductFaq[] | null;
   in_stock: boolean;
+};
+
+export type ProductFaq = {
+  question: string;
+  answer: string;
 };
 
 export type OrderStatus = "pending" | "paid" | "fulfilled" | "cancelled";

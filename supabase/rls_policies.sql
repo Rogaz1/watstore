@@ -52,6 +52,10 @@ create unique index if not exists merchants_slug_key
 on public.merchants (slug)
 where slug is not null;
 
+-- Product FAQs are merchant-authored question/answer rows used on product pages.
+alter table public.products
+  add column if not exists faqs jsonb;
+
 -- Public order fields used by the storefront WhatsApp order flow.
 alter table public.orders
   add column if not exists product_id uuid,
@@ -204,6 +208,8 @@ $$;
 
 grant execute on function public.get_admin_renewals() to authenticated;
 
+drop function if exists public.get_current_merchant_profile();
+
 create or replace function public.get_current_merchant_profile()
 returns table (
   id uuid,
@@ -261,6 +267,8 @@ as $$
 $$;
 
 grant execute on function public.is_own_merchant(uuid) to authenticated;
+
+drop function if exists public.get_public_merchant_by_slug(text);
 
 create or replace function public.get_public_merchant_by_slug(requested_slug text)
 returns table (

@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { FormEvent, TouchEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Truck } from "lucide-react";
+import { MapPin, Share2, Truck, User } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
 import { formatGhsPrice } from "@/app/components/productTypes";
@@ -18,34 +18,18 @@ import {
 type ProductDetailClientProps = {
   slug: string;
   productId: string;
+  initialMerchant?: PublicMerchant | null;
+  initialProduct?: PublicProduct | null;
+  initialMessage?: string;
 };
 
 type CreateOrderResponse = {
   order_number: number;
 };
 
-function ShareIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-4 w-4"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-    >
-      <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
-      <path d="m16 6-4-4-4 4" />
-      <path d="M12 2v13" />
-    </svg>
-  );
-}
-
 function CheckIcon() {
   return (
-    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1DA851]">
+    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#25D366]">
       <svg
         aria-hidden="true"
         className="h-3 w-3 text-white"
@@ -103,7 +87,7 @@ function ProductMediaSlide({ media }: { media: ProductMedia }) {
   }
 
   return (
-    <div className="h-full w-full bg-[#FAF9F7]">
+    <div className="h-full w-full bg-[#F4F4F5]">
       <img className="h-full w-full object-cover" src={media.url} alt="" />
     </div>
   );
@@ -168,28 +152,29 @@ function OrderSheet({
   return (
     <div className="fixed inset-0 z-40 flex items-end bg-black/45">
       <form
-        className="max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-white px-5 pb-6 pt-3 text-[#1C1917] shadow-xl sm:mx-auto sm:max-w-lg"
+        className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white px-6 pb-8 pt-6 text-[#111111] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] sm:mx-auto sm:max-w-md"
         onSubmit={handleSubmit}
       >
-        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[#E7E4DF]" />
-        <div className="mb-5 flex min-w-0 items-start justify-between gap-4">
-          <div className="flex min-w-0 flex-1 gap-3">
-            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md border border-[#E7E4DF] bg-[#FAF9F7]">
+        <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-[#E5E5E5]" />
+        <div className="mb-5 flex min-w-0 items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-[#F4F4F5]">
               {thumbnail ? (
                 <img className="h-full w-full object-cover" src={thumbnail} alt={product.name} />
               ) : null}
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-[#78716C]">Order summary</p>
-              <h2 className="truncate text-lg font-semibold">{product.name}</h2>
-              <p className="mt-1 text-sm font-semibold">
+            <div className="min-w-0 flex-1 pt-0.5">
+              <h2 className="truncate text-[15px] font-bold leading-tight">
+                {product.name}
+              </h2>
+              <p className="mt-1 text-[13px] font-medium leading-none text-[#25D366]">
                 {formatGhsPrice(product.sale_price)}
               </p>
             </div>
           </div>
           <button
             aria-label="Close order form"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E7E4DF] text-xl leading-none"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-base leading-none text-[#888888] transition hover:bg-[#F4F4F5] hover:text-[#111111]"
             type="button"
             onClick={onClose}
           >
@@ -197,20 +182,20 @@ function OrderSheet({
           </button>
         </div>
 
-        <div className="mb-5 flex min-w-0 items-center justify-between gap-4 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] p-3">
-          <span className="min-w-0 flex-1 truncate font-medium">Quantity</span>
+        <div className="mb-4 flex min-w-0 items-center justify-between gap-4">
+          <span className="min-w-0 flex-1 truncate text-xs font-bold">Quantity</span>
           <div className="flex shrink-0 items-center gap-3">
             <button
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E7E4DF] bg-white text-lg font-semibold disabled:opacity-40"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#E5E5E5] bg-white text-base font-semibold text-[#888888] disabled:opacity-40"
               type="button"
               disabled={quantity === 1}
               onClick={() => setQuantity((current) => Math.max(1, current - 1))}
             >
               -
             </button>
-            <span className="w-6 text-center font-semibold">{quantity}</span>
+            <span className="w-6 text-center text-base font-bold">{quantity}</span>
             <button
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E7E4DF] bg-white text-lg font-semibold"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#E5E5E5] bg-white text-base font-semibold text-[#888888]"
               type="button"
               onClick={() => setQuantity((current) => current + 1)}
             >
@@ -219,67 +204,79 @@ function OrderSheet({
           </div>
         </div>
 
-        <p className="mb-5 text-lg font-semibold">
-          Total Payable: {formatGhsPrice(total)}
-        </p>
+        <div className="mb-5 flex min-w-0 items-center justify-between gap-3 rounded-2xl bg-[#F8F8F8] px-4 py-3">
+          <span className="min-w-0 flex-1 truncate text-xs font-medium text-[#888888]">
+            Total Payable
+          </span>
+          <span className="shrink-0 text-base font-bold">
+            {formatGhsPrice(total)}
+          </span>
+        </div>
 
         <div className="grid gap-4">
           <label className="block">
-            <span className="mb-2 block text-sm font-medium">Name</span>
-            <input
-              className="h-12 w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
-              value={customerName}
-              onChange={(event) => setCustomerName(event.target.value)}
-              required
-            />
+            <span className="mb-2 block text-xs font-semibold">Your Full Name</span>
+            <div className="flex h-11 min-w-0 items-center gap-2 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10">
+              <User aria-hidden="true" className="h-4 w-4 shrink-0" />
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-[#111111] outline-none placeholder:text-[#888888]"
+                placeholder="Kemi Adeyemi"
+                value={customerName}
+                onChange={(event) => setCustomerName(event.target.value)}
+                required
+              />
+            </div>
           </label>
           <label className="block">
-            <span className="mb-2 block text-sm font-medium">
-              Delivery location
+            <span className="mb-2 block text-xs font-semibold">
+              Delivery Location
             </span>
-            <input
-              className="h-12 w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
-              value={deliveryLocation}
-              onChange={(event) => setDeliveryLocation(event.target.value)}
-              required
-            />
+            <div className="flex h-11 min-w-0 items-center gap-2 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10">
+              <MapPin aria-hidden="true" className="h-4 w-4 shrink-0" />
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-[#111111] outline-none placeholder:text-[#888888]"
+                placeholder="Lekki Phase 1, Lagos"
+                value={deliveryLocation}
+                onChange={(event) => setDeliveryLocation(event.target.value)}
+                required
+              />
+            </div>
           </label>
         </div>
 
-        <p className="mt-4 rounded-md bg-[#EAF7EF] px-3 py-2 text-sm font-medium text-[#0F6B34]">
-          You&apos;ll receive payment details on WhatsApp to complete your order.
+        <p className="mt-4 text-center text-[10px] font-medium leading-4 text-[#999999]">
+          You&apos;ll confirm everything over WhatsApp. No payment required now.
         </p>
 
-        {merchant.delivery_info ? (
-          <p className="mt-3 flex min-w-0 items-start gap-2 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm font-medium text-[#78716C]">
-            <Truck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
-            <span className="min-w-0 flex-1">{merchant.delivery_info}</span>
-          </p>
-        ) : null}
-
         {message ? (
-          <p className="mt-4 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm text-[#B94A2C]">
+          <p className="mt-4 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 py-3.5 text-sm text-[#B91C1C]">
             {message}
           </p>
         ) : null}
 
         <button
-          className="mt-5 h-12 w-full rounded-md bg-[#1DA851] px-4 font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#78716C]"
+          className="mt-5 w-full rounded-xl bg-[#25D366] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:opacity-40"
           type="submit"
           disabled={isSubmitting || !canSubmit}
         >
-          {isSubmitting ? "Creating order..." : "Continue to WhatsApp"}
+          {isSubmitting ? "Creating order..." : "Continue to WhatsApp ->"}
         </button>
       </form>
     </div>
   );
 }
 
-export function ProductDetailClient({ slug, productId }: ProductDetailClientProps) {
-  const [merchant, setMerchant] = useState<PublicMerchant | null>(null);
-  const [product, setProduct] = useState<PublicProduct | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [message, setMessage] = useState("");
+export function ProductDetailClient({
+  slug,
+  productId,
+  initialMerchant = null,
+  initialProduct = null,
+  initialMessage = "",
+}: ProductDetailClientProps) {
+  const [merchant, setMerchant] = useState<PublicMerchant | null>(initialMerchant);
+  const [product, setProduct] = useState<PublicProduct | null>(initialProduct);
+  const [isLoading, setIsLoading] = useState(!initialMerchant && !initialProduct && !initialMessage);
+  const [message, setMessage] = useState(initialMessage);
   const [activeIndex, setActiveIndex] = useState(0);
   const [shareMessage, setShareMessage] = useState("");
   const [isOrderOpen, setIsOrderOpen] = useState(false);
@@ -287,12 +284,17 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
 
   const media = useMemo(() => (product ? buildProductMedia(product) : []), [product]);
   const benefits = product?.key_benefits?.filter(Boolean) ?? [];
+  const faqs = product?.faqs?.filter((faq) => faq.question && faq.answer) ?? [];
   const discountPercent =
     product?.original_price && product.original_price > product.sale_price
       ? Math.round((1 - product.sale_price / product.original_price) * 100)
       : null;
 
   useEffect(() => {
+    if (initialMerchant || initialProduct || initialMessage) {
+      return;
+    }
+
     let isMounted = true;
 
     async function loadProduct() {
@@ -324,7 +326,7 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
       const { data: productData, error: productError } = await supabase
         .from("products")
         .select(
-          "id,merchant_id,name,sale_price,original_price,photo_urls,video_url,short_description,long_description,key_benefits,in_stock",
+          "id,merchant_id,name,sale_price,original_price,photo_urls,video_url,short_description,long_description,key_benefits,faqs,in_stock",
         )
         .eq("id", productId)
         .eq("merchant_id", publicMerchant.id)
@@ -349,7 +351,7 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
     return () => {
       isMounted = false;
     };
-  }, [productId, slug]);
+  }, [initialMerchant, initialMessage, initialProduct, productId, slug]);
 
   function handleTouchStart(event: TouchEvent<HTMLDivElement>) {
     touchStartX.current = event.touches[0].clientX;
@@ -381,25 +383,36 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
     }
 
     const shareText = `${product.name} - ${formatGhsPrice(product.sale_price)}`;
+    const shareUrl = window.location.href;
 
-    if (navigator.share) {
-      await navigator.share({
-        title: product.name,
-        text: shareText,
-        url: window.location.href,
-      });
-      return;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: product.name,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      }
+
+      await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      setShareMessage("Link copied!");
+      window.setTimeout(() => setShareMessage(""), 2000);
+    } catch (error) {
+      if ((error as Error).name === "AbortError") {
+        return;
+      }
+
+      await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      setShareMessage("Link copied!");
+      window.setTimeout(() => setShareMessage(""), 2000);
     }
-
-    await navigator.clipboard.writeText(`${shareText}\n${window.location.href}`);
-    setShareMessage("Link copied.");
-    window.setTimeout(() => setShareMessage(""), 2000);
   }
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-white px-5 text-[#1C1917]">
-        <p className="text-sm font-medium text-[#78716C]">Loading product...</p>
+      <main className="flex min-h-screen items-center justify-center bg-white px-5 text-[#111111]">
+        <p className="text-sm font-medium text-[#888888]">Loading product...</p>
       </main>
     );
   }
@@ -410,7 +423,7 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
     }
 
     return (
-      <main className="flex min-h-screen items-center justify-center bg-white px-5 text-center text-[#1C1917]">
+      <main className="flex min-h-screen items-center justify-center bg-white px-5 text-center text-[#111111]">
         <p className="text-base font-medium">{message || "Product not found."}</p>
       </main>
     );
@@ -421,10 +434,10 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
   }
 
   return (
-    <main className="min-h-screen bg-white pb-28 text-[#1C1917]">
+    <main className="min-h-screen bg-white pb-28 text-[#111111]">
       <section className="relative">
         <div
-          className="relative aspect-square w-full overflow-hidden bg-[#FAF9F7] sm:mx-auto sm:max-w-3xl"
+          className="relative aspect-square w-full overflow-hidden bg-[#F4F4F5]"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
@@ -439,25 +452,19 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
                 </div>
               ))
             ) : (
-              <div className="flex h-full w-full shrink-0 items-center justify-center bg-[#FAF9F7] text-sm font-medium text-[#78716C]">
+              <div className="flex h-full w-full shrink-0 items-center justify-center bg-[#F4F4F5] text-sm font-medium text-[#888888]">
                 No media
               </div>
             )}
           </div>
 
-          {discountPercent ? (
-            <span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[#1C1917] shadow-sm">
-              {discountPercent}% off
-            </span>
-          ) : null}
-
           <button
             aria-label="Share product"
-            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-[#1C1917] shadow-sm"
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-[#E5E5E5] bg-white/95 text-[#111111] shadow-sm"
             type="button"
             onClick={handleShare}
           >
-            <ShareIcon />
+            <Share2 aria-hidden="true" className="h-4 w-4" strokeWidth={1.5} />
           </button>
 
           {media.length > 1 ? (
@@ -480,38 +487,33 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-3xl px-5 py-6">
+      <section className="relative z-10 -mt-6 mx-auto w-full max-w-3xl rounded-t-[28px] bg-white px-5 pb-6 pt-5">
         {shareMessage ? (
-          <p className="mb-4 rounded-md bg-[#EAF7EF] px-3 py-2 text-sm font-medium text-[#0F6B34]">
+          <p className="mb-4 rounded-2xl bg-[#EDFBF3] px-4 py-3.5 text-sm font-medium text-[#0A5C2B]">
             {shareMessage}
           </p>
         ) : null}
 
-        <p className="mb-2 text-sm font-medium text-[#78716C]">
-          {merchant.business_name}
-        </p>
-        <h1 className="text-3xl font-semibold leading-tight">{product.name}</h1>
+        <h1 className="text-[22px] font-bold leading-tight">{product.name}</h1>
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <span className="text-2xl font-semibold">
+          <span className="text-[26px] font-bold leading-none">
             {formatGhsPrice(product.sale_price)}
           </span>
           {product.original_price ? (
-            <span className="text-base text-[#78716C] line-through">
+            <span className="text-[15px] font-bold text-[#BDB9B2] line-through">
               {formatGhsPrice(product.original_price)}
+            </span>
+          ) : null}
+          {discountPercent ? (
+            <span className="rounded-full bg-[#FEF2F2] px-2 py-0.5 text-[10px] font-bold uppercase text-[#B91C1C]">
+              {discountPercent}% off
             </span>
           ) : null}
         </div>
 
         {product.short_description ? (
-          <div className="mt-5 rounded-lg bg-[#EAF7EF] px-4 py-4 text-base font-medium leading-7 text-[#0F6B34]">
+          <div className="mt-5 rounded-2xl bg-[#EDFBF3] px-4 py-4 text-[13.5px] font-medium leading-6 text-[#0A5C2B]">
             {product.short_description}
-          </div>
-        ) : null}
-
-        {merchant.delivery_info ? (
-          <div className="mt-3 flex min-w-0 items-start gap-2 rounded-lg border border-[#E7E4DF] bg-[#FAF9F7] px-4 py-3 text-sm font-medium leading-6 text-[#78716C]">
-            <Truck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
-            <span className="min-w-0 flex-1">{merchant.delivery_info}</span>
           </div>
         ) : null}
 
@@ -519,7 +521,7 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
           <section className="mt-6">
             <ul className="grid gap-3">
               {benefits.map((benefit) => (
-                <li className="flex min-w-0 gap-3 text-base leading-7" key={benefit}>
+                <li className="flex min-w-0 gap-3 text-[13.5px] font-medium leading-6" key={benefit}>
                   <CheckIcon />
                   <span className="min-w-0 flex-1">{benefit}</span>
                 </li>
@@ -528,8 +530,19 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
           </section>
         ) : null}
 
+        {merchant.delivery_info ? (
+          <div className="mt-6 flex min-w-0 items-center gap-2 rounded-2xl border border-[#E5E5E5] bg-white px-4 py-3.5 text-[11px] font-medium leading-5 text-[#555555] shadow-sm">
+            <Truck
+              aria-hidden="true"
+              className="h-3.5 w-3.5 shrink-0 text-[#888888]"
+              strokeWidth={1.5}
+            />
+            <span className="min-w-0 flex-1">{merchant.delivery_info}</span>
+          </div>
+        ) : null}
+
         <a
-          className="mt-7 flex h-12 w-full items-center justify-center rounded-md border border-[#1DA851] px-4 font-medium text-[#1DA851] transition hover:bg-[#EAF7EF]"
+          className="mt-7 flex w-full items-center justify-center rounded-xl border-[1.5px] border-[#25D366] px-4 py-3.5 text-[13px] font-semibold text-[#25D366] transition active:opacity-70"
           href={buildWhatsAppUrl(
             merchant.whatsapp_number,
             `Hi, I have a question about ${product.name}`,
@@ -541,21 +554,47 @@ export function ProductDetailClient({ slug, productId }: ProductDetailClientProp
         </a>
 
         {product.long_description ? (
-          <section className="mt-9 border-t border-[#E7E4DF] pt-7">
-            <p className="mb-3 text-sm font-medium uppercase text-[#78716C]">
+          <section className="mt-9 border-t border-[#E5E5E5] pt-7">
+            <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#888888]">
               About this product
             </p>
-            <div className="whitespace-pre-line text-base leading-8 text-[#1C1917]">
+            <div className="whitespace-pre-line text-sm font-normal leading-7 text-[#111111]">
               {product.long_description}
+            </div>
+          </section>
+        ) : null}
+
+        {faqs.length ? (
+          <section className="mt-9 border-t border-[#E5E5E5] pt-7">
+            <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#888888]">
+              Frequently asked questions
+            </p>
+            <div className="grid gap-3">
+              {faqs.map((faq, index) => (
+                <details
+                  className="group rounded-2xl border border-[#E5E5E5] bg-white"
+                  key={`${faq.question}-${index}`}
+                >
+                  <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-[13px] font-bold">
+                    <span className="min-w-0 flex-1">{faq.question}</span>
+                    <span className="shrink-0 text-[#BBBBBB] transition group-open:rotate-45">
+                      +
+                    </span>
+                  </summary>
+                  <p className="border-t border-[#F4F3F0] px-4 py-4 text-sm font-normal leading-7 text-[#555555]">
+                    {faq.answer}
+                  </p>
+                </details>
+              ))}
             </div>
           </section>
         ) : null}
       </section>
 
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-[#E7E4DF] bg-white p-4">
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-[#E5E5E5] bg-white p-4">
         <div className="mx-auto max-w-3xl">
           <button
-            className="h-12 w-full rounded-md bg-[#1DA851] px-4 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#78716C]"
+            className="w-full rounded-xl bg-[#25D366] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:opacity-40"
             type="button"
             disabled={!product.in_stock}
             onClick={() => setIsOrderOpen(true)}

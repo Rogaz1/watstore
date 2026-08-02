@@ -4,6 +4,22 @@
 :root {
   --background: #ffffff;
   --foreground: #1c1917;
+  --type-photo-badge: 9px;
+  --type-stat-label: 9.5px;
+  --type-status-badge: 10px;
+  --type-eyebrow: 10.5px;
+  --type-meta: 11px;
+  --type-small-ui: 12px;
+  --type-card: 13px;
+  --type-callout: 13.5px;
+  --type-body: 14px;
+  --type-compact-title: 15px;
+  --type-store-heading: 18px;
+  --type-sticky-price: 20px;
+  --type-screen-title: 22px;
+  --type-auth-title: 24px;
+  --type-sale-price: 26px;
+  --type-trial-number: 30px;
 }
 
 @theme inline {

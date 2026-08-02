@@ -70,11 +70,11 @@ function AppLogoIcon() {
 function LoginBrandHeader() {
   return (
     <div className="text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1C1917] text-white shadow-sm">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#111111] text-white shadow-sm">
         <AppLogoIcon />
       </div>
       <h1 className="mt-4 text-[24px] font-bold leading-none">Watstore</h1>
-      <p className="mx-auto mt-3 max-w-full text-sm font-medium leading-5 text-[#78716C]">
+      <p className="mx-auto mt-3 max-w-full text-sm font-medium leading-5 text-[#888888]">
         Your WhatsApp store, beautifully managed.
       </p>
     </div>
@@ -135,7 +135,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#FFFFFF] px-6 py-12 text-[#1C1917]">
+    <main className="flex min-h-screen items-center justify-center bg-[#FFFFFF] px-6 py-12 text-[#111111]">
       <section className="w-full" style={{ maxWidth: isSignup ? "20rem" : "18.75rem" }}>
         {isSignup ? (
           <LoginBrandHeader />
@@ -143,13 +143,13 @@ export function AuthForm({ mode }: AuthFormProps) {
           <LoginBrandHeader />
         )}
 
-        <div className={`${isSignup ? "mt-5" : "mt-8"} rounded-xl border border-[#E7E4DF] bg-white p-6 shadow-sm`}>
+        <div className={`${isSignup ? "mt-5" : "mt-8"} rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-sm`}>
           {isSignup ? (
             <div className="mb-5 text-center">
-              <h1 className="text-[18px] font-bold leading-tight">
+              <h1 className="text-[22px] font-bold leading-tight">
                 Create an account
               </h1>
-              <p className="mt-2 text-xs font-medium text-[#78716C]">
+              <p className="mt-2 text-sm font-medium leading-5 text-[#888888]">
                 Enter your details to set up your store
               </p>
             </div>
@@ -157,13 +157,13 @@ export function AuthForm({ mode }: AuthFormProps) {
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold">
+              <span className="mb-2 block text-xs font-semibold">
                 Email Address
               </span>
-              <div className="flex h-12 items-center gap-3 rounded-lg border border-[#E7E4DF] bg-[#FAF9F7] px-3 text-[#78716C] transition focus-within:border-[#1C1917] focus-within:ring-2 focus-within:ring-[#1C1917]/10">
+              <div className="flex h-12 items-center gap-3 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10">
                 {isSignup ? <EnvelopeIcon /> : null}
                 <input
-                  className="h-full min-w-0 flex-1 bg-transparent text-[#1C1917] outline-none placeholder:text-[#78716C]"
+                  className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-[#111111] outline-none placeholder:text-[#888888]"
                   type="email"
                   autoComplete="email"
                   placeholder="name@business.com"
@@ -175,21 +175,21 @@ export function AuthForm({ mode }: AuthFormProps) {
             </label>
 
             <label className="block">
-              <span className="mb-2 flex min-w-0 items-center justify-between gap-3 text-sm font-semibold">
+              <span className="mb-2 flex min-w-0 items-center justify-between gap-3 text-xs font-semibold">
                 <span className="min-w-0 flex-1 truncate">Password</span>
                 {!isSignup ? (
                   <Link
-                    className="shrink-0 text-xs font-semibold text-[#1DA851] underline-offset-4 hover:underline"
+                    className="shrink-0 text-xs font-semibold text-[#25D366] underline-offset-4 hover:underline"
                     href="/forgot-password"
                   >
                     Forgot password?
                   </Link>
                 ) : null}
               </span>
-              <div className="flex h-12 items-center gap-3 rounded-lg border border-[#E7E4DF] bg-[#FAF9F7] px-3 text-[#78716C] transition focus-within:border-[#1C1917] focus-within:ring-2 focus-within:ring-[#1C1917]/10">
+              <div className="flex h-12 items-center gap-3 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10">
                 {isSignup ? <LockIcon /> : null}
                 <input
-                  className="h-full min-w-0 flex-1 bg-transparent text-[#1C1917] outline-none placeholder:text-[#78716C]"
+                  className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-[#111111] outline-none placeholder:text-[#888888]"
                   type="password"
                   autoComplete={isSignup ? "new-password" : "current-password"}
                   minLength={6}
@@ -206,13 +206,13 @@ export function AuthForm({ mode }: AuthFormProps) {
             </label>
 
             {message ? (
-              <p className="rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm text-[#B94A2C]">
+              <p className="rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 py-3.5 text-sm text-[#B91C1C]">
                 {message}
               </p>
             ) : null}
 
             <button
-              className="h-12 w-full rounded-full bg-[linear-gradient(180deg,#34302C_0%,#1C1917_42%,#1C1917_100%)] px-4 font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_10px_22px_rgba(28,25,23,0.14)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-xl bg-[#111111] px-4 py-[15px] text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
               type="submit"
               disabled={isLoading}
             >
@@ -224,10 +224,10 @@ export function AuthForm({ mode }: AuthFormProps) {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-[#78716C]">
+          <p className="mt-6 text-center text-sm text-[#888888]">
             {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
             <Link
-              className="font-semibold text-[#1DA851] underline-offset-4 hover:underline"
+              className="font-semibold text-[#25D366] underline-offset-4 hover:underline"
               href={isSignup ? "/login" : "/signup"}
             >
               {isSignup ? "Log in" : "Sign up"}

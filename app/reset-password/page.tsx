@@ -47,11 +47,11 @@ function AppLogoIcon() {
 function AuthBrandHeader() {
   return (
     <div className="text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1C1917] text-white shadow-sm">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#111111] text-white shadow-sm">
         <AppLogoIcon />
       </div>
       <h1 className="mt-4 text-[24px] font-bold leading-none">Watstore</h1>
-      <p className="mx-auto mt-3 max-w-full text-sm font-medium leading-5 text-[#78716C]">
+      <p className="mx-auto mt-3 max-w-full text-sm font-medium leading-5 text-[#888888]">
         Your WhatsApp store, beautifully managed.
       </p>
     </div>
@@ -156,29 +156,29 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#FFFFFF] px-6 py-12 text-[#1C1917]">
+    <main className="flex min-h-screen items-center justify-center bg-[#FFFFFF] px-6 py-12 text-[#111111]">
       <section className="w-full" style={{ maxWidth: "18.75rem" }}>
         <AuthBrandHeader />
 
-        <div className="mt-8 rounded-xl border border-[#E7E4DF] bg-white p-6 shadow-sm">
+        <div className="mt-8 rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-sm">
           {resetState === "checking" ? (
-            <p className="py-4 text-center text-sm font-medium text-[#78716C]">
+            <p className="py-4 text-center text-sm font-medium text-[#888888]">
               Checking reset link...
             </p>
           ) : null}
 
           {resetState === "invalid" ? (
             <div className="py-3 text-center">
-              <h2 className="text-lg font-bold">
+              <h2 className="text-[22px] font-bold leading-tight">
                 This password reset link is invalid or has expired
               </h2>
               {message ? (
-                <p className="mt-2 text-sm font-medium text-[#B94A2C]">
+                <p className="mt-2 text-sm font-medium text-[#B91C1C]">
                   {message}
                 </p>
               ) : null}
               <Link
-                className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-[linear-gradient(180deg,#34302C_0%,#1C1917_42%,#1C1917_100%)] px-4 font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_10px_22px_rgba(28,25,23,0.14)] transition hover:opacity-95"
+                className="mt-6 flex w-full items-center justify-center rounded-xl bg-[#111111] px-4 py-[15px] text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99]"
                 href="/forgot-password"
               >
                 Request a new link
@@ -188,12 +188,12 @@ export default function ResetPasswordPage() {
 
           {resetState === "success" ? (
             <div className="py-3 text-center">
-              <h2 className="text-lg font-bold">Password updated</h2>
-              <p className="mt-2 text-sm font-medium text-[#78716C]">
+              <h2 className="text-[22px] font-bold leading-tight">Password updated</h2>
+              <p className="mt-2 text-sm font-medium text-[#888888]">
                 Your password has been reset. Redirecting you to login...
               </p>
               <Link
-                className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-[linear-gradient(180deg,#34302C_0%,#1C1917_42%,#1C1917_100%)] px-4 font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_10px_22px_rgba(28,25,23,0.14)] transition hover:opacity-95"
+                className="mt-6 flex w-full items-center justify-center rounded-xl bg-[#111111] px-4 py-[15px] text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99]"
                 href="/login"
               >
                 Continue to login
@@ -204,21 +204,21 @@ export default function ResetPasswordPage() {
           {resetState === "valid" ? (
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="text-center">
-                <h2 className="text-[18px] font-bold leading-tight">
+                <h2 className="text-[22px] font-bold leading-tight">
                   Reset your password
                 </h2>
-                <p className="mt-2 text-xs font-medium leading-5 text-[#78716C]">
+                <p className="mt-2 text-sm font-medium leading-5 text-[#888888]">
                   Choose a new password for your account.
                 </p>
               </div>
               <label className="block">
-                <span className="mb-2 block text-sm font-semibold">
+                <span className="mb-2 block text-xs font-semibold">
                   New Password
                 </span>
-                <div className="flex h-12 items-center gap-3 rounded-lg border border-[#E7E4DF] bg-[#FAF9F7] px-3 text-[#78716C] transition focus-within:border-[#1C1917] focus-within:ring-2 focus-within:ring-[#1C1917]/10">
+                <div className="flex h-12 items-center gap-3 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10">
                   <LockIcon />
                   <input
-                    className="h-full min-w-0 flex-1 bg-transparent text-[#1C1917] outline-none placeholder:text-[#78716C]"
+                    className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-[#111111] outline-none placeholder:text-[#888888]"
                     type="password"
                     autoComplete="new-password"
                     minLength={6}
@@ -231,13 +231,13 @@ export default function ResetPasswordPage() {
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-semibold">
+                <span className="mb-2 block text-xs font-semibold">
                   Confirm New Password
                 </span>
-                <div className="flex h-12 items-center gap-3 rounded-lg border border-[#E7E4DF] bg-[#FAF9F7] px-3 text-[#78716C] transition focus-within:border-[#1C1917] focus-within:ring-2 focus-within:ring-[#1C1917]/10">
+                <div className="flex h-12 items-center gap-3 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10">
                   <LockIcon />
                   <input
-                    className="h-full min-w-0 flex-1 bg-transparent text-[#1C1917] outline-none placeholder:text-[#78716C]"
+                    className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-[#111111] outline-none placeholder:text-[#888888]"
                     type="password"
                     autoComplete="new-password"
                     minLength={6}
@@ -250,16 +250,16 @@ export default function ResetPasswordPage() {
               </label>
 
               {message ? (
-                <p className="rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm text-[#B94A2C]">
+                <p className="rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 py-3.5 text-sm text-[#B91C1C]">
                   {message}
                 </p>
               ) : null}
 
               <button
-                className={`h-12 w-full rounded-full px-4 font-bold text-white transition disabled:cursor-not-allowed ${
+                className={`w-full rounded-xl px-4 py-[15px] text-sm font-semibold text-white transition active:scale-[0.99] disabled:cursor-not-allowed ${
                   canSubmit
-                    ? "bg-[linear-gradient(180deg,#34302C_0%,#1C1917_42%,#1C1917_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_10px_22px_rgba(28,25,23,0.14)] hover:opacity-95"
-                    : "bg-[#78716C] opacity-55"
+                    ? "bg-[#111111] hover:bg-[#222222]"
+                    : "bg-[#111111] opacity-40"
                 }`}
                 type="submit"
                 disabled={!canSubmit}

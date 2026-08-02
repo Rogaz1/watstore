@@ -5,10 +5,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useMemo, useState } from "react";
+import {
+  Check,
+  ChevronLeft,
+  GripVertical,
+  Plus,
+  X,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { ExpiredAccessScreen } from "./ExpiredAccessScreen";
+import { compressImageForUpload } from "./imageCompression";
 import { getMerchantForUser } from "./merchantProfile";
-import { Merchant, Product } from "./productTypes";
+import { Merchant, Product, ProductFaq } from "./productTypes";
 import {
   getSubscriptionAccess,
   refreshMerchantSubscription,
@@ -17,6 +25,7 @@ import { useRequireUser } from "./useRequireUser";
 
 const PRODUCT_MEDIA_BUCKET = "product-media";
 const MAX_BENEFITS = 5;
+const MAX_FAQS = 5;
 
 type MediaItem = {
   id: string;
@@ -55,9 +64,13 @@ export function ProductForm({ productId }: ProductFormProps) {
   const [keyBenefits, setKeyBenefits] = useState<string[]>([]);
   const [benefitInput, setBenefitInput] = useState("");
   const [longDescription, setLongDescription] = useState("");
+  const [faqs, setFaqs] = useState<ProductFaq[]>([]);
+  const [faqQuestion, setFaqQuestion] = useState("");
+  const [faqAnswer, setFaqAnswer] = useState("");
   const [inStock, setInStock] = useState(true);
   const [isLoading, setIsLoading] = useState(Boolean(productId));
   const [isSaving, setIsSaving] = useState(false);
+  const [isCompressingImages, setIsCompressingImages] = useState(false);
   const [message, setMessage] = useState("");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
@@ -110,7 +123,7 @@ export function ProductForm({ productId }: ProductFormProps) {
       const { data: product, error: productError } = await supabase
         .from("products")
         .select(
-          "id,merchant_id,name,sale_price,original_price,photo_urls,video_url,short_description,long_description,key_benefits,in_stock",
+          "id,merchant_id,name,sale_price,original_price,photo_urls,video_url,short_description,long_description,key_benefits,faqs,in_stock",
         )
         .eq("id", productId)
         .eq("merchant_id", refreshedMerchant.id)
@@ -153,6 +166,11 @@ export function ProductForm({ productId }: ProductFormProps) {
       setShortDescription(loadedProduct.short_description ?? "");
       setKeyBenefits((loadedProduct.key_benefits ?? []).filter(Boolean).slice(0, MAX_BENEFITS));
       setLongDescription(loadedProduct.long_description ?? "");
+      setFaqs(
+        (loadedProduct.faqs ?? [])
+          .filter((faq) => faq?.question?.trim() && faq?.answer?.trim())
+          .slice(0, MAX_FAQS),
+      );
       setInStock(loadedProduct.in_stock);
       setIsLoading(false);
     }
@@ -164,16 +182,32 @@ export function ProductForm({ productId }: ProductFormProps) {
     };
   }, [productId, router, userId]);
 
-  function handleImageFiles(event: ChangeEvent<HTMLInputElement>) {
+  async function handleImageFiles(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
-    setImages((current) => [...current, ...files.map(makeMediaItem)]);
     event.target.value = "";
-  }
 
-  function handleVideoFile(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    setVideo(file ? makeMediaItem(file) : null);
-    event.target.value = "";
+    if (!files.length) {
+      return;
+    }
+
+    setIsCompressingImages(true);
+    setMessage("");
+
+    try {
+      const compressedFiles = await Promise.all(
+        files.map((file) => compressImageForUpload(file)),
+      );
+      setImages((current) => [
+        ...current,
+        ...compressedFiles.map(makeMediaItem),
+      ]);
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Unable to compress image.",
+      );
+    } finally {
+      setIsCompressingImages(false);
+    }
   }
 
   function moveImage(fromIndex: number, toIndex: number) {
@@ -203,6 +237,28 @@ export function ProductForm({ productId }: ProductFormProps) {
 
     event.preventDefault();
     addBenefit();
+  }
+
+  function addFaq() {
+    const question = faqQuestion.trim();
+    const answer = faqAnswer.trim();
+
+    if (!question || !answer || faqs.length >= MAX_FAQS) {
+      return;
+    }
+
+    setFaqs((current) => [...current, { question, answer }]);
+    setFaqQuestion("");
+    setFaqAnswer("");
+  }
+
+  function handleFaqKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== "Enter") {
+      return;
+    }
+
+    event.preventDefault();
+    addFaq();
   }
 
   async function uploadMedia(item: MediaItem, merchantId: string) {
@@ -253,6 +309,12 @@ export function ProductForm({ productId }: ProductFormProps) {
         short_description: shortDescription.trim() || null,
         key_benefits: keyBenefits.map((benefit) => benefit.trim()).filter(Boolean),
         long_description: longDescription.trim() || null,
+        faqs: faqs
+          .map((faq) => ({
+            question: faq.question.trim(),
+            answer: faq.answer.trim(),
+          }))
+          .filter((faq) => faq.question && faq.answer),
         in_stock: inStock,
       };
 
@@ -282,8 +344,8 @@ export function ProductForm({ productId }: ProductFormProps) {
 
   if (isCheckingAuth || isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#FFFFFF] px-6 text-[#1C1917]">
-        <p className="text-sm font-medium text-[#78716C]">Loading product...</p>
+      <main className="flex min-h-screen items-center justify-center bg-[#FFFFFF] px-6 text-[#111111]">
+        <p className="text-sm font-medium text-[#888888]">Loading product...</p>
       </main>
     );
   }
@@ -302,192 +364,166 @@ export function ProductForm({ productId }: ProductFormProps) {
   }
 
   return (
-    <main className="min-h-screen bg-[#FFFFFF] text-[#1C1917]">
-      <header className="sticky top-0 z-10 border-b border-[#E7E4DF] bg-white">
-        <div className="mx-auto flex w-full max-w-5xl min-w-0 items-center justify-between gap-4 px-6 py-5">
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium uppercase text-[#78716C]">
-              Watstore
-            </p>
-            <h1 className="truncate text-2xl font-semibold">
-              {isEditing ? "Edit Product" : "Add Product"}
-            </h1>
-          </div>
+    <main className="min-h-screen bg-[#FFFFFF] text-[#111111]">
+      <header className="sticky top-0 z-10 border-b border-[#F0F0F0] bg-white">
+        <div className="mx-auto flex h-[76px] w-full max-w-xl min-w-0 items-center gap-3 px-5">
           <Link
-            className="shrink-0 rounded-md border border-[#E7E4DF] px-4 py-2 text-sm font-medium transition hover:border-[#1C1917]"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#111111] transition hover:bg-[#F8F8F8]"
             href="/dashboard"
+            aria-label="Back to dashboard"
           >
-            Cancel
+            <ChevronLeft aria-hidden="true" className="h-5 w-5" strokeWidth={1.5} />
           </Link>
+          <h1 className="min-w-0 flex-1 truncate text-[15px] font-bold">
+            {isEditing ? "Edit product" : "Add product"}
+          </h1>
         </div>
       </header>
 
       <form
-        className="mx-auto grid w-full max-w-5xl gap-6 px-6 py-10"
+        className="mx-auto grid w-full max-w-xl gap-5 px-5 py-6"
         onSubmit={handleSubmit}
       >
-        <label className="block">
-          <span className="mb-2 block text-sm font-medium">Name</span>
-          <input
-            className="h-12 w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            required
-          />
-        </label>
-
-        <div className="grid gap-5 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium">Sale price</span>
-            <input
-              className="h-12 w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
-              type="number"
-              min="0"
-              step="0.01"
-              value={salePrice}
-              onChange={(event) => setSalePrice(event.target.value)}
-              required
-            />
-          </label>
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium">
-              Original price <span className="text-[#78716C]">(optional)</span>
-            </span>
-            <input
-              className="h-12 w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
-              type="number"
-              min="0"
-              step="0.01"
-              value={originalPrice}
-              onChange={(event) => setOriginalPrice(event.target.value)}
-            />
-          </label>
-        </div>
-
-        <section className="rounded-lg border border-[#E7E4DF] bg-white p-5">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold">Photo/video upload</h2>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium">
-                Product photos
+        <section>
+          <h2 className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#666666]">
+            Product Images
+          </h2>
+          <div className="-mx-1 flex min-w-0 gap-3 overflow-x-auto px-1 pb-2">
+            <label className="flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[#BBBBBB] bg-white text-center transition hover:border-[#111111]">
+              <Plus aria-hidden="true" className="h-5 w-5 text-[#25D366]" strokeWidth={1.8} />
+              <span className="mt-2 text-[10px] font-semibold uppercase text-[#888888]">
+                Add photo
               </span>
               <input
-                className="block w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-3 text-sm"
+                className="sr-only"
                 type="file"
                 accept="image/*"
                 multiple
                 onChange={handleImageFiles}
               />
             </label>
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium">
-                Product video <span className="text-[#78716C]">(optional)</span>
-              </span>
-              <input
-                className="block w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-3 text-sm"
-                type="file"
-                accept="video/*"
-                onChange={handleVideoFile}
-              />
-            </label>
-          </div>
 
-          {images.length ? (
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {images.map((image, index) => (
-                <div
-                  className="group relative aspect-square overflow-hidden rounded-md border border-[#E7E4DF] bg-[#FAF9F7]"
-                  draggable
-                  key={image.id}
-                  onDragStart={() => setDraggedIndex(index)}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={() => {
-                    if (draggedIndex !== null && draggedIndex !== index) {
-                      moveImage(draggedIndex, index);
-                    }
-                    setDraggedIndex(null);
-                  }}
-                >
-                  <img
-                    className="h-full w-full object-cover"
-                    src={image.previewUrl}
-                    alt={name || "Product photo"}
-                  />
-                  {index === 0 ? (
-                    <span className="absolute bottom-2 left-2 rounded-full bg-[#1C1917]/80 px-2 py-1 text-[10px] font-semibold text-white">
-                      Cover
-                    </span>
-                  ) : null}
-                  <div className="absolute inset-x-2 top-2 flex justify-end opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
-                    <button
-                      aria-label="Remove photo"
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-lg leading-none text-[#B94A2C] shadow-sm"
-                      type="button"
-                      onClick={() =>
-                        setImages((current) =>
-                          current.filter((item) => item.id !== image.id),
-                        )
-                      }
-                    >
-                      x
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : null}
-          {images.length ? (
-            <p className="mt-3 text-xs text-[#78716C]">
-              Drag to reorder. First photo is cover.
-            </p>
-          ) : null}
-
-          {video ? (
-            <div className="mt-5 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] p-3">
-              <video
-                className="max-h-64 w-full rounded-md bg-black"
-                controls
-                src={video.previewUrl}
-              />
-              <button
-                className="mt-3 text-sm font-medium text-[#B94A2C] hover:underline"
-                type="button"
-                onClick={() => setVideo(null)}
+            {images.map((image, index) => (
+              <div
+                className="group relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-[#E5E5E5] bg-[#F4F4F5] shadow-sm"
+                draggable
+                key={image.id}
+                onDragStart={() => setDraggedIndex(index)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => {
+                  if (draggedIndex !== null && draggedIndex !== index) {
+                    moveImage(draggedIndex, index);
+                  }
+                  setDraggedIndex(null);
+                }}
               >
-                Remove video
-              </button>
-            </div>
+                <img
+                  className="h-full w-full object-cover"
+                  src={image.previewUrl}
+                  alt={name || "Product photo"}
+                />
+                {index === 0 ? (
+                  <span className="absolute left-2 top-2 rounded-full bg-[#25D366] px-2 py-0.5 text-[9px] font-bold text-white">
+                    Main
+                  </span>
+                ) : null}
+                <span className="absolute bottom-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/95 text-[#888888] shadow-sm">
+                  <GripVertical aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </span>
+                <button
+                  aria-label="Remove photo"
+                  className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/95 text-[#111111] shadow-sm transition hover:text-[#EF4444]"
+                  type="button"
+                  onClick={() =>
+                    setImages((current) =>
+                      current.filter((item) => item.id !== image.id),
+                    )
+                  }
+                >
+                  <X aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </button>
+              </div>
+            ))}
+          </div>
+          <p className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-[#888888]">
+            <GripVertical aria-hidden="true" className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
+            <span className="min-w-0 flex-1">
+              Drag items to reorder. First item is your cover.
+            </span>
+          </p>
+          {isCompressingImages ? (
+            <p className="mt-2 text-xs font-semibold text-[#888888]">
+              Compressing image...
+            </p>
           ) : null}
         </section>
 
         <label className="block">
-          <span className="mb-2 block text-sm font-medium">
+          <span className="mb-2 block text-[13px] font-semibold">Product name</span>
+          <input
+            className="h-12 w-full rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
+            placeholder="e.g. Ankara Print Wrap Dress"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            required
+          />
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block min-w-0">
+            <span className="mb-2 block text-[13px] font-semibold">Sale price</span>
+            <input
+              className="h-12 w-full rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="18500"
+              value={salePrice}
+              onChange={(event) => setSalePrice(event.target.value)}
+              required
+            />
+          </label>
+          <label className="block min-w-0">
+            <span className="mb-2 block text-[13px] font-semibold">
+              Original price <span className="text-[#888888]">(optional)</span>
+            </span>
+            <input
+              className="h-12 w-full rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="22000"
+              value={originalPrice}
+              onChange={(event) => setOriginalPrice(event.target.value)}
+            />
+          </label>
+        </div>
+
+        <label className="block">
+          <span className="mb-2 block text-[13px] font-semibold">
             Short description
           </span>
           <textarea
-            className="min-h-28 w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
+            className="min-h-20 w-full resize-none rounded-2xl border-0 bg-[#F4F4F5] px-4 py-3.5 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
+            placeholder="One or two sentences for the product callout box."
             value={shortDescription}
             onChange={(event) => setShortDescription(event.target.value)}
           />
         </label>
 
         <section>
-          <h2 className="mb-2 text-sm font-medium">Key benefits</h2>
+          <h2 className="mb-2 text-[13px] font-semibold">Key Benefits or Highlights</h2>
           <div className="grid gap-2">
             {keyBenefits.map((benefit, index) => (
               <div
-                className="flex min-w-0 items-center gap-3 rounded-md bg-[#FAF9F7] px-3 py-3 text-sm"
+                className="flex min-w-0 items-center gap-3 rounded-2xl bg-[#F4F4F5] px-4 py-3.5 text-[13.5px] font-medium"
                 key={`${benefit}-${index}`}
               >
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1DA851] text-xs font-bold text-white">
-                  ✓
-                </span>
+                <Check aria-hidden="true" className="h-4 w-4 shrink-0 text-[#BBBBBB]" strokeWidth={1.5} />
                 <span className="min-w-0 flex-1">{benefit}</span>
                 <button
                   aria-label="Remove benefit"
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-lg leading-none text-[#78716C] hover:text-[#B94A2C]"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#BBBBBB] transition hover:text-[#EF4444]"
                   type="button"
                   onClick={() =>
                     setKeyBenefits((current) =>
@@ -495,13 +531,13 @@ export function ProductForm({ productId }: ProductFormProps) {
                     )
                   }
                 >
-                  x
+                  <X aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={1.5} />
                 </button>
               </div>
             ))}
             <div className="flex min-w-0 gap-2">
               <input
-                className="h-11 min-w-0 flex-1 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
+                className="h-11 min-w-0 flex-1 rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
                 placeholder="Add a benefit and press Enter"
                 value={benefitInput}
                 onChange={(event) => setBenefitInput(event.target.value)}
@@ -509,7 +545,7 @@ export function ProductForm({ productId }: ProductFormProps) {
                 disabled={keyBenefits.length >= MAX_BENEFITS}
               />
               <button
-                className="h-11 shrink-0 rounded-md bg-[#1C1917] px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-[#78716C]"
+                className="h-11 shrink-0 rounded-2xl bg-[#111111] px-4 text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
                 type="button"
                 disabled={keyBenefits.length >= MAX_BENEFITS || !benefitInput.trim()}
                 onClick={addBenefit}
@@ -517,57 +553,143 @@ export function ProductForm({ productId }: ProductFormProps) {
                 Add
               </button>
             </div>
-            <p className="text-xs text-[#78716C]">
-              {keyBenefits.length}/{MAX_BENEFITS} benefits added.
+            <p className="text-xs font-medium text-[#888888]">
+              {keyBenefits.length}/{MAX_BENEFITS} highlights added.
             </p>
           </div>
         </section>
 
         <label className="block">
-          <span className="mb-2 block text-sm font-medium">
+          <span className="mb-2 block text-[13px] font-semibold">
             Long description
           </span>
           <textarea
-            className="min-h-44 w-full rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-3 outline-none transition focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
+            className="min-h-36 w-full resize-none rounded-2xl border-0 bg-[#F4F4F5] px-4 py-3.5 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
+            placeholder="Full product description. Separate paragraphs with a blank line."
             value={longDescription}
             onChange={(event) => setLongDescription(event.target.value)}
           />
         </label>
 
-        <label className="flex min-w-0 items-center justify-between gap-4 rounded-lg border border-[#E7E4DF] bg-white p-5">
+        <section>
+          <h2 className="mb-2 text-[13px] font-semibold">FAQs</h2>
+          <div className="grid gap-2">
+            {faqs.map((faq, index) => (
+              <div
+                className="grid gap-1 rounded-2xl bg-[#F4F4F5] px-4 py-3.5 text-[13px] font-medium"
+                key={`${faq.question}-${index}`}
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="shrink-0 font-bold text-[#111111]">Q</span>
+                  <p className="min-w-0 flex-1">{faq.question}</p>
+                  <button
+                    aria-label="Remove FAQ"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#BBBBBB] transition hover:text-[#EF4444]"
+                    type="button"
+                    onClick={() =>
+                      setFaqs((current) =>
+                        current.filter((_, itemIndex) => itemIndex !== index),
+                      )
+                    }
+                  >
+                    <X aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  </button>
+                </div>
+                <div className="flex min-w-0 items-start gap-3 text-[#555555]">
+                  <span className="shrink-0 font-bold text-[#888888]">A</span>
+                  <p className="min-w-0 flex-1">{faq.answer}</p>
+                </div>
+              </div>
+            ))}
+            <div className="grid gap-2">
+              <input
+                className="h-11 min-w-0 rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
+                placeholder="Question"
+                value={faqQuestion}
+                onChange={(event) => setFaqQuestion(event.target.value)}
+                onKeyDown={handleFaqKeyDown}
+                disabled={faqs.length >= MAX_FAQS}
+              />
+              <div className="flex min-w-0 gap-2">
+                <input
+                  className="h-11 min-w-0 flex-1 rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
+                  placeholder="Answer"
+                  value={faqAnswer}
+                  onChange={(event) => setFaqAnswer(event.target.value)}
+                  onKeyDown={handleFaqKeyDown}
+                  disabled={faqs.length >= MAX_FAQS}
+                />
+                <button
+                  className="h-11 shrink-0 rounded-2xl bg-[#111111] px-4 text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+                  type="button"
+                  disabled={
+                    faqs.length >= MAX_FAQS ||
+                    !faqQuestion.trim() ||
+                    !faqAnswer.trim()
+                  }
+                  onClick={addFaq}
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+            <p className="text-xs font-medium text-[#888888]">
+              {faqs.length}/{MAX_FAQS} FAQs added.
+            </p>
+          </div>
+        </section>
+
+        <label className="flex min-w-0 items-center justify-between gap-4 rounded-2xl bg-white py-1">
           <span className="min-w-0 flex-1">
-            <span className="block font-medium">In stock</span>
-            <span className="block text-sm text-[#78716C]">
-              Available for customers once storefront pages are added.
+            <span className="block text-[13px] font-semibold">In stock</span>
+            <span className="block text-xs font-medium text-[#888888]">
+              Turn off to show &quot;Out of stock&quot; on storefront
             </span>
           </span>
-          <input
-            className="h-5 w-5 shrink-0 accent-[#1C1917]"
-            type="checkbox"
-            checked={inStock}
-            onChange={(event) => setInStock(event.target.checked)}
-          />
+          <button
+            aria-pressed={inStock}
+            className={`flex h-5 w-10 shrink-0 items-center rounded-full p-0.5 transition ${
+              inStock ? "bg-[#25D366]" : "bg-[#E5E5E5]"
+            }`}
+            type="button"
+            onClick={() => setInStock((current) => !current)}
+          >
+            <span
+              className={`h-4 w-4 rounded-full bg-white shadow transition ${
+                inStock ? "translate-x-[20px]" : "translate-x-0"
+              }`}
+            />
+          </button>
         </label>
 
+        <p className="text-xs font-medium leading-5 text-[#888888]">
+          Tip: Products with at least 3 high-quality photos and clear benefits
+          lists sell 45% faster.
+        </p>
+
         {message ? (
-          <p className="rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm text-[#B94A2C]">
+          <p className="rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 py-3.5 text-sm text-[#B91C1C]">
             {message}
           </p>
         ) : null}
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <div className="grid grid-cols-2 gap-3 pb-4">
           <Link
-            className="flex h-12 items-center justify-center rounded-md border border-[#E7E4DF] px-5 font-medium transition hover:border-[#1C1917]"
+            className="flex items-center justify-center rounded-2xl border border-[#E5E5E5] px-5 py-[15px] text-sm font-semibold transition hover:bg-[#F8F8F8]"
             href="/dashboard"
           >
             Cancel
           </Link>
           <button
-            className="h-12 rounded-md bg-[#1C1917] px-5 font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#78716C]"
+            className="rounded-2xl bg-[#111111] px-5 py-[15px] text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
             type="submit"
-            disabled={isSaving || !canSave}
+            disabled={isSaving || isCompressingImages || !canSave}
           >
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving
+              ? "Saving..."
+              : isCompressingImages
+                ? "Compressing..."
+                : "Save product"}
           </button>
         </div>
       </form>

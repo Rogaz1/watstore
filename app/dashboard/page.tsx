@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { ExpiredAccessScreen } from "../components/ExpiredAccessScreen";
+import { compressImageForUpload } from "../components/imageCompression";
 import { getMerchantForUser } from "../components/merchantProfile";
 import {
   formatGhsPrice,
@@ -90,18 +91,18 @@ function cleanFileName(name: string) {
 
 function homeStatusClasses(status: OrderStatus) {
   if (status === "pending") {
-    return "border-[#C2780C] bg-white text-[#C2780C]";
+    return "border-[#F59E0B] bg-transparent text-[#B45309]";
   }
 
   if (status === "paid") {
-    return "border-[#1DA851] bg-[#1DA851] text-white";
+    return "border-transparent bg-[#EFF6FF] text-[#1D4ED8]";
   }
 
   if (status === "fulfilled") {
-    return "border-[#1C1917] bg-[#1C1917] text-white";
+    return "border-transparent bg-[#F0FDF4] text-[#15803D]";
   }
 
-  return "border-[#B94A2C] bg-[#FAF9F7] text-[#B94A2C]";
+  return "border-transparent bg-[#FEF2F2] text-[#B91C1C]";
 }
 
 function formatRelativeOrderDate(value: string) {
@@ -173,7 +174,7 @@ function buildPlanWhatsAppUrl(
 
 function SettingsFieldIcon({ children }: { children: ReactNode }) {
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center text-[#78716C]">
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center text-[#888888]">
       {children}
     </span>
   );
@@ -187,8 +188,8 @@ function SettingsSectionTitle({
   children: ReactNode;
 }) {
   return (
-    <h2 className="flex min-w-0 items-center gap-2 text-lg font-bold">
-      <span className="shrink-0 text-[#1C1917]">{icon}</span>
+    <h2 className="flex min-w-0 items-center gap-2 text-[18px] font-bold">
+      <span className="shrink-0 text-[#1A1A18]">{icon}</span>
       <span className="min-w-0 flex-1 truncate">{children}</span>
     </h2>
   );
@@ -272,11 +273,11 @@ function StatCard({
   highlight?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-[#E7E4DF] bg-white px-3 py-3 shadow-[0_8px_18px_rgba(28,25,23,0.06)]">
-      <p className="text-[10px] font-bold uppercase text-[#78716C]">{label}</p>
+    <div className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
+      <p className="text-[9.5px] font-bold uppercase tracking-[0.08em] text-[#888888]">{label}</p>
       <p
         className={`mt-1 text-[22px] font-bold leading-none ${
-          highlight ? "text-[#1DA851]" : "text-[#1C1917]"
+          highlight ? "text-[#25D366]" : "text-[#1A1A18]"
         }`}
       >
         {value}
@@ -295,21 +296,21 @@ function HomeRecentOrderCard({
   const thumbnail = order.product?.photo_urls?.[0];
 
   return (
-    <article className="rounded-xl border border-[#E7E4DF] bg-white px-4 py-3 shadow-[0_5px_16px_rgba(28,25,23,0.04)]">
+    <article className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="flex min-w-0 items-center gap-1.5 text-[12px] font-bold">
-            <User aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[#78716C]" />
+          <p className="flex min-w-0 items-center gap-1.5 text-[13px] font-bold">
+            <User aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[#888888]" />
             <span className="min-w-0 flex-1 truncate">{order.customer_name}</span>
           </p>
         </div>
         <div className="flex shrink-0 items-center justify-end gap-2">
-          <span className="hidden shrink-0 items-center gap-1 text-[11px] font-medium text-[#78716C] min-[360px]:inline-flex">
+          <span className="hidden shrink-0 items-center gap-1 text-[11px] font-medium text-[#888888] min-[360px]:inline-flex">
             <Calendar aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
             {formatRelativeOrderDate(order.created_at)}
           </span>
           <span
-            className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold capitalize leading-none ${homeStatusClasses(
+            className={`shrink-0 rounded-full border-[1.5px] px-3.5 py-1.5 text-[10px] font-semibold capitalize leading-none ${homeStatusClasses(
               order.status,
             )}`}
           >
@@ -318,8 +319,8 @@ function HomeRecentOrderCard({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center gap-3 border-b border-[#E7E4DF] pb-3">
-        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-[#E7E4DF] bg-[#FAF9F7]">
+      <div className="mt-3 flex items-center gap-3 border-b border-[#EDECEA] pb-3">
+        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-[#EDECEA] bg-[#F7F5F2]">
           {thumbnail ? (
             <img
               className="h-full w-full object-cover"
@@ -327,28 +328,28 @@ function HomeRecentOrderCard({
               alt={order.product?.name ?? "Ordered product"}
             />
           ) : (
-            <span className="flex h-full w-full items-center justify-center text-[9px] font-semibold text-[#78716C]">
+            <span className="flex h-full w-full items-center justify-center text-[9px] font-semibold text-[#888888]">
               No photo
             </span>
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[12px] font-bold text-[#1DA851]">
+          <p className="truncate text-[13px] font-semibold text-[#25D366]">
             {order.product?.name ?? "Product unavailable"}
           </p>
-          <p className="mt-0.5 text-[11px] font-medium text-[#78716C]">
+          <p className="mt-0.5 text-[13px] font-medium text-[#888888]">
             Qty {order.quantity} &middot; {formatGhsPrice(order.total)}
           </p>
         </div>
       </div>
 
       <div className="mt-2 flex items-center justify-between gap-3">
-        <p className="flex min-w-0 flex-1 items-center gap-1.5 text-[11px] font-medium text-[#78716C]">
+        <p className="flex min-w-0 flex-1 items-center gap-1.5 text-[11px] font-medium text-[#888888]">
           <MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
           <span className="min-w-0 flex-1 truncate">{order.delivery_location}</span>
         </p>
         <button
-          className="shrink-0 text-[11px] font-bold text-[#1DA851]"
+          className="shrink-0 text-xs font-bold text-[#25D366]"
           type="button"
           onClick={onDetails}
         >
@@ -369,23 +370,23 @@ function OrderSummaryCard({
   const thumbnail = order.product?.photo_urls?.[0];
 
   return (
-    <article className="rounded-xl border border-[#E7E4DF] bg-white px-4 py-3 shadow-[0_5px_16px_rgba(28,25,23,0.04)]">
+    <article className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="flex min-w-0 items-center gap-1.5 text-[12px] font-bold">
-            <User aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[#78716C]" />
+          <p className="flex min-w-0 items-center gap-1.5 text-[13px] font-bold">
+            <User aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[#888888]" />
             <span className="min-w-0 flex-1 truncate">{order.customer_name}</span>
           </p>
         </div>
         <div className="flex shrink-0 items-center justify-end gap-2">
-          <span className="hidden shrink-0 items-center gap-1 text-[11px] font-medium text-[#78716C] min-[360px]:inline-flex">
+          <span className="hidden shrink-0 items-center gap-1 text-[11px] font-medium text-[#888888] min-[360px]:inline-flex">
             <Calendar aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
             {formatRelativeOrderDate(order.created_at)}
           </span>
           <label className="relative inline-flex shrink-0">
             <span className="sr-only">Change order status</span>
             <select
-              className={`h-6 max-w-[86px] cursor-pointer appearance-none truncate rounded-full border py-0 pl-2.5 pr-2.5 text-[10px] font-semibold capitalize leading-none outline-none ${homeStatusClasses(
+              className={`h-6 max-w-[86px] cursor-pointer appearance-none truncate rounded-full border-[1.5px] py-0 pl-3.5 pr-3.5 text-[10px] font-semibold capitalize leading-none outline-none ${homeStatusClasses(
                 order.status,
               )}`}
               value={order.status}
@@ -403,8 +404,8 @@ function OrderSummaryCard({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center gap-3 border-b border-[#E7E4DF] pb-3">
-        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-[#E7E4DF] bg-[#FAF9F7]">
+      <div className="mt-3 flex items-center gap-3 border-b border-[#EDECEA] pb-3">
+        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-[#EDECEA] bg-[#F7F5F2]">
           {thumbnail ? (
             <img
               className="h-full w-full object-cover"
@@ -412,22 +413,22 @@ function OrderSummaryCard({
               alt={order.product?.name ?? "Ordered product"}
             />
           ) : (
-            <span className="flex h-full w-full items-center justify-center text-[9px] font-semibold text-[#78716C]">
+            <span className="flex h-full w-full items-center justify-center text-[9px] font-semibold text-[#888888]">
               No photo
             </span>
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[12px] font-bold text-[#1DA851]">
+          <p className="truncate text-[13px] font-semibold text-[#25D366]">
             {order.product?.name ?? "Product unavailable"}
           </p>
-          <p className="mt-0.5 text-[11px] font-medium text-[#78716C]">
+          <p className="mt-0.5 text-[13px] font-medium text-[#888888]">
             Qty {order.quantity} &middot; {formatGhsPrice(order.total)}
           </p>
         </div>
       </div>
 
-      <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-[#78716C]">
+      <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-[#888888]">
         <MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
         <span className="min-w-0 flex-1 truncate">{order.delivery_location}</span>
       </div>
@@ -459,6 +460,8 @@ export default function DashboardPage() {
   const [settingsLogoPreviewUrl, setSettingsLogoPreviewUrl] = useState("");
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
   const [isSlugAvailable, setIsSlugAvailable] = useState<boolean | null>(null);
+  const [isCompressingSettingsLogo, setIsCompressingSettingsLogo] =
+    useState(false);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isSavingDeliveryInfo, setIsSavingDeliveryInfo] = useState(false);
   const [settingsMessage, setSettingsMessage] = useState("");
@@ -682,11 +685,32 @@ export default function DashboardPage() {
     );
   }
 
-  function handleSettingsLogoChange(event: ChangeEvent<HTMLInputElement>) {
+  async function handleSettingsLogoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
-    setSettingsLogoFile(file);
-    setSettingsLogoPreviewUrl(file ? URL.createObjectURL(file) : merchant?.logo_url ?? "");
     event.target.value = "";
+
+    if (!file) {
+      setSettingsLogoFile(null);
+      setSettingsLogoPreviewUrl(merchant?.logo_url ?? "");
+      return;
+    }
+
+    setIsCompressingSettingsLogo(true);
+    setSettingsMessage("");
+
+    try {
+      const compressedFile = await compressImageForUpload(file);
+      setSettingsLogoFile(compressedFile);
+      setSettingsLogoPreviewUrl(URL.createObjectURL(compressedFile));
+    } catch (error) {
+      setSettingsLogoFile(null);
+      setSettingsLogoPreviewUrl(merchant?.logo_url ?? "");
+      setSettingsMessage(
+        error instanceof Error ? error.message : "Unable to compress logo.",
+      );
+    } finally {
+      setIsCompressingSettingsLogo(false);
+    }
   }
 
   async function checkSettingsSlugAvailability() {
@@ -906,8 +930,8 @@ export default function DashboardPage() {
 
   if (isCheckingAuth) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-white px-6 text-[#1C1917]">
-        <p className="text-sm font-medium text-[#78716C]">Checking session...</p>
+      <main className="flex min-h-screen items-center justify-center bg-white px-6 text-[#1A1A18]">
+        <p className="text-sm font-medium text-[#888888]">Checking session...</p>
       </main>
     );
   }
@@ -939,12 +963,12 @@ export default function DashboardPage() {
     activePlanCycle === 12 ? "Annual Plan" : "Monthly Plan";
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-white pb-28 text-[#1C1917]">
-      <header className="sticky top-0 z-20 border-b border-[#E7E4DF] bg-white">
+    <main className="min-h-screen overflow-x-hidden bg-[#F7F5F2] pb-28 text-[#1A1A18]">
+      <header className="sticky top-0 z-20 border-b border-[#EDECEA] bg-white">
         <div className="mx-auto w-full max-w-5xl">
           <div className="relative flex min-w-0 items-center justify-between gap-3 px-4 py-4 sm:px-6">
             <div className="flex min-w-0 flex-1 items-center gap-3">
-              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-[#1C1917] text-white">
+              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-[#1A1A18] text-white">
                 {merchant?.logo_url ? (
                   <img
                     className="h-full w-full object-cover"
@@ -963,28 +987,28 @@ export default function DashboardPage() {
                 onClick={() => setIsStoreMenuOpen((isOpen) => !isOpen)}
                 aria-expanded={isStoreMenuOpen}
               >
-                <span className="max-w-[132px] truncate text-[17px] font-bold leading-none min-[390px]:max-w-[170px] sm:max-w-[320px]">
+                <span className="max-w-[132px] truncate text-[15px] font-bold leading-none min-[390px]:max-w-[170px] sm:max-w-[320px]">
                   {merchant?.business_name ?? "Your store"}
                 </span>
-                <span className="shrink-0 text-[#78716C]">
+                <span className="shrink-0 text-[#888888]">
                   {isStoreMenuOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
                 </span>
               </button>
 
               {isStoreMenuOpen ? (
-                <div className="absolute left-4 top-[72px] z-30 w-[240px] overflow-hidden rounded-2xl bg-white shadow-[0_16px_40px_rgba(28,25,23,0.16)] ring-1 ring-[#E7E4DF]">
+                <div className="absolute left-4 top-[72px] z-30 w-[240px] overflow-hidden rounded-2xl bg-white shadow-[0_8px_32px_rgba(0,0,0,0.10)] ring-1 ring-[#EDECEA]">
                   <button
-                    className="flex h-[60px] w-full min-w-0 items-center gap-4 px-5 text-left text-[16px] font-medium text-[#1C1917] transition hover:bg-[#FAF9F7]"
+                    className="flex h-[60px] w-full min-w-0 items-center gap-4 px-5 text-left text-[13px] font-medium text-[#1A1A18] transition hover:bg-[#F7F5F2]"
                     type="button"
                     onClick={handleSignOut}
                   >
-                    <LogOut aria-hidden="true" className="h-5 w-5 shrink-0 text-[#78716C]" />
+                    <LogOut aria-hidden="true" className="h-5 w-5 shrink-0 text-[#888888]" />
                     <span className="min-w-0 flex-1 truncate">Log out</span>
                   </button>
-                  <div className="mx-5 h-px bg-[#E7E4DF]" />
+                  <div className="mx-5 h-px bg-[#EDECEA]" />
                   {merchant ? (
                     <a
-                      className="flex h-[60px] w-full min-w-0 items-center gap-4 px-5 text-[16px] font-bold text-[#1DA851] transition hover:bg-[#FAF9F7]"
+                      className="flex h-[60px] w-full min-w-0 items-center gap-4 px-5 text-[13px] font-bold text-[#25D366] transition hover:bg-[#F7F5F2]"
                       href={buildUpgradeUrl(merchant)}
                       target="_blank"
                       rel="noreferrer"
@@ -993,16 +1017,16 @@ export default function DashboardPage() {
                       <span className="min-w-0 flex-1 truncate">Upgrade</span>
                     </a>
                   ) : null}
-                  <div className="mx-5 h-px bg-[#E7E4DF]" />
+                  <div className="mx-5 h-px bg-[#EDECEA]" />
                   <a
-                    className="flex h-[60px] w-full min-w-0 items-center gap-4 px-5 text-[16px] font-medium text-[#1C1917] transition hover:bg-[#FAF9F7]"
+                    className="flex h-[60px] w-full min-w-0 items-center gap-4 px-5 text-[13px] font-medium text-[#1A1A18] transition hover:bg-[#F7F5F2]"
                     href={helpUrl}
                     target="_blank"
                     rel="noreferrer"
                   >
                     <MessageCircle
                       aria-hidden="true"
-                      className="h-5 w-5 shrink-0 text-[#78716C]"
+                      className="h-5 w-5 shrink-0 text-[#888888]"
                     />
                     <span className="min-w-0 flex-1 truncate">Get Help</span>
                   </a>
@@ -1012,7 +1036,7 @@ export default function DashboardPage() {
 
             <div className="flex shrink-0 items-center gap-2">
               <button
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FAF9F7] text-[#1C1917] transition hover:bg-[#E7E4DF]"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F7F5F2] text-[#1A1A18] transition hover:bg-[#EDECEA]"
                 type="button"
                 onClick={handleCopyStoreLink}
                 aria-label="Copy store link"
@@ -1022,7 +1046,7 @@ export default function DashboardPage() {
               </button>
               {storeUrl ? (
                 <a
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FAF9F7] text-[#1C1917] transition hover:bg-[#E7E4DF]"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F7F5F2] text-[#1A1A18] transition hover:bg-[#EDECEA]"
                   href={storeUrl}
                   target="_blank"
                   rel="noreferrer"
@@ -1040,28 +1064,28 @@ export default function DashboardPage() {
         {activeTab === "home" ? (
           <section className="grid gap-6">
             <div>
-              <h1 className="text-[26px] font-bold leading-none sm:text-[30px]">
+                <h1 className="text-[26px] font-bold leading-none sm:text-[30px]">
                 Welcome back
               </h1>
-              <p className="mt-2 text-[15px] font-medium text-[#78716C]">
+              <p className="mt-2 text-sm font-medium text-[#888888]">
                 Your store is doing great today.
               </p>
             </div>
 
             {showProminentSubscription ? (
-            <div className="flex min-w-0 items-center justify-between gap-4 rounded-xl border border-[#1DA851]/25 bg-[#D6F9DF] px-4 py-4 shadow-[0_8px_20px_rgba(29,168,81,0.08)]">
+            <div className="flex min-w-0 items-center justify-between gap-4 rounded-2xl border-2 border-[#F59E0B] bg-[#FFFBEB] p-4 shadow-sm">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-[#0F6B34]">
+                  <p className="text-[13px] font-bold text-[#92400E]">
                     {planName}
                   </p>
-                  <p className="mt-1 text-[13px] font-medium leading-5 text-[#0F6B34]">
+                  <p className="mt-1 text-[13px] font-medium leading-5 text-[#B45309]">
                     Expires in {daysRemaining ?? 0} days - don&apos;t lose
                     access!
                   </p>
                 </div>
                 {merchant ? (
                   <a
-                    className="flex h-10 shrink-0 items-center justify-center rounded-full bg-[#1DA851] px-5 text-sm font-bold text-white transition hover:opacity-90"
+                    className="flex h-10 shrink-0 items-center justify-center rounded-xl bg-[#25D366] px-5 py-3.5 text-[13px] font-semibold text-white transition hover:opacity-90"
                     href={buildUpgradeUrl(merchant)}
                     target="_blank"
                     rel="noreferrer"
@@ -1071,23 +1095,23 @@ export default function DashboardPage() {
                 ) : null}
               </div>
             ) : merchant?.subscription_status === "active" ? (
-              <div className="flex min-w-0 items-center justify-between gap-3 rounded-full border border-[#E7E4DF] bg-white px-4 py-3 shadow-[0_5px_16px_rgba(28,25,23,0.04)]">
-                <p className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium text-[#78716C]">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#1DA851]" />
+              <div className="flex min-w-0 items-center justify-between gap-3 rounded-full border border-[#EDECEA] bg-white px-4 py-3 shadow-sm">
+                <p className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-medium text-[#888888]">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
                   <span className="min-w-0 flex-1 truncate">
                     {activeHomePlanName} · Active
                   </span>
                 </p>
-                <span className="shrink-0 text-xs font-medium text-[#A8A29E]">
+                <span className="shrink-0 text-[11px] font-medium text-[#999999]">
                   Renews {expiryLabel}
                 </span>
               </div>
             ) : (
-              <div className="rounded-xl border border-[#E7E4DF] bg-white px-4 py-3">
-                <p className="text-xs font-bold uppercase text-[#78716C]">
+              <div className="rounded-2xl border border-[#EDECEA] bg-white p-4">
+                <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#888888]">
                   Subscription
                 </p>
-                <p className="mt-1 text-sm font-bold">{planName}</p>
+                <p className="mt-1 text-[13px] font-bold">{planName}</p>
               </div>
             )}
 
@@ -1103,9 +1127,9 @@ export default function DashboardPage() {
 
             <section>
             <div className="mb-3 flex min-w-0 items-center justify-between gap-4">
-                <h2 className="min-w-0 flex-1 truncate text-[16px] font-bold">Recent orders</h2>
+                <h2 className="min-w-0 flex-1 truncate text-[15px] font-bold">Recent orders</h2>
                 <button
-                  className="inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#1DA851]"
+                  className="inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#25D366]"
                   type="button"
                   onClick={() => setActiveTab("orders")}
                 >
@@ -1114,7 +1138,7 @@ export default function DashboardPage() {
                 </button>
               </div>
               {isLoadingOrders ? (
-                <p className="rounded-xl border border-[#E7E4DF] bg-white px-4 py-8 text-center text-sm font-medium text-[#78716C]">
+                <p className="rounded-2xl border border-[#EDECEA] bg-white p-4 py-8 text-center text-sm font-medium text-[#888888]">
                   Loading orders...
                 </p>
               ) : recentOrders.length ? (
@@ -1128,14 +1152,14 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <p className="rounded-xl border border-[#E7E4DF] bg-white px-4 py-8 text-center text-sm font-medium text-[#78716C]">
+                <p className="rounded-2xl border border-[#EDECEA] bg-white p-4 py-8 text-center text-sm font-medium text-[#888888]">
                   No orders yet - share your store link to get your first one
                 </p>
               )}
             </section>
 
             <Link
-              className="flex h-12 w-full items-center justify-center rounded-full bg-[#1C1917] px-4 text-sm font-bold text-white shadow-[0_10px_22px_rgba(28,25,23,0.12)] transition hover:opacity-90"
+              className="flex h-12 w-full items-center justify-center rounded-full bg-[#1A1A18] px-4 py-[15px] text-[14px] font-bold text-white transition hover:bg-[#2E2E2C] active:scale-[0.99]"
               href="/dashboard/products/new"
             >
               + Add Product
@@ -1144,13 +1168,13 @@ export default function DashboardPage() {
         ) : null}
 
         {activeTab === "products" ? (
-          <section className="-mx-4 -my-6 grid min-h-[calc(100vh-9rem)] gap-4 bg-[#FAF9F7] px-4 py-6 sm:-mx-6 sm:px-6">
+          <section className="-mx-4 -my-6 grid min-h-[calc(100vh-9rem)] gap-4 bg-[#F7F5F2] px-4 py-6 sm:-mx-6 sm:px-6">
             <div className="flex min-w-0 items-center justify-between gap-3">
-              <p className="min-w-0 flex-1 truncate text-sm font-medium text-[#78716C]">
+                <p className="min-w-0 flex-1 truncate text-xs font-medium text-[#999999]">
                 {products.length} {products.length === 1 ? "product" : "products"}
               </p>
               <Link
-                className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-[#1DA851] px-4 text-sm font-bold text-white transition hover:opacity-90"
+                className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-[#1A1A18] px-4 text-xs font-bold text-white transition hover:bg-[#2E2E2C] active:scale-[0.99]"
                 href="/dashboard/products/new"
               >
                 <PlusIcon />
@@ -1159,25 +1183,25 @@ export default function DashboardPage() {
             </div>
 
             {message ? (
-              <p className="mb-3 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm text-[#B94A2C]">
+              <p className="mb-3 rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-4 py-3.5 text-sm text-[#B91C1C]">
                 {message}
               </p>
             ) : null}
 
             {isLoadingProducts ? (
-              <p className="py-10 text-sm font-medium text-[#78716C]">
+              <p className="py-10 text-sm font-medium text-[#888888]">
                 Loading products...
               </p>
             ) : null}
 
             {!isLoadingProducts && !products.length && !message ? (
               <div className="py-12 text-center">
-                <h3 className="text-lg font-semibold">No products yet</h3>
-                <p className="mx-auto mt-2 max-w-md text-[#78716C]">
+                <h3 className="text-[18px] font-bold">No products yet</h3>
+                <p className="mx-auto mt-2 max-w-md text-[#888888]">
                   Add your first product when you are ready.
                 </p>
                 <Link
-                  className="mt-6 inline-flex h-11 items-center justify-center rounded-md bg-[#1C1917] px-4 text-sm font-medium text-white transition hover:opacity-90"
+                  className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[#1A1A18] px-4 py-[15px] text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99]"
                   href="/dashboard/products/new"
                 >
                   Add Product
@@ -1199,11 +1223,11 @@ export default function DashboardPage() {
 
                   return (
                     <article
-                      className="flex min-h-[106px] items-start gap-3 rounded-xl border border-[#E7E4DF] bg-white p-3.5 shadow-[0_5px_16px_rgba(28,25,23,0.04)] sm:p-4"
+                      className="flex min-h-[106px] items-start gap-3 rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
                       key={product.id}
                     >
                       <Link
-                        className="block h-[68px] w-[68px] shrink-0 overflow-hidden rounded-2xl border border-[#E7E4DF] bg-[#FAF9F7]"
+                        className="block h-[68px] w-[68px] shrink-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-[#F7F5F2]"
                         href={`/dashboard/products/${product.id}`}
                       >
                         {thumbnail ? (
@@ -1213,7 +1237,7 @@ export default function DashboardPage() {
                             alt={product.name}
                           />
                         ) : (
-                          <span className="flex h-full w-full items-center justify-center text-xs font-medium text-[#78716C]">
+                          <span className="flex h-full w-full items-center justify-center text-xs font-medium text-[#888888]">
                             No photo
                           </span>
                         )}
@@ -1223,22 +1247,24 @@ export default function DashboardPage() {
                         className="min-w-0 flex-1 pt-1"
                         href={`/dashboard/products/${product.id}`}
                       >
-                        <h3 className="line-clamp-2 text-[13px] font-bold leading-snug text-[#1C1917]">
+                        <h3 className="line-clamp-2 text-[13px] font-bold leading-snug text-[#1A1A18]">
                           {product.name}
                         </h3>
                         <div className="mt-1 flex flex-wrap items-baseline gap-2">
-                          <span className="text-[13px] font-extrabold text-[#1C1917]">
+                          <span className="text-[13px] font-bold text-[#1A1A18]">
                             {formatPrice(product.sale_price)}
                           </span>
                           {product.original_price ? (
-                            <span className="text-xs text-[#78716C] line-through">
+                            <span className="text-xs text-[#BDB9B2] line-through">
                               {formatPrice(product.original_price)}
                             </span>
                           ) : null}
                         </div>
                         <p
-                          className={`mt-2 text-[11px] font-semibold ${
-                            product.in_stock ? "text-[#1DA851]" : "text-[#B94A2C]"
+                          className={`mt-2 inline-flex w-fit rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                            product.in_stock
+                              ? "bg-[#EDFBF3] text-[#15803D]"
+                              : "bg-[#FEF2F2] text-[#B91C1C]"
                           }`}
                         >
                           {product.in_stock ? "In stock" : "Out of stock"}
@@ -1248,14 +1274,14 @@ export default function DashboardPage() {
                       <div className="flex shrink-0 flex-col items-center gap-1.5 pt-1">
                         <Link
                           aria-label={`Edit ${product.name}`}
-                          className="flex h-6 w-6 items-center justify-center rounded-md text-[#A8A29E] transition hover:bg-[#FAF9F7] hover:text-[#1C1917]"
+                          className="flex h-6 w-6 items-center justify-center rounded-lg text-[#BBBBBB] transition hover:bg-[#F7F5F2] hover:text-[#1A1A18]"
                           href={`/dashboard/products/${product.id}`}
                         >
                           <PencilIcon />
                         </Link>
                         <button
                           aria-label={`Delete ${product.name}`}
-                          className="flex h-6 w-6 items-center justify-center rounded-md text-[#A8A29E] transition hover:bg-[#FAF9F7] hover:text-[#B94A2C]"
+                          className="flex h-6 w-6 items-center justify-center rounded-lg text-[#BBBBBB] transition hover:bg-[#F7F5F2] hover:text-[#EF4444]"
                           type="button"
                           onClick={() => handleDelete(product)}
                         >
@@ -1264,7 +1290,7 @@ export default function DashboardPage() {
                         {liveProductUrl ? (
                           <a
                             aria-label={`View ${product.name} live`}
-                            className="flex h-6 w-6 items-center justify-center rounded-md text-[#A8A29E] transition hover:bg-[#FAF9F7] hover:text-[#1C1917]"
+                            className="flex h-6 w-6 items-center justify-center rounded-lg text-[#BBBBBB] transition hover:bg-[#F7F5F2] hover:text-[#1A1A18]"
                             href={liveProductUrl}
                             target="_blank"
                             rel="noreferrer"
@@ -1287,10 +1313,10 @@ export default function DashboardPage() {
               <div className="flex min-w-0 gap-3 overflow-x-auto pb-4">
                 {orderFilters.map((filter) => (
                   <button
-                    className={`h-10 shrink-0 rounded-full border px-5 text-sm font-semibold transition ${
+                    className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[11px] font-semibold transition ${
                       orderFilter === filter.value
-                        ? "border-[#1C1917] bg-[#1C1917] text-white"
-                        : "border-[#E7E4DF] bg-white text-[#78716C] hover:border-[#1C1917] hover:text-[#1C1917]"
+                        ? "border-[#1A1A18] bg-[#1A1A18] text-white"
+                        : "border-[#EDECEA] bg-white text-[#666666] hover:border-[#1A1A18] hover:text-[#1A1A18]"
                     }`}
                     key={filter.value}
                     type="button"
@@ -1303,28 +1329,28 @@ export default function DashboardPage() {
             </div>
 
             {orderMessage ? (
-              <p className="mt-4 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm text-[#B94A2C]">
+              <p className="mt-4 rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-4 py-3.5 text-sm text-[#B91C1C]">
                 {orderMessage}
               </p>
             ) : null}
 
             {isLoadingOrders ? (
-              <p className="py-10 text-sm font-medium text-[#78716C]">
+              <p className="py-10 text-sm font-medium text-[#888888]">
                 Loading orders...
               </p>
             ) : null}
 
             {!isLoadingOrders && !orders.length && !orderMessage ? (
               <div className="py-12 text-center">
-                <h3 className="text-lg font-semibold">No orders yet</h3>
-                <p className="mx-auto mt-2 max-w-md text-[#78716C]">
+                <h3 className="text-[18px] font-bold">No orders yet</h3>
+                <p className="mx-auto mt-2 max-w-md text-[#888888]">
                   Share your store link to start selling.
                 </p>
               </div>
             ) : null}
 
             {!isLoadingOrders && orders.length && !filteredOrders.length ? (
-              <p className="py-10 text-center text-sm font-medium text-[#78716C]">
+              <p className="py-10 text-center text-sm font-medium text-[#888888]">
                 No {orderFilter} orders right now.
               </p>
             ) : null}
@@ -1344,9 +1370,9 @@ export default function DashboardPage() {
         ) : null}
 
         {activeTab === "settings" ? (
-          <section className="grid gap-4 bg-[#FAF9F7]">
+          <section className="grid gap-4 bg-[#F7F5F2]">
             <form
-              className="rounded-xl border border-[#E7E4DF] bg-white p-5 shadow-[0_6px_18px_rgba(28,25,23,0.04)]"
+              className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
               onSubmit={handleSettingsSubmit}
             >
               <SettingsSectionTitle icon={<Store className="h-5 w-5" />}>
@@ -1354,15 +1380,15 @@ export default function DashboardPage() {
               </SettingsSectionTitle>
               <div className="mt-5 grid gap-4">
                 <label className="block">
-                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#78716C]">
+                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
                     Business Name
                   </span>
-                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-lg border border-[#E7E4DF] bg-[#FAF9F7] text-[#78716C] transition focus-within:border-[#1C1917] focus-within:ring-2 focus-within:ring-[#1C1917]/10">
+                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
                       <Store className="h-4 w-4" />
                     </SettingsFieldIcon>
                     <input
-                      className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1C1917] outline-none placeholder:text-[#78716C]"
+                      className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1A1A18] outline-none placeholder:text-[#888888]"
                       value={settingsBusinessName}
                       onChange={(event) => setSettingsBusinessName(event.target.value)}
                       required
@@ -1371,15 +1397,15 @@ export default function DashboardPage() {
                 </label>
 
                 <label className="block">
-                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#78716C]">
+                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
                     Tagline (optional)
                   </span>
-                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-lg border border-[#E7E4DF] bg-[#FAF9F7] text-[#78716C] transition focus-within:border-[#1C1917] focus-within:ring-2 focus-within:ring-[#1C1917]/10">
+                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
                       <Tag className="h-4 w-4" />
                     </SettingsFieldIcon>
                     <input
-                      className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1C1917] outline-none placeholder:text-[#78716C]"
+                      className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1A1A18] outline-none placeholder:text-[#888888]"
                       maxLength={90}
                       value={settingsTagline}
                       onChange={(event) => setSettingsTagline(event.target.value)}
@@ -1388,12 +1414,12 @@ export default function DashboardPage() {
                 </label>
 
                 <label className="block min-w-0 max-w-full">
-                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#78716C]">Store URL</span>
-                  <div className="flex h-12 max-w-full overflow-hidden rounded-lg border border-[#E7E4DF] bg-[#FAF9F7] focus-within:border-[#1C1917] focus-within:ring-2 focus-within:ring-[#1C1917]/10">
+                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">Store URL</span>
+                  <div className="flex h-12 max-w-full overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
                       <Globe className="h-4 w-4" />
                     </SettingsFieldIcon>
-                    <span className="flex h-full shrink-0 items-center border-r border-[#E7E4DF] pr-3 text-sm font-semibold text-[#78716C]">
+                    <span className="flex h-full shrink-0 items-center border-r border-[#EDECEA] pr-3 text-sm font-semibold text-[#888888]">
                       /store/
                     </span>
                     <input
@@ -1408,27 +1434,27 @@ export default function DashboardPage() {
                     />
                   </div>
                   {isCheckingSlug ? (
-                    <p className="mt-2 text-sm text-[#78716C]">
+                    <p className="mt-2 text-sm text-[#888888]">
                       Checking URL...
                     </p>
                   ) : null}
                   {isSlugAvailable ? (
-                    <p className="mt-2 text-sm font-medium text-[#1DA851]">
+                    <p className="mt-2 text-sm font-medium text-[#25D366]">
                       /store/{normalizeSlug(settingsSlug)} is available.
                     </p>
                   ) : null}
                 </label>
 
                 <label className="block">
-                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#78716C]">
+                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
                     WhatsApp Number
                   </span>
-                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-lg border border-[#E7E4DF] bg-[#FAF9F7] text-[#78716C] transition focus-within:border-[#1C1917] focus-within:ring-2 focus-within:ring-[#1C1917]/10">
+                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
                       <Phone className="h-4 w-4" />
                     </SettingsFieldIcon>
                     <input
-                      className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1C1917] outline-none placeholder:text-[#78716C]"
+                      className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1A1A18] outline-none placeholder:text-[#888888]"
                       inputMode="tel"
                       value={settingsWhatsappNumber}
                       onChange={(event) => setSettingsWhatsappNumber(event.target.value)}
@@ -1436,12 +1462,12 @@ export default function DashboardPage() {
                     />
                   </div>
                   {settingsDigitsOnlyWhatsapp ? (
-                    <p className="mt-2 text-sm text-[#78716C]">
+                    <p className="mt-2 text-sm text-[#888888]">
                       Saved as {settingsDigitsOnlyWhatsapp}
                     </p>
                   ) : null}
                   {settingsWhatsappStartsWithZero ? (
-                    <p className="mt-2 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm text-[#B94A2C]">
+                    <p className="mt-2 rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-4 py-3.5 text-sm text-[#B91C1C]">
                       This starts with 0. Use a country code instead of a local
                       leading zero.
                     </p>
@@ -1450,17 +1476,17 @@ export default function DashboardPage() {
 
                 <section>
                   <label className="block">
-                    <span className="mb-2 block text-[11px] font-bold uppercase text-[#78716C]">Store Logo</span>
-                    <span className="flex min-h-14 min-w-0 cursor-pointer items-center gap-3 rounded-lg border border-dashed border-[#E7E4DF] bg-[#FAF9F7] px-3 py-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[#E7E4DF] bg-white text-[#78716C]">
+                    <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">Store Logo</span>
+                    <span className="flex min-h-14 min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-[#E5E5E5] bg-[#F4F3F0] px-3 py-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#EDECEA] bg-white text-[#888888]">
                         <ImageIcon className="h-5 w-5" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-bold text-[#1C1917]">
+                        <span className="block truncate text-sm font-bold text-[#1A1A18]">
                           {settingsLogoPreviewUrl ? "Change Logo" : "Upload Logo"}
                         </span>
-                        <span className="block text-xs font-medium text-[#78716C]">
-                          PNG, JPG up to 5MB
+                        <span className="block text-xs font-medium text-[#888888]">
+                          PNG, JPG accepted
                         </span>
                       </span>
                     </span>
@@ -1474,12 +1500,12 @@ export default function DashboardPage() {
                   {settingsLogoPreviewUrl ? (
                     <div className="mt-4 flex min-w-0 items-center gap-4">
                       <img
-                        className="h-20 w-20 shrink-0 rounded-md border border-[#E7E4DF] object-cover"
+                        className="h-20 w-20 shrink-0 rounded-xl border border-[#EDECEA] object-cover"
                         src={settingsLogoPreviewUrl}
                         alt="Store logo preview"
                       />
                       <button
-                        className="min-w-0 flex-1 truncate text-left text-sm font-medium text-[#B94A2C] hover:underline"
+                        className="min-w-0 flex-1 truncate text-left text-xs font-semibold text-[#EF4444] hover:underline"
                         type="button"
                         onClick={() => {
                           setSettingsLogoFile(null);
@@ -1490,60 +1516,70 @@ export default function DashboardPage() {
                       </button>
                     </div>
                   ) : null}
+                  {isCompressingSettingsLogo ? (
+                    <p className="mt-3 text-sm font-medium text-[#888888]">
+                      Compressing logo...
+                    </p>
+                  ) : null}
                 </section>
               </div>
 
               {settingsMessage ? (
-                <p className="mt-5 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm text-[#1C1917]">
+                <p className="mt-5 rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-4 py-3.5 text-sm text-[#1A1A18]">
                   {settingsMessage}
                 </p>
               ) : null}
 
               <button
-                className="mt-6 h-12 w-full rounded-full bg-[linear-gradient(180deg,#34302C_0%,#1C1917_42%,#1C1917_100%)] px-4 font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_10px_22px_rgba(28,25,23,0.14)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:bg-[#78716C] disabled:bg-none"
+                className="mt-6 h-12 w-full rounded-xl bg-[#111111] px-4 py-[15px] text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
                 type="submit"
                 disabled={
                   isSavingSettings ||
+                  isCompressingSettingsLogo ||
                   isCheckingSlug ||
                   !settingsBusinessName.trim() ||
                   !normalizeSlug(settingsSlug) ||
                   !settingsDigitsOnlyWhatsapp
                 }
               >
-                {isSavingSettings ? "Saving..." : "Save Settings"}
+                {isSavingSettings
+                  ? "Saving..."
+                  : isCompressingSettingsLogo
+                    ? "Compressing..."
+                    : "Save Settings"}
               </button>
             </form>
 
             <form
-              className="rounded-xl border border-[#E7E4DF] bg-white p-5 shadow-[0_6px_18px_rgba(28,25,23,0.04)]"
+              className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
               onSubmit={handleDeliveryInfoSubmit}
             >
-              <h2 className="text-lg font-bold">Delivery Info</h2>
-              <p className="mt-1 text-xs font-medium text-[#78716C]">
+              <h2 className="text-[18px] font-bold">Delivery Info</h2>
+              <p className="mt-1 text-xs font-medium text-[#888888]">
                 Optional details for your customers
               </p>
               <textarea
-                className="mt-4 min-h-24 w-full resize-none rounded-lg border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-3 text-sm font-medium leading-6 outline-none transition placeholder:text-[#78716C] focus:border-[#1C1917] focus:ring-2 focus:ring-[#1C1917]/10"
-                maxLength={150}
+                className="mt-4 min-h-24 w-full resize-none rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-3 py-3 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:border-[#1A1A18] focus:ring-2 focus:ring-[#1A1A18]/10"
+                maxLength={50}
                 placeholder="e.g. Same-day delivery in Accra, 2-3 days nationwide. Free delivery in Accra & Tema"
                 value={settingsDeliveryInfo}
                 onChange={(event) => setSettingsDeliveryInfo(event.target.value)}
               />
               <div className="mt-3 flex min-w-0 items-start justify-between gap-4">
-                <p className="min-w-0 flex-1 text-xs font-medium leading-5 text-[#78716C]">
+                <p className="min-w-0 flex-1 text-xs font-medium leading-5 text-[#888888]">
                   To help customers understand your delivery times and offers.
                 </p>
-                <p className="shrink-0 text-xs font-bold text-[#78716C]">
-                  {settingsDeliveryInfo.length}/150
+                <p className="shrink-0 text-xs font-bold text-[#888888]">
+                  {settingsDeliveryInfo.length}/50
                 </p>
               </div>
               {deliveryInfoMessage ? (
-                <p className="mt-3 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm text-[#1C1917]">
+                <p className="mt-3 rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-4 py-3.5 text-sm text-[#1A1A18]">
                   {deliveryInfoMessage}
                 </p>
               ) : null}
               <button
-                className="mt-4 h-10 rounded-full border border-[#1C1917] px-5 text-sm font-bold transition hover:bg-[#1C1917] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-4 w-full rounded-xl border border-[#E5E5E5] bg-transparent px-4 py-[15px] text-sm font-semibold text-[#111111] transition hover:bg-[#F8F8F8] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 type="submit"
                 disabled={isSavingDeliveryInfo}
               >
@@ -1552,7 +1588,7 @@ export default function DashboardPage() {
             </form>
 
             <form
-              className="rounded-xl border border-[#E7E4DF] bg-white p-5 shadow-[0_6px_18px_rgba(28,25,23,0.04)]"
+              className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
               onSubmit={handlePasswordSubmit}
             >
               <SettingsSectionTitle icon={<Lock className="h-5 w-5" />}>
@@ -1560,15 +1596,15 @@ export default function DashboardPage() {
               </SettingsSectionTitle>
               <div className="mt-5 grid gap-4">
                 <label className="block">
-                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#78716C]">
+                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
                     New Password
                   </span>
-                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-lg border border-[#E7E4DF] bg-[#FAF9F7] text-[#78716C] transition focus-within:border-[#1C1917] focus-within:ring-2 focus-within:ring-[#1C1917]/10">
+                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
                       <Lock className="h-4 w-4" />
                     </SettingsFieldIcon>
                     <input
-                      className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1C1917] outline-none placeholder:text-[#78716C]"
+                      className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1A1A18] outline-none placeholder:text-[#888888]"
                       type="password"
                       autoComplete="new-password"
                       minLength={6}
@@ -1578,15 +1614,15 @@ export default function DashboardPage() {
                   </div>
                 </label>
                 <label className="block">
-                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#78716C]">
+                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
                     Confirm Password
                   </span>
-                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-lg border border-[#E7E4DF] bg-[#FAF9F7] text-[#78716C] transition focus-within:border-[#1C1917] focus-within:ring-2 focus-within:ring-[#1C1917]/10">
+                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
                       <Lock className="h-4 w-4" />
                     </SettingsFieldIcon>
                     <input
-                      className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1C1917] outline-none placeholder:text-[#78716C]"
+                      className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1A1A18] outline-none placeholder:text-[#888888]"
                       type="password"
                       autoComplete="new-password"
                       minLength={6}
@@ -1597,12 +1633,12 @@ export default function DashboardPage() {
                 </label>
               </div>
               {passwordMessage ? (
-                <p className="mt-4 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm text-[#1C1917]">
+                <p className="mt-4 rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-4 py-3.5 text-sm text-[#1A1A18]">
                   {passwordMessage}
                 </p>
               ) : null}
               <button
-                className="mt-5 h-12 w-full rounded-full bg-[linear-gradient(180deg,#34302C_0%,#1C1917_42%,#1C1917_100%)] px-4 font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_10px_22px_rgba(28,25,23,0.14)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:bg-[#78716C] disabled:bg-none"
+                className="mt-5 h-12 w-full rounded-xl bg-[#111111] px-4 py-[15px] text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
                 type="submit"
                 disabled={isUpdatingPassword}
               >
@@ -1610,7 +1646,7 @@ export default function DashboardPage() {
               </button>
             </form>
 
-            <section className="grid gap-3 rounded-xl border border-[#E7E4DF] bg-white p-5 shadow-[0_6px_18px_rgba(28,25,23,0.04)]">
+            <section className="grid gap-3 rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
               <h2 className="text-lg font-bold">Subscription Plan</h2>
               {[
                 { name: "Monthly" as const, cycle: 1, price: "GHS 49", suffix: "/month" },
@@ -1621,38 +1657,38 @@ export default function DashboardPage() {
 
                 return (
                   <article
-                    className={`relative rounded-xl border p-4 ${
+                    className={`relative rounded-2xl border p-4 ${
                       plan.cycle === 12
-                        ? "border-[#1DA851]/20 bg-[#EAF7EF]"
-                        : "border-[#E7E4DF] bg-white"
+                        ? "border-[#25D366]/20 bg-[#EDFBF3]"
+                        : "border-[#EDECEA] bg-white"
                     }`}
                     key={plan.name}
                   >
                     {plan.cycle === 12 ? (
-                      <span className="absolute right-3 top-0 -translate-y-1/2 rounded-sm bg-[#1DA851] px-2 py-1 text-[9px] font-bold text-white">
+                      <span className="absolute right-3 top-0 -translate-y-1/2 rounded-sm bg-[#25D366] px-2 py-1 text-[9px] font-bold text-white">
                         Best Value - Save GHS 189
                       </span>
                     ) : null}
                     {isActivePlan ? (
-                      <div className="mb-4 flex min-w-0 items-center justify-between gap-3 rounded-full border border-[#E7E4DF] bg-white px-3 py-2">
-                        <p className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium text-[#78716C]">
-                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#1DA851]" />
+                      <div className="mb-4 flex min-w-0 items-center justify-between gap-3 rounded-full border border-[#EDECEA] bg-white px-3 py-2">
+                <p className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-medium text-[#888888]">
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
                           <span className="min-w-0 flex-1 truncate">
                             {plan.name} Plan · Active
                           </span>
                         </p>
-                        <span className="shrink-0 text-xs font-medium text-[#A8A29E]">
+                        <span className="shrink-0 text-xs font-medium text-[#999999]">
                           Renews {expiryLabel}
                         </span>
                       </div>
                     ) : (
                       <>
-                        <h3 className="text-base font-bold">{plan.name}</h3>
+                        <h3 className="text-[15px] font-bold">{plan.name}</h3>
                         <p className="mt-1 flex min-w-0 items-end gap-1">
-                          <span className="text-2xl font-extrabold leading-none">
+                          <span className="text-[24px] font-bold leading-none">
                             {plan.price}
                           </span>
-                          <span className="pb-0.5 text-xs font-medium text-[#78716C]">
+                          <span className="pb-0.5 text-xs font-medium text-[#888888]">
                             {plan.suffix}
                           </span>
                         </p>
@@ -1660,7 +1696,7 @@ export default function DashboardPage() {
                     )}
                     {merchant ? (
                       <a
-                        className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#1DA851] px-4 text-sm font-bold text-white transition hover:opacity-90"
+                        className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99]"
                         href={buildPlanWhatsAppUrl(merchant, plan.name, intent)}
                         target="_blank"
                         rel="noreferrer"
@@ -1675,13 +1711,13 @@ export default function DashboardPage() {
                 );
               })}
               {merchant?.subscription_status === "trial" ? (
-                <div className="flex min-w-0 items-center gap-3 rounded-xl border border-[#E7E4DF] bg-[#FAF9F7] p-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E7E4DF] bg-white text-[#78716C]">
+                <div className="flex min-w-0 items-center gap-3 rounded-xl border border-[#EDECEA] bg-[#F4F3F0] p-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#EDECEA] bg-white text-[#888888]">
                     <Zap className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold">Free Trial Active</p>
-                    <p className="mt-0.5 text-xs font-medium text-[#78716C]">
+                    <p className="mt-0.5 text-xs font-medium text-[#888888]">
                       {daysRemaining ?? 0} days remaining on your trial period.
                     </p>
                   </div>
@@ -1689,20 +1725,20 @@ export default function DashboardPage() {
               ) : null}
             </section>
 
-            <section className="rounded-xl border border-[#E7E4DF] bg-white p-5 text-center shadow-[0_6px_18px_rgba(28,25,23,0.04)]">
+            <section className="rounded-2xl border border-[#EDECEA] bg-white p-4 text-center shadow-sm">
               <button
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#FFB8B8] bg-white text-sm font-bold text-[#FF1F1F] transition hover:border-[#FF1F1F] hover:bg-[#FFF7F7]"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#EF4444] bg-white text-sm font-semibold text-[#EF4444] transition hover:opacity-70"
                 type="button"
                 onClick={handleSignOut}
               >
                 <LogOut aria-hidden="true" className="h-4 w-4 shrink-0" />
                 <span>Log out</span>
               </button>
-              <p className="mt-5 text-xs font-medium text-[#78716C]">
+              <p className="mt-5 text-xs font-medium text-[#888888]">
                 Having trouble with your settings?
               </p>
               <a
-                className="mt-2 inline-flex min-w-0 items-center justify-center gap-1.5 text-sm font-bold text-[#1DA851] underline-offset-4 hover:underline"
+                className="mt-2 inline-flex min-w-0 items-center justify-center gap-1.5 text-sm font-bold text-[#25D366] underline-offset-4 hover:underline"
                 href={helpUrl}
                 target="_blank"
                 rel="noreferrer"
@@ -1717,7 +1753,7 @@ export default function DashboardPage() {
         ) : null}
       </section>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-30 w-full border-t border-[#E7E4DF] bg-white px-2 py-2">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 w-full border-t border-[#EDECEA] bg-white px-2 py-2">
         <div
           className="grid w-full grid-cols-4 items-stretch"
           style={{
@@ -1732,7 +1768,7 @@ export default function DashboardPage() {
               return (
                 <button
                   className={`flex h-14 min-w-0 flex-col items-center justify-center gap-1 text-[11px] font-semibold capitalize transition sm:text-xs ${
-                    active ? "text-[#1C1917]" : "text-[#78716C]"
+                    active ? "text-[#1A1A18]" : "text-[#888888]"
                   }`}
                   key={tab}
                   type="button"

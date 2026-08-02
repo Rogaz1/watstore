@@ -67,35 +67,35 @@ export default function RenewalsPage() {
   }, [router]);
 
   return (
-      <main className="min-h-screen bg-white px-6 py-10 text-[#1C1917]">
-        <section className="mx-auto w-full max-w-5xl rounded-lg border border-[#E7E4DF] bg-white p-8 shadow-sm">
-          <div className="border-b border-[#E7E4DF] pb-6">
-            <p className="mb-2 text-sm font-medium uppercase text-[#78716C]">
+      <main className="min-h-screen bg-white px-7 py-10 text-[#111111]">
+        <section className="mx-auto w-full max-w-5xl rounded-2xl border border-[#E5E5E5] bg-white p-4 shadow-sm sm:p-8">
+          <div className="border-b border-[#E5E5E5] pb-6">
+            <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#AAAAAA]">
             Admin
           </p>
-          <h1 className="text-2xl font-semibold">Active merchant renewals</h1>
+          <h1 className="text-[24px] font-bold">Active merchant renewals</h1>
         </div>
 
         {isLoading ? (
-              <p className="py-10 text-sm font-medium text-[#78716C]">
+              <p className="py-10 text-sm font-medium text-[#888888]">
             Loading renewals...
           </p>
         ) : null}
 
         {message ? (
-              <p className="mt-6 rounded-md border border-[#E7E4DF] bg-[#FAF9F7] px-3 py-2 text-sm text-[#B94A2C]">
+              <p className="mt-6 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 py-3.5 text-sm text-[#B91C1C]">
             {message}
           </p>
         ) : null}
 
         {!isLoading && !merchants.length && !message ? (
-              <p className="py-10 text-sm font-medium text-[#78716C]">
+              <p className="py-10 text-sm font-medium text-[#888888]">
             No active merchants with renewal dates.
           </p>
         ) : null}
 
         {merchants.length ? (
-              <div className="divide-y divide-[#E7E4DF]">
+              <div className="divide-y divide-[#E5E5E5]">
             {merchants.map((merchant) => {
               return (
                 <article
@@ -104,12 +104,12 @@ export default function RenewalsPage() {
                 >
                   <div>
                     <h2 className="font-semibold">{merchant.business_name}</h2>
-                      <p className="text-sm text-[#78716C]">/store/{merchant.slug}</p>
+                      <p className="text-sm text-[#888888]">/store/{merchant.slug}</p>
                   </div>
                   <p className="text-sm">
                     {merchant.billing_cycle_months === 12 ? "Yearly" : "Monthly"}
                   </p>
-                    <p className="text-sm text-[#78716C]">
+                    <p className="text-sm text-[#888888]">
                     Paid{" "}
                     {new Intl.DateTimeFormat("en-US", {
                       dateStyle: "medium",

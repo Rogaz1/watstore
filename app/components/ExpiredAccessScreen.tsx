@@ -14,7 +14,7 @@ function LockIcon() {
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      strokeWidth="2"
+      strokeWidth="1.5"
       viewBox="0 0 24 24"
     >
       <rect height="11" rx="2" ry="2" width="18" x="3" y="11" />
@@ -39,24 +39,24 @@ export function ExpiredAccessScreen({
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white px-6 py-12 text-[#1C1917]">
+    <main className="flex min-h-screen items-center justify-center bg-white px-7 py-12 text-[#111111]">
       <section className="w-full max-w-md text-center">
-        <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-[#FAF9F7] text-[#78716C]">
+        <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-[#F4F4F5] text-[#888888]">
           <LockIcon />
         </div>
-        <h1 className="text-2xl font-semibold">
+        <h1 className="text-[22px] font-bold leading-tight">
           {wasTrial ? "Your free trial has ended" : "Your subscription has ended"}
         </h1>
         <div className="mt-5 flex flex-col gap-2">
-          <span className="rounded-full border border-[#E7E4DF] bg-[#FAF9F7] px-4 py-2 text-sm font-semibold">
+          <span className="rounded-full border border-[#E5E5E5] bg-[#F4F4F5] px-3.5 py-1.5 text-[11px] font-semibold">
             Product Management Locked
           </span>
-          <span className="rounded-full border border-[#E7E4DF] bg-[#FAF9F7] px-4 py-2 text-sm font-semibold">
+          <span className="rounded-full border border-[#E5E5E5] bg-[#F4F4F5] px-3.5 py-1.5 text-[11px] font-semibold">
             Storefront Hidden from Web
           </span>
         </div>
         <a
-          className="mt-7 flex h-12 w-full items-center justify-center rounded-md bg-[#1DA851] px-4 font-medium text-white transition hover:opacity-90"
+          className="mt-7 flex w-full items-center justify-center rounded-xl bg-[#25D366] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99]"
           href={buildUpgradeUrl(merchant)}
           target="_blank"
           rel="noreferrer"
@@ -64,7 +64,7 @@ export function ExpiredAccessScreen({
           Upgrade - Message Us on WhatsApp
         </a>
         <button
-          className="mt-5 text-sm font-medium text-[#78716C] underline-offset-4 hover:text-[#1C1917] hover:underline"
+          className="mt-5 text-sm font-medium text-[#888888] underline-offset-4 hover:text-[#111111] hover:underline"
           type="button"
           onClick={handleLogout}
         >
@@ -77,7 +77,7 @@ export function ExpiredAccessScreen({
 
 export function StoreUnavailableScreen() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white px-5 text-center text-[#1C1917]">
+    <main className="flex min-h-screen items-center justify-center bg-white px-5 text-center text-[#111111]">
       <p className="text-lg font-semibold">
         This store is temporarily unavailable
       </p>

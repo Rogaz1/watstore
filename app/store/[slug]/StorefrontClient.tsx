@@ -4,7 +4,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Truck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
 import { formatGhsPrice } from "@/app/components/productTypes";
@@ -26,25 +25,30 @@ function ProductCard({
 }) {
   const thumbnail = product.photo_urls?.[0];
   const card = (
-    <article className="flex h-[248px] flex-col overflow-hidden rounded-lg border border-[#E7E4DF] bg-white">
-      <div className="h-36 w-full bg-[#FAF9F7]">
+    <article className="flex h-[210px] flex-col overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white shadow-sm">
+      <div className="relative h-[128px] w-full bg-[#F4F4F5]">
         {thumbnail ? (
           <img
             className={`h-full w-full object-cover ${
-              product.in_stock ? "" : "opacity-35"
+              product.in_stock ? "" : "opacity-30"
             }`}
             src={thumbnail}
             alt={product.name}
           />
         ) : (
-          <span className="flex h-full w-full items-center justify-center text-xs font-medium text-[#78716C]">
+          <span className="flex h-full w-full items-center justify-center text-xs font-medium text-[#888888]">
             No photo
           </span>
         )}
+        {!product.in_stock ? (
+          <span className="absolute bottom-2 left-2 rounded-full bg-white/95 px-2 py-0.5 text-[12px] font-semibold text-[#888888] shadow-sm">
+            Out of stock
+          </span>
+        ) : null}
       </div>
-      <div className="flex flex-1 flex-col justify-between p-3">
+      <div className="flex flex-1 flex-col justify-between px-3 pb-3 pt-2">
         <h2
-          className="text-sm font-semibold leading-5"
+          className="text-[13px] font-semibold leading-[17px] text-[#111111]"
           style={{
             display: "-webkit-box",
             WebkitLineClamp: 2,
@@ -55,26 +59,22 @@ function ProductCard({
           {product.name}
         </h2>
         {product.in_stock ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold">
+          <div className="mt-2 flex min-w-0 items-baseline gap-2">
+            <span className="shrink-0 text-[13px] font-bold">
               {formatGhsPrice(product.sale_price)}
             </span>
             {product.original_price ? (
-              <span className="text-xs text-[#78716C] line-through">
+              <span className="min-w-0 truncate text-[12px] font-medium text-[#CCCCCC] line-through">
                 {formatGhsPrice(product.original_price)}
               </span>
             ) : null}
           </div>
         ) : (
-          <p className="mt-3 text-sm font-medium text-[#78716C]">Unavailable</p>
+          <p className="mt-2 text-xs font-medium text-[#888888]">--</p>
         )}
       </div>
     </article>
   );
-
-  if (!product.in_stock) {
-    return card;
-  }
 
   return (
     <Link className="transition hover:opacity-90" href={`/store/${slug}/${product.id}`}>
@@ -152,15 +152,15 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-white px-5 text-[#1C1917]">
-        <p className="text-sm font-medium text-[#78716C]">Loading store...</p>
+      <main className="flex min-h-screen items-center justify-center bg-white px-5 text-[#111111]">
+        <p className="text-sm font-medium text-[#888888]">Loading store...</p>
       </main>
     );
   }
 
   if (!merchant) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-white px-5 text-center text-[#1C1917]">
+      <main className="flex min-h-screen items-center justify-center bg-white px-5 text-center text-[#111111]">
         <p className="text-base font-medium">{message || "Store not found."}</p>
       </main>
     );
@@ -171,46 +171,43 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
   }
 
   return (
-    <main className="min-h-screen bg-white px-4 pb-10 text-[#1C1917]">
-      <header className="mx-auto flex w-full max-w-5xl items-center gap-3 py-7">
+    <main className="min-h-screen bg-[#F4F4F5] px-5 pb-8 pt-12 text-[#111111] sm:px-7">
+      <header className="mx-auto flex w-full max-w-5xl flex-col items-center text-center">
         {merchant.logo_url ? (
           <img
-            className="h-14 w-14 shrink-0 rounded-md border border-[#E7E4DF] object-cover"
+            className="h-12 w-12 shrink-0 rounded-xl border border-[#E5E5E5] object-cover"
             src={merchant.logo_url}
             alt={`${merchant.business_name ?? "Store"} logo`}
           />
         ) : (
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md border border-[#E7E4DF] bg-[#FAF9F7] text-lg font-semibold">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#111111] text-lg font-bold text-white">
             {(merchant.business_name ?? "S").charAt(0)}
           </div>
         )}
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-semibold">
+        <div className="mt-3 min-w-0">
+          <h1 className="truncate text-lg font-bold leading-none">
             {merchant.business_name}
           </h1>
           {merchant.tagline ? (
-            <p className="mt-1 truncate text-sm text-[#78716C]">
+            <p className="mt-2 truncate text-[11px] font-medium text-[#888888]">
               {merchant.tagline}
             </p>
           ) : null}
           {merchant.delivery_info ? (
-            <p className="mt-2 flex min-w-0 items-center gap-1.5 text-xs font-medium text-[#78716C]">
-              <Truck aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
-              <span className="min-w-0 flex-1 truncate">
-                {merchant.delivery_info}
-              </span>
+            <p className="mt-1 truncate text-[11px] font-medium text-[#888888]">
+              {merchant.delivery_info}
             </p>
           ) : null}
         </div>
       </header>
 
-      <section className="mx-auto w-full max-w-5xl">
+      <section className="mx-auto mt-8 w-full max-w-5xl">
         {message && !products.length ? (
-          <p className="py-10 text-center text-sm text-[#B94A2C]">{message}</p>
+          <p className="py-10 text-center text-sm text-[#B91C1C]">{message}</p>
         ) : null}
 
         {!products.length && !message ? (
-          <p className="py-16 text-center text-base font-medium text-[#78716C]">
+          <p className="py-16 text-center text-base font-medium text-[#888888]">
             No products available yet - check back soon!
           </p>
         ) : null}

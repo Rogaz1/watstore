@@ -26,6 +26,11 @@ import { useRequireUser } from "./useRequireUser";
 const PRODUCT_MEDIA_BUCKET = "product-media";
 const MAX_BENEFITS = 5;
 const MAX_FAQS = 5;
+const MAX_IMAGES = 5;
+const MAX_BENEFIT_CHARS = 64;
+const MAX_SHORT_DESCRIPTION_CHARS = 150;
+const MAX_FAQ_QUESTION_CHARS = 90;
+const MAX_FAQ_ANSWER_CHARS = 140;
 
 type MediaItem = {
   id: string;
@@ -148,11 +153,13 @@ export function ProductForm({ productId }: ProductFormProps) {
           : String(loadedProduct.original_price),
       );
       setImages(
-        (loadedProduct.photo_urls ?? []).map((url) => ({
-          id: crypto.randomUUID(),
-          url,
-          previewUrl: url,
-        })),
+        (loadedProduct.photo_urls ?? [])
+          .slice(0, MAX_IMAGES)
+          .map((url) => ({
+            id: crypto.randomUUID(),
+            url,
+            previewUrl: url,
+          })),
       );
       setVideo(
         loadedProduct.video_url
@@ -164,7 +171,12 @@ export function ProductForm({ productId }: ProductFormProps) {
           : null,
       );
       setShortDescription(loadedProduct.short_description ?? "");
-      setKeyBenefits((loadedProduct.key_benefits ?? []).filter(Boolean).slice(0, MAX_BENEFITS));
+      setKeyBenefits(
+        (loadedProduct.key_benefits ?? [])
+          .filter(Boolean)
+          .map((benefit) => benefit.slice(0, MAX_BENEFIT_CHARS))
+          .slice(0, MAX_BENEFITS),
+      );
       setLongDescription(loadedProduct.long_description ?? "");
       setFaqs(
         (loadedProduct.faqs ?? [])
@@ -194,13 +206,25 @@ export function ProductForm({ productId }: ProductFormProps) {
     setMessage("");
 
     try {
+      const availableSlots = Math.max(0, MAX_IMAGES - images.length);
+      const acceptedFiles = files.slice(0, availableSlots);
+
+      if (!acceptedFiles.length) {
+        setMessage(`You can upload up to ${MAX_IMAGES} images per product.`);
+        return;
+      }
+
       const compressedFiles = await Promise.all(
-        files.map((file) => compressImageForUpload(file)),
+        acceptedFiles.map((file) => compressImageForUpload(file)),
       );
       setImages((current) => [
         ...current,
         ...compressedFiles.map(makeMediaItem),
       ]);
+
+      if (files.length > acceptedFiles.length) {
+        setMessage(`Only ${MAX_IMAGES} images are allowed per product.`);
+      }
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Unable to compress image.",
@@ -220,7 +244,7 @@ export function ProductForm({ productId }: ProductFormProps) {
   }
 
   function addBenefit() {
-    const nextBenefit = benefitInput.trim();
+    const nextBenefit = benefitInput.trim().slice(0, MAX_BENEFIT_CHARS);
 
     if (!nextBenefit || keyBenefits.length >= MAX_BENEFITS) {
       return;
@@ -240,8 +264,8 @@ export function ProductForm({ productId }: ProductFormProps) {
   }
 
   function addFaq() {
-    const question = faqQuestion.trim();
-    const answer = faqAnswer.trim();
+    const question = faqQuestion.trim().slice(0, MAX_FAQ_QUESTION_CHARS);
+    const answer = faqAnswer.trim().slice(0, MAX_FAQ_ANSWER_CHARS);
 
     if (!question || !answer || faqs.length >= MAX_FAQS) {
       return;
@@ -364,7 +388,7 @@ export function ProductForm({ productId }: ProductFormProps) {
   }
 
   return (
-    <main className="min-h-screen bg-[#FFFFFF] text-[#111111]">
+    <main className="min-h-screen overflow-x-hidden bg-[#FFFFFF] text-[#111111]">
       <header className="sticky top-0 z-10 border-b border-[#F0F0F0] bg-white">
         <div className="mx-auto flex h-[76px] w-full max-w-xl min-w-0 items-center gap-3 px-5">
           <Link
@@ -381,27 +405,29 @@ export function ProductForm({ productId }: ProductFormProps) {
       </header>
 
       <form
-        className="mx-auto grid w-full max-w-xl gap-5 px-5 py-6"
+        className="mx-auto grid w-full max-w-xl gap-5 overflow-x-hidden px-5 py-6"
         onSubmit={handleSubmit}
       >
-        <section>
+        <section className="min-w-0 overflow-hidden">
           <h2 className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#666666]">
             Product Images
           </h2>
-          <div className="-mx-1 flex min-w-0 gap-3 overflow-x-auto px-1 pb-2">
-            <label className="flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[#BBBBBB] bg-white text-center transition hover:border-[#111111]">
-              <Plus aria-hidden="true" className="h-5 w-5 text-[#25D366]" strokeWidth={1.8} />
-              <span className="mt-2 text-[10px] font-semibold uppercase text-[#888888]">
-                Add photo
-              </span>
-              <input
-                className="sr-only"
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageFiles}
-              />
-            </label>
+          <div className="-mx-1 flex max-w-full min-w-0 gap-3 overflow-x-auto px-1 pb-2">
+            {images.length < MAX_IMAGES ? (
+              <label className="flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[#BBBBBB] bg-white text-center transition hover:border-[#111111]">
+                <Plus aria-hidden="true" className="h-5 w-5 text-[#25D366]" strokeWidth={1.8} />
+                <span className="mt-2 text-[10px] font-semibold uppercase text-[#888888]">
+                  Add photo
+                </span>
+                <input
+                  className="sr-only"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageFiles}
+                />
+              </label>
+            ) : null}
 
             {images.map((image, index) => (
               <div
@@ -448,7 +474,7 @@ export function ProductForm({ productId }: ProductFormProps) {
           <p className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-[#888888]">
             <GripVertical aria-hidden="true" className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
             <span className="min-w-0 flex-1">
-              Drag items to reorder. First item is your cover.
+              Drag items to reorder. First item is your cover. {images.length}/{MAX_IMAGES} images.
             </span>
           </p>
           {isCompressingImages ? (
@@ -504,14 +530,18 @@ export function ProductForm({ productId }: ProductFormProps) {
             Short description
           </span>
           <textarea
-            className="min-h-20 w-full resize-none rounded-2xl border-0 bg-[#F4F4F5] px-4 py-3.5 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
+            className="h-[96px] w-full resize-none overflow-y-auto rounded-2xl border-0 bg-[#F4F4F5] px-4 py-3.5 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
+            maxLength={MAX_SHORT_DESCRIPTION_CHARS}
             placeholder="One or two sentences for the product callout box."
             value={shortDescription}
             onChange={(event) => setShortDescription(event.target.value)}
           />
+          <span className="mt-1 block text-right text-[11px] font-medium text-[#888888]">
+            {shortDescription.length}/{MAX_SHORT_DESCRIPTION_CHARS}
+          </span>
         </label>
 
-        <section>
+        <section className="min-w-0 overflow-hidden">
           <h2 className="mb-2 text-[13px] font-semibold">Key Benefits or Highlights</h2>
           <div className="grid gap-2">
             {keyBenefits.map((benefit, index) => (
@@ -520,7 +550,7 @@ export function ProductForm({ productId }: ProductFormProps) {
                 key={`${benefit}-${index}`}
               >
                 <Check aria-hidden="true" className="h-4 w-4 shrink-0 text-[#BBBBBB]" strokeWidth={1.5} />
-                <span className="min-w-0 flex-1">{benefit}</span>
+                <span className="min-w-0 flex-1 truncate">{benefit}</span>
                 <button
                   aria-label="Remove benefit"
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#BBBBBB] transition hover:text-[#EF4444]"
@@ -539,6 +569,7 @@ export function ProductForm({ productId }: ProductFormProps) {
               <input
                 className="h-11 min-w-0 flex-1 rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
                 placeholder="Add a benefit and press Enter"
+                maxLength={MAX_BENEFIT_CHARS}
                 value={benefitInput}
                 onChange={(event) => setBenefitInput(event.target.value)}
                 onKeyDown={handleBenefitKeyDown}
@@ -554,7 +585,7 @@ export function ProductForm({ productId }: ProductFormProps) {
               </button>
             </div>
             <p className="text-xs font-medium text-[#888888]">
-              {keyBenefits.length}/{MAX_BENEFITS} highlights added.
+              {keyBenefits.length}/{MAX_BENEFITS} highlights added. {MAX_BENEFIT_CHARS} characters max each.
             </p>
           </div>
         </section>
@@ -571,56 +602,69 @@ export function ProductForm({ productId }: ProductFormProps) {
           />
         </label>
 
-        <section>
+        <section className="min-w-0 overflow-hidden">
           <h2 className="mb-2 text-[13px] font-semibold">FAQs</h2>
           <div className="grid gap-2">
             {faqs.map((faq, index) => (
-              <div
-                className="grid gap-1 rounded-2xl bg-[#F4F4F5] px-4 py-3.5 text-[13px] font-medium"
+              <details
+                className="group relative min-w-0 overflow-hidden rounded-2xl bg-[#F4F4F5] px-4 py-3.5 text-[13px] font-medium"
                 key={`${faq.question}-${index}`}
               >
-                <div className="flex min-w-0 items-start gap-3">
+                <summary className="flex min-w-0 cursor-pointer list-none items-center gap-3 pr-9">
                   <span className="shrink-0 font-bold text-[#111111]">Q</span>
-                  <p className="min-w-0 flex-1">{faq.question}</p>
-                  <button
-                    aria-label="Remove FAQ"
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#BBBBBB] transition hover:text-[#EF4444]"
-                    type="button"
-                    onClick={() =>
-                      setFaqs((current) =>
-                        current.filter((_, itemIndex) => itemIndex !== index),
-                      )
-                    }
-                  >
-                    <X aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  </button>
+                  <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+                    {faq.question}
+                  </span>
+                </summary>
+                <button
+                  aria-label="Remove FAQ"
+                  className="absolute right-3 top-2.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#BBBBBB] transition hover:text-[#EF4444]"
+                  type="button"
+                  onClick={() =>
+                    setFaqs((current) =>
+                      current.filter((_, itemIndex) => itemIndex !== index),
+                    )
+                  }
+                >
+                  <X aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </button>
+                <div className="mt-3 grid min-w-0 gap-2 border-t border-[#E5E5E5] pt-3">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="shrink-0 font-bold text-[#111111]">Q</span>
+                    <p className="min-w-0 flex-1 whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                      {faq.question}
+                    </p>
+                  </div>
+                  <div className="flex min-w-0 items-start gap-3 text-[#555555]">
+                    <span className="shrink-0 font-bold text-[#888888]">A</span>
+                    <p className="min-w-0 flex-1 whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                      {faq.answer}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex min-w-0 items-start gap-3 text-[#555555]">
-                  <span className="shrink-0 font-bold text-[#888888]">A</span>
-                  <p className="min-w-0 flex-1">{faq.answer}</p>
-                </div>
-              </div>
+              </details>
             ))}
             <div className="grid gap-2">
               <input
                 className="h-11 min-w-0 rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
                 placeholder="Question"
+                maxLength={MAX_FAQ_QUESTION_CHARS}
                 value={faqQuestion}
                 onChange={(event) => setFaqQuestion(event.target.value)}
                 onKeyDown={handleFaqKeyDown}
                 disabled={faqs.length >= MAX_FAQS}
               />
-              <div className="flex min-w-0 gap-2">
-                <input
-                  className="h-11 min-w-0 flex-1 rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
+              <div className="grid min-w-0 gap-2 sm:grid-cols-[1fr_auto]">
+                <textarea
+                  className="min-h-20 min-w-0 resize-none rounded-2xl border-0 bg-[#F4F4F5] px-4 py-3 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
                   placeholder="Answer"
+                  maxLength={MAX_FAQ_ANSWER_CHARS}
                   value={faqAnswer}
                   onChange={(event) => setFaqAnswer(event.target.value)}
-                  onKeyDown={handleFaqKeyDown}
                   disabled={faqs.length >= MAX_FAQS}
                 />
                 <button
-                  className="h-11 shrink-0 rounded-2xl bg-[#111111] px-4 text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="h-11 shrink-0 rounded-2xl bg-[#111111] px-4 text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 sm:self-start"
                   type="button"
                   disabled={
                     faqs.length >= MAX_FAQS ||
@@ -634,7 +678,7 @@ export function ProductForm({ productId }: ProductFormProps) {
               </div>
             </div>
             <p className="text-xs font-medium text-[#888888]">
-              {faqs.length}/{MAX_FAQS} FAQs added.
+              {faqs.length}/{MAX_FAQS} FAQs added. Questions {MAX_FAQ_QUESTION_CHARS} chars, answers {MAX_FAQ_ANSWER_CHARS} chars.
             </p>
           </div>
         </section>
@@ -656,7 +700,7 @@ export function ProductForm({ productId }: ProductFormProps) {
           >
             <span
               className={`h-4 w-4 rounded-full bg-white shadow transition ${
-                inStock ? "translate-x-[20px]" : "translate-x-0"
+                inStock ? "translate-x-5" : "translate-x-0"
               }`}
             />
           </button>

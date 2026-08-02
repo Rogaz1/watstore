@@ -572,16 +572,18 @@ export function ProductDetailClient({
             <div className="grid gap-3">
               {faqs.map((faq, index) => (
                 <details
-                  className="group rounded-2xl border border-[#E5E5E5] bg-white"
+                  className="group min-w-0 overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white"
                   key={`${faq.question}-${index}`}
                 >
                   <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-[13px] font-bold">
-                    <span className="min-w-0 flex-1">{faq.question}</span>
+                    <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+                      {faq.question}
+                    </span>
                     <span className="shrink-0 text-[#BBBBBB] transition group-open:rotate-45">
                       +
                     </span>
                   </summary>
-                  <p className="border-t border-[#F4F3F0] px-4 py-4 text-sm font-normal leading-7 text-[#555555]">
+                  <p className="border-t border-[#F4F3F0] px-4 py-4 text-sm font-normal leading-7 text-[#555555] whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
                     {faq.answer}
                   </p>
                 </details>

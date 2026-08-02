@@ -1,5 +1,10 @@
 import { ProductDetailClient } from "./ProductDetailClient";
 import { supabase } from "@/lib/supabase";
+import {
+  isMissingFaqsColumn,
+  PRODUCT_SELECT_BASE,
+  PRODUCT_SELECT_WITH_FAQS,
+} from "@/app/components/productQueries";
 import type {
   PublicMerchant,
   PublicProduct,
@@ -42,14 +47,26 @@ export default async function ProductDetailPage({
     );
   }
 
-  const { data: productData, error: productError } = await supabase
+  const productResult = await supabase
     .from("products")
-    .select(
-      "id,merchant_id,name,sale_price,original_price,photo_urls,video_url,short_description,long_description,key_benefits,faqs,in_stock",
-    )
+    .select(PRODUCT_SELECT_WITH_FAQS)
     .eq("id", productId)
     .eq("merchant_id", merchant.id)
     .maybeSingle();
+  let productData = productResult.data as PublicProduct | null;
+  let productError: unknown = productResult.error;
+
+  if (isMissingFaqsColumn(productError)) {
+    const fallback = await supabase
+      .from("products")
+      .select(PRODUCT_SELECT_BASE)
+      .eq("id", productId)
+      .eq("merchant_id", merchant.id)
+      .maybeSingle();
+
+    productData = fallback.data as PublicProduct | null;
+    productError = fallback.error;
+  }
 
   if (productError || !productData) {
     return (

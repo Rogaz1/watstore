@@ -14,6 +14,7 @@ import {
 } from "react";
 import {
   ArrowRight,
+  BookOpen,
   Calendar,
   ChevronDown,
   ChevronUp,
@@ -21,6 +22,7 @@ import {
   ExternalLink,
   Home,
   Image as ImageIcon,
+  Lightbulb,
   Lock,
   LogOut,
   MapPin,
@@ -35,6 +37,7 @@ import {
   Tag,
   Trash2,
   User,
+  X,
   Zap,
   Globe,
 } from "lucide-react";
@@ -60,6 +63,68 @@ import { useRequireUser } from "../components/useRequireUser";
 
 const LOGO_BUCKET = "merchant-logos";
 const PLATFORM_HELP_NUMBER = "233509396861";
+const MAX_TAGLINE_CHARS = 60;
+const MAX_DELIVERY_INFO_CHARS = 60;
+
+const sellingTips = [
+  {
+    title: "Photos",
+    items: [
+      "Use at least 3 real photos of your actual product - buyers trust real photos more than a single studio shot",
+      "Include a close-up, a full view, and if possible, the product in use",
+      "Good lighting matters more than a fancy camera - natural daylight works well",
+    ],
+  },
+  {
+    title: "Your short description",
+    items: [
+      "This is the first thing buyers read - make it about the benefit, not just what the product is",
+      "Keep it to one or two sentences",
+    ],
+  },
+  {
+    title: "Key benefits",
+    items: [
+      "List specific, concrete benefits, not vague claims",
+      "3-4 short bullet points work better than one long paragraph",
+    ],
+  },
+  {
+    title: "Full description",
+    items: [
+      "Break it into short paragraphs, not one big block of text",
+      "Answer the obvious questions: what it's made of, how to use it, who it's for",
+    ],
+  },
+  {
+    title: "Delivery info",
+    items: [
+      "Be specific and honest about delivery areas and timing - this is one of the biggest things that makes buyers hesitate to order",
+      "Keep it short - one clear line works better than a long explanation",
+    ],
+  },
+  {
+    title: "FAQ",
+    items: [
+      "Add answers to the questions you get asked most often on WhatsApp - this saves you time and helps hesitant buyers order without needing to ask first",
+    ],
+  },
+  {
+    title: "Building trust",
+    items: [
+      "Be honest in your descriptions - buyers who feel misled won't come back, even if you get the one sale",
+      "Respond quickly to WhatsApp messages - buyers often compare a few sellers and go with whoever answers first",
+    ],
+  },
+];
+
+const includedFeatures = [
+  "Unlimited products",
+  "Public storefront",
+  "WhatsApp ordering",
+  "Order management",
+  "Product photos, benefits, descriptions, and FAQs",
+];
 
 type DashboardTab = "home" | "products" | "orders" | "settings";
 type OrderFilter = "all" | OrderStatus;
@@ -272,6 +337,9 @@ function StatCard({
   value: string | number;
   highlight?: boolean;
 }) {
+  const displayValue =
+    typeof value === "number" ? String(value).padStart(2, "0") : value;
+
   return (
     <div className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
       <p className="text-[9.5px] font-bold uppercase tracking-[0.08em] text-[#888888]">{label}</p>
@@ -280,7 +348,7 @@ function StatCard({
           highlight ? "text-[#25D366]" : "text-[#1A1A18]"
         }`}
       >
-        {value}
+        {displayValue}
       </p>
     </div>
   );
@@ -383,10 +451,10 @@ function OrderSummaryCard({
             <Calendar aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
             {formatRelativeOrderDate(order.created_at)}
           </span>
-          <label className="relative inline-flex shrink-0">
+          <label className="relative inline-flex h-6 shrink-0 items-center">
             <span className="sr-only">Change order status</span>
             <select
-              className={`h-6 max-w-[86px] cursor-pointer appearance-none truncate rounded-full border-[1.5px] py-0 pl-3.5 pr-3.5 text-[10px] font-semibold capitalize leading-none outline-none ${homeStatusClasses(
+              className={`h-6 max-w-[96px] cursor-pointer appearance-none truncate rounded-full border-[1.5px] py-0 pl-3.5 pr-7 text-[10px] font-semibold capitalize leading-none outline-none ${homeStatusClasses(
                 order.status,
               )}`}
               value={order.status}
@@ -400,6 +468,11 @@ function OrderSummaryCard({
                 </option>
               ))}
             </select>
+            <ChevronDown
+              aria-hidden="true"
+              className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2"
+              strokeWidth={2.4}
+            />
           </label>
         </div>
       </div>
@@ -451,6 +524,7 @@ export default function DashboardPage() {
   const [orderMessage, setOrderMessage] = useState("");
   const [storeLinkCopied, setStoreLinkCopied] = useState(false);
   const [isStoreMenuOpen, setIsStoreMenuOpen] = useState(false);
+  const [isSellingTipsOpen, setIsSellingTipsOpen] = useState(false);
   const [settingsBusinessName, setSettingsBusinessName] = useState("");
   const [settingsTagline, setSettingsTagline] = useState("");
   const [settingsDeliveryInfo, setSettingsDeliveryInfo] = useState("");
@@ -470,6 +544,19 @@ export default function DashboardPage() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+  useEffect(() => {
+    if (!isSellingTipsOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isSellingTipsOpen]);
 
   useEffect(() => {
     if (!userId) {
@@ -634,7 +721,7 @@ export default function DashboardPage() {
 
     await navigator.clipboard.writeText(storeUrl);
     setStoreLinkCopied(true);
-    window.setTimeout(() => setStoreLinkCopied(false), 1600);
+    window.setTimeout(() => setStoreLinkCopied(false), 3200);
   }
 
   async function handleDelete(product: Product) {
@@ -802,7 +889,7 @@ export default function DashboardPage() {
       const logoUrl = await uploadSettingsLogo();
       const payload = {
         business_name: settingsBusinessName.trim(),
-        tagline: settingsTagline.trim() || null,
+        tagline: settingsTagline.trim().slice(0, MAX_TAGLINE_CHARS) || null,
         slug: normalizedSlug,
         whatsapp_number: digitsOnlyWhatsapp,
         logo_url: logoUrl,
@@ -842,7 +929,8 @@ export default function DashboardPage() {
     setIsSavingDeliveryInfo(true);
     setDeliveryInfoMessage("");
 
-    const deliveryInfo = settingsDeliveryInfo.trim() || null;
+    const deliveryInfo =
+      settingsDeliveryInfo.trim().slice(0, MAX_DELIVERY_INFO_CHARS) || null;
     const { error } = await supabase
       .from("merchants")
       .update({ delivery_info: deliveryInfo })
@@ -910,13 +998,13 @@ export default function DashboardPage() {
           stats.todayOrders += 1;
         }
 
-        if (order.status !== "fulfilled" && order.status !== "cancelled") {
-          stats.activeOrders += 1;
+        if (order.status === "pending") {
+          stats.pendingOrders += 1;
         }
 
         return stats;
       },
-      { activeOrders: 0, todayOrders: 0, todaySales: 0 },
+      { pendingOrders: 0, todayOrders: 0, todaySales: 0 },
     );
   }, [orders]);
   const recentOrders = orders.slice(0, 3);
@@ -966,9 +1054,9 @@ export default function DashboardPage() {
     <main className="min-h-screen overflow-x-hidden bg-[#F7F5F2] pb-28 text-[#1A1A18]">
       <header className="sticky top-0 z-20 border-b border-[#EDECEA] bg-white">
         <div className="mx-auto w-full max-w-5xl">
-          <div className="relative flex min-w-0 items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <div className="relative flex min-w-0 items-center justify-between gap-3 px-4 py-5 sm:px-6">
             <div className="flex min-w-0 flex-1 items-center gap-3">
-              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-[#1A1A18] text-white">
+              <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#1A1A18] text-white">
                 {merchant?.logo_url ? (
                   <img
                     className="h-full w-full object-cover"
@@ -976,7 +1064,7 @@ export default function DashboardPage() {
                     alt={`${merchant.business_name ?? "Store"} logo`}
                   />
                 ) : (
-                  <span className="flex h-full w-full items-center justify-center text-lg font-bold">
+                  <span className="flex h-full w-full items-center justify-center text-[13px] font-bold">
                     {(merchant?.business_name ?? "S").charAt(0)}
                   </span>
                 )}
@@ -987,7 +1075,7 @@ export default function DashboardPage() {
                 onClick={() => setIsStoreMenuOpen((isOpen) => !isOpen)}
                 aria-expanded={isStoreMenuOpen}
               >
-                <span className="max-w-[132px] truncate text-[15px] font-bold leading-none min-[390px]:max-w-[170px] sm:max-w-[320px]">
+                <span className="max-w-[132px] truncate text-[13px] font-bold leading-none min-[390px]:max-w-[170px] sm:max-w-[320px]">
                   {merchant?.business_name ?? "Your store"}
                 </span>
                 <span className="shrink-0 text-[#888888]">
@@ -1018,6 +1106,21 @@ export default function DashboardPage() {
                     </a>
                   ) : null}
                   <div className="mx-5 h-px bg-[#EDECEA]" />
+                  <button
+                    className="flex h-[60px] w-full min-w-0 items-center gap-4 px-5 text-left text-[13px] font-medium text-[#1A1A18] transition hover:bg-[#F7F5F2]"
+                    type="button"
+                    onClick={() => {
+                      setIsStoreMenuOpen(false);
+                      setIsSellingTipsOpen(true);
+                    }}
+                  >
+                    <Lightbulb
+                      aria-hidden="true"
+                      className="h-5 w-5 shrink-0 text-[#888888]"
+                    />
+                    <span className="min-w-0 flex-1 truncate">Selling Tips</span>
+                  </button>
+                  <div className="mx-5 h-px bg-[#EDECEA]" />
                   <a
                     className="flex h-[60px] w-full min-w-0 items-center gap-4 px-5 text-[13px] font-medium text-[#1A1A18] transition hover:bg-[#F7F5F2]"
                     href={helpUrl}
@@ -1036,7 +1139,7 @@ export default function DashboardPage() {
 
             <div className="flex shrink-0 items-center gap-2">
               <button
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F7F5F2] text-[#1A1A18] transition hover:bg-[#EDECEA]"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7F5F2] text-[#1A1A18] transition hover:bg-[#EDECEA]"
                 type="button"
                 onClick={handleCopyStoreLink}
                 aria-label="Copy store link"
@@ -1046,7 +1149,7 @@ export default function DashboardPage() {
               </button>
               {storeUrl ? (
                 <a
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F7F5F2] text-[#1A1A18] transition hover:bg-[#EDECEA]"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7F5F2] text-[#1A1A18] transition hover:bg-[#EDECEA]"
                   href={storeUrl}
                   target="_blank"
                   rel="noreferrer"
@@ -1060,20 +1163,82 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {storeLinkCopied ? (
+        <div className="fixed left-4 right-4 top-20 z-40 mx-auto max-w-sm rounded-2xl border border-[#EDECEA] bg-white px-4 py-3 text-center text-[12px] font-semibold leading-5 text-[#1A1A18] shadow-[0_12px_30px_rgba(0,0,0,0.12)]">
+          Store link copied. Share it with customers so they can visit your
+          storefront.
+        </div>
+      ) : null}
+
+      {isSellingTipsOpen ? (
+        <section className="fixed inset-0 z-[100] flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-white text-[#1A1A18]">
+            <header className="shrink-0 border-b border-[#EDECEA] px-5 py-4">
+              <div className="mx-auto flex w-full max-w-2xl min-w-0 items-center justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7F5F2] text-[#1A1A18]">
+                  <BookOpen aria-hidden="true" className="h-[18px] w-[18px]" />
+                </span>
+                <div className="min-w-0">
+                  <h2 className="truncate text-[18px] font-bold">Selling Tips</h2>
+                  <p className="mt-0.5 truncate text-xs font-medium text-[#888888]">
+                    Simple ways to improve your product pages
+                  </p>
+                </div>
+              </div>
+              <button
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7F5F2] text-[#1A1A18] transition hover:bg-[#EDECEA]"
+                type="button"
+                aria-label="Close selling tips"
+                onClick={() => setIsSellingTipsOpen(false)}
+              >
+                <X aria-hidden="true" className="h-4 w-4" />
+              </button>
+              </div>
+            </header>
+            <div className="min-h-0 flex-1 overflow-y-scroll px-5 py-5 [-webkit-overflow-scrolling:touch]">
+              <div className="mx-auto w-full max-w-2xl pb-8">
+              <div className="grid gap-3">
+                {sellingTips.map((section) => (
+                  <article
+                    className="rounded-2xl border border-[#EDECEA] bg-white p-4"
+                    key={section.title}
+                  >
+                    <h3 className="text-[13px] font-bold">{section.title}</h3>
+                    <ul className="mt-3 grid gap-2">
+                      {section.items.map((item) => (
+                        <li
+                          className="flex min-w-0 gap-2 text-[12px] font-medium leading-5 text-[#666666]"
+                          key={item}
+                        >
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
+                          <span className="min-w-0 flex-1">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </article>
+                ))}
+              </div>
+            </div>
+            </div>
+        </section>
+      ) : null}
+
       <section className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
         {activeTab === "home" ? (
           <section className="grid gap-6">
             <div>
                 <h1 className="text-[26px] font-bold leading-none sm:text-[30px]">
-                Welcome back
+                Your Store Today
               </h1>
               <p className="mt-2 text-sm font-medium text-[#888888]">
-                Your store is doing great today.
+                Everything you need at a glance.
               </p>
             </div>
 
-            {showProminentSubscription ? (
-            <div className="flex min-w-0 items-center justify-between gap-4 rounded-2xl border-2 border-[#F59E0B] bg-[#FFFBEB] p-4 shadow-sm">
+            {!merchant ? (
+              <div className="h-11 rounded-full border border-[#EDECEA] bg-white shadow-sm" />
+            ) : showProminentSubscription ? (
+              <div className="flex min-w-0 items-center justify-between gap-4 rounded-2xl border-2 border-[#F59E0B] bg-[#FFFBEB] p-4 shadow-sm">
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-bold text-[#92400E]">
                     {planName}
@@ -1083,18 +1248,16 @@ export default function DashboardPage() {
                     access!
                   </p>
                 </div>
-                {merchant ? (
-                  <a
-                    className="flex h-10 shrink-0 items-center justify-center rounded-xl bg-[#25D366] px-5 py-3.5 text-[13px] font-semibold text-white transition hover:opacity-90"
-                    href={buildUpgradeUrl(merchant)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Upgrade
-                  </a>
-                ) : null}
+                <a
+                  className="flex h-10 shrink-0 items-center justify-center rounded-xl bg-[#25D366] px-5 py-3.5 text-[13px] font-semibold text-white transition hover:opacity-90"
+                  href={buildUpgradeUrl(merchant)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Upgrade
+                </a>
               </div>
-            ) : merchant?.subscription_status === "active" ? (
+            ) : merchant.subscription_status === "active" ? (
               <div className="flex min-w-0 items-center justify-between gap-3 rounded-full border border-[#EDECEA] bg-white px-4 py-3 shadow-sm">
                 <p className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-medium text-[#888888]">
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
@@ -1118,11 +1281,11 @@ export default function DashboardPage() {
             <div className="grid grid-cols-3 gap-3">
               <StatCard label="Orders" value={orderStats.todayOrders} />
               <StatCard
-                label="In Progress"
-                value={String(orderStats.activeOrders).padStart(2, "0")}
+                label="Pending"
+                value={orderStats.pendingOrders}
                 highlight
               />
-              <StatCard label="Chats" value="0" />
+              <StatCard label="Chats" value={0} />
             </div>
 
             <section>
@@ -1406,9 +1569,13 @@ export default function DashboardPage() {
                     </SettingsFieldIcon>
                     <input
                       className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1A1A18] outline-none placeholder:text-[#888888]"
-                      maxLength={90}
+                      maxLength={MAX_TAGLINE_CHARS}
                       value={settingsTagline}
-                      onChange={(event) => setSettingsTagline(event.target.value)}
+                      onChange={(event) =>
+                        setSettingsTagline(
+                          event.target.value.slice(0, MAX_TAGLINE_CHARS),
+                        )
+                      }
                     />
                   </div>
                 </label>
@@ -1558,19 +1725,23 @@ export default function DashboardPage() {
               <p className="mt-1 text-xs font-medium text-[#888888]">
                 Optional details for your customers
               </p>
-              <textarea
-                className="mt-4 min-h-24 w-full resize-none rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-3 py-3 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:border-[#1A1A18] focus:ring-2 focus:ring-[#1A1A18]/10"
-                maxLength={50}
-                placeholder="e.g. Same-day delivery in Accra, 2-3 days nationwide. Free delivery in Accra & Tema"
+              <input
+                className="mt-4 h-12 w-full rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-3 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:border-[#1A1A18] focus:ring-2 focus:ring-[#1A1A18]/10"
+                maxLength={MAX_DELIVERY_INFO_CHARS}
+                placeholder="e.g. Same-day delivery in Accra"
                 value={settingsDeliveryInfo}
-                onChange={(event) => setSettingsDeliveryInfo(event.target.value)}
+                onChange={(event) =>
+                  setSettingsDeliveryInfo(
+                    event.target.value.slice(0, MAX_DELIVERY_INFO_CHARS),
+                  )
+                }
               />
               <div className="mt-3 flex min-w-0 items-start justify-between gap-4">
                 <p className="min-w-0 flex-1 text-xs font-medium leading-5 text-[#888888]">
                   To help customers understand your delivery times and offers.
                 </p>
                 <p className="shrink-0 text-xs font-bold text-[#888888]">
-                  {settingsDeliveryInfo.length}/50
+                  {settingsDeliveryInfo.length}/{MAX_DELIVERY_INFO_CHARS}
                 </p>
               </div>
               {deliveryInfoMessage ? (
@@ -1648,6 +1819,20 @@ export default function DashboardPage() {
 
             <section className="grid gap-3 rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
               <h2 className="text-lg font-bold">Subscription Plan</h2>
+              <div className="rounded-2xl border border-[#EDECEA] bg-[#F7F5F2] p-4">
+                <h3 className="text-[13px] font-bold">What&apos;s included</h3>
+                <ul className="mt-3 grid gap-2">
+                  {includedFeatures.map((feature) => (
+                    <li
+                      className="flex min-w-0 items-center gap-2 text-[12px] font-medium text-[#666666]"
+                      key={feature}
+                    >
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
+                      <span className="min-w-0 flex-1">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
               {[
                 { name: "Monthly" as const, cycle: 1, price: "GHS 49", suffix: "/month" },
                 { name: "Annual" as const, cycle: 12, price: "GHS 399", suffix: "/year" },
@@ -1753,6 +1938,7 @@ export default function DashboardPage() {
         ) : null}
       </section>
 
+      {!isSellingTipsOpen ? (
       <nav className="fixed bottom-0 left-0 right-0 z-30 w-full border-t border-[#EDECEA] bg-white px-2 py-2">
         <div
           className="grid w-full grid-cols-4 items-stretch"
@@ -1793,6 +1979,7 @@ export default function DashboardPage() {
           )}
         </div>
       </nav>
+      ) : null}
     </main>
   );
 }

@@ -3,9 +3,14 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { FormEvent, TouchEvent, useEffect, useMemo, useRef, useState } from "react";
-import { MapPin, Share2, Truck, User } from "lucide-react";
+import { ChevronDown, ChevronUp, MapPin, Share2, Truck, User } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
+import {
+  isMissingFaqsColumn,
+  PRODUCT_SELECT_BASE,
+  PRODUCT_SELECT_WITH_FAQS,
+} from "@/app/components/productQueries";
 import { formatGhsPrice } from "@/app/components/productTypes";
 import {
   buildProductMedia,
@@ -136,13 +141,13 @@ function OrderSheet({
 
     const order = data as CreateOrderResponse;
     const whatsappMessage = [
-      `Order #${order.order_number}`,
       "Hello, I'd like to order:",
       `Product: ${product.name}`,
       `Quantity: ${quantity}`,
       `Total: GHS ${total.toFixed(2)}`,
       `Name: ${customerName.trim()}`,
       `Delivery Location: ${deliveryLocation.trim()}`,
+      `Order #${order.order_number}`,
     ].join("\n");
 
     window.open(buildWhatsAppUrl(merchant.whatsapp_number, whatsappMessage), "_blank");
@@ -220,7 +225,7 @@ function OrderSheet({
               <User aria-hidden="true" className="h-4 w-4 shrink-0" />
               <input
                 className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-[#111111] outline-none placeholder:text-[#888888]"
-                placeholder="Kemi Adeyemi"
+                placeholder="Ama Mensah"
                 value={customerName}
                 onChange={(event) => setCustomerName(event.target.value)}
                 required
@@ -235,7 +240,7 @@ function OrderSheet({
               <MapPin aria-hidden="true" className="h-4 w-4 shrink-0" />
               <input
                 className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-[#111111] outline-none placeholder:text-[#888888]"
-                placeholder="Lekki Phase 1, Lagos"
+                placeholder="East Legon, Accra"
                 value={deliveryLocation}
                 onChange={(event) => setDeliveryLocation(event.target.value)}
                 required
@@ -245,7 +250,7 @@ function OrderSheet({
         </div>
 
         <p className="mt-4 text-center text-[10px] font-medium leading-4 text-[#999999]">
-          You&apos;ll confirm everything over WhatsApp. No payment required now.
+          You will confirm your order on WhatsApp. No payment required now
         </p>
 
         {message ? (
@@ -280,6 +285,7 @@ export function ProductDetailClient({
   const [activeIndex, setActiveIndex] = useState(0);
   const [shareMessage, setShareMessage] = useState("");
   const [isOrderOpen, setIsOrderOpen] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const touchStartX = useRef(0);
 
   const media = useMemo(() => (product ? buildProductMedia(product) : []), [product]);
@@ -323,14 +329,26 @@ export function ProductDetailClient({
         return;
       }
 
-      const { data: productData, error: productError } = await supabase
+      const productResult = await supabase
         .from("products")
-        .select(
-          "id,merchant_id,name,sale_price,original_price,photo_urls,video_url,short_description,long_description,key_benefits,faqs,in_stock",
-        )
+        .select(PRODUCT_SELECT_WITH_FAQS)
         .eq("id", productId)
         .eq("merchant_id", publicMerchant.id)
         .maybeSingle();
+      let productData = productResult.data as PublicProduct | null;
+      let productError: unknown = productResult.error;
+
+      if (isMissingFaqsColumn(productError)) {
+        const fallback = await supabase
+          .from("products")
+          .select(PRODUCT_SELECT_BASE)
+          .eq("id", productId)
+          .eq("merchant_id", publicMerchant.id)
+          .maybeSingle();
+
+        productData = fallback.data as PublicProduct | null;
+        productError = fallback.error;
+      }
 
       if (!isMounted) {
         return;
@@ -537,7 +555,9 @@ export function ProductDetailClient({
               className="h-3.5 w-3.5 shrink-0 text-[#888888]"
               strokeWidth={1.5}
             />
-            <span className="min-w-0 flex-1">{merchant.delivery_info}</span>
+            <span className="min-w-0 flex-1 truncate">
+              {merchant.delivery_info}
+            </span>
           </div>
         ) : null}
 
@@ -566,27 +586,55 @@ export function ProductDetailClient({
 
         {faqs.length ? (
           <section className="mt-9 border-t border-[#E5E5E5] pt-7">
-            <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#888888]">
+            <p className="mb-4 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#AAAAAA]">
               Frequently asked questions
             </p>
-            <div className="grid gap-3">
+            <div className={openFaqIndex === null ? "grid gap-3" : "grid"}>
               {faqs.map((faq, index) => (
-                <details
-                  className="group min-w-0 overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white"
+                <div
+                  className={
+                    openFaqIndex === null
+                      ? "min-w-0 overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white"
+                      : "min-w-0 border-b border-[#E5E5E5] py-4 last:border-b-0"
+                  }
                   key={`${faq.question}-${index}`}
                 >
-                  <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-[13px] font-bold">
+                  <button
+                    className={
+                      openFaqIndex === null
+                        ? "flex min-w-0 w-full items-center justify-between gap-3 px-4 py-4 text-left text-[13px] font-bold"
+                        : "flex min-w-0 w-full items-center justify-between gap-3 text-left text-[13px] font-bold"
+                    }
+                    type="button"
+                    onClick={() =>
+                      setOpenFaqIndex((current) =>
+                        current === index ? null : index,
+                      )
+                    }
+                  >
                     <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
                       {faq.question}
                     </span>
-                    <span className="shrink-0 text-[#BBBBBB] transition group-open:rotate-45">
-                      +
+                    <span
+                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
+                        openFaqIndex === index
+                          ? "bg-[#1A1A18] text-white"
+                          : "border border-[#D8D4CE] bg-white text-[#AAAAAA]"
+                      }`}
+                    >
+                      {openFaqIndex === index ? (
+                        <ChevronUp aria-hidden="true" className="h-2.5 w-2.5" strokeWidth={2.5} />
+                      ) : (
+                        <ChevronDown aria-hidden="true" className="h-2.5 w-2.5" strokeWidth={2.5} />
+                      )}
                     </span>
-                  </summary>
-                  <p className="border-t border-[#F4F3F0] px-4 py-4 text-sm font-normal leading-7 text-[#555555] whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
-                    {faq.answer}
-                  </p>
-                </details>
+                  </button>
+                  {openFaqIndex === index ? (
+                    <p className="mt-4 whitespace-pre-wrap break-words text-sm font-normal leading-7 text-[#555555] [overflow-wrap:anywhere]">
+                      {faq.answer}
+                    </p>
+                  ) : null}
+                </div>
               ))}
             </div>
           </section>

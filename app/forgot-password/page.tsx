@@ -122,13 +122,18 @@ export default function ForgotPasswordPage() {
         Back to login
       </Link>
 
-      <section className="mx-auto mt-16 w-full" style={{ maxWidth: "18.75rem" }}>
+      <section
+        className="mx-auto mt-16 w-full"
+        style={{ maxWidth: "18.75rem" }}
+      >
         <AuthBrandHeader />
 
         <div className="mt-8 rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-sm">
           {isSent ? (
             <div className="py-3 text-center">
-              <h2 className="text-[22px] font-bold leading-tight">Check your email</h2>
+              <h2 className="text-[22px] font-bold leading-tight">
+                Check your email
+              </h2>
               <p className="mt-2 text-sm font-medium text-[#888888]">
                 Check your email for a reset link.
               </p>
@@ -137,16 +142,16 @@ export default function ForgotPasswordPage() {
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="text-center">
                 <h2 className="text-[22px] font-bold leading-tight">
-                  Reset your password
+                  Reset Your Password
                 </h2>
                 <p className="mx-auto mt-2 text-sm font-medium leading-5 text-[#888888]">
-                  Enter your email and we&apos;ll send you a link to get back
-                  into your account.
+                  Enter your email and we will send you a link to get back into
+                  your account.
                 </p>
               </div>
               <label className="block">
                 <span className="mb-2 block text-xs font-semibold">
-                  Email address
+                  Email Address
                 </span>
                 <div className="flex h-12 items-center gap-3 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10">
                   <EnvelopeIcon />

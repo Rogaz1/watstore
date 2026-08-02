@@ -16,6 +16,11 @@ import { supabase } from "@/lib/supabase";
 import { ExpiredAccessScreen } from "./ExpiredAccessScreen";
 import { compressImageForUpload } from "./imageCompression";
 import { getMerchantForUser } from "./merchantProfile";
+import {
+  isMissingFaqsColumn,
+  PRODUCT_SELECT_BASE,
+  PRODUCT_SELECT_WITH_FAQS,
+} from "./productQueries";
 import { Merchant, Product, ProductFaq } from "./productTypes";
 import {
   getSubscriptionAccess,
@@ -125,14 +130,26 @@ export function ProductForm({ productId }: ProductFormProps) {
         return;
       }
 
-      const { data: product, error: productError } = await supabase
+      const productResult = await supabase
         .from("products")
-        .select(
-          "id,merchant_id,name,sale_price,original_price,photo_urls,video_url,short_description,long_description,key_benefits,faqs,in_stock",
-        )
+        .select(PRODUCT_SELECT_WITH_FAQS)
         .eq("id", productId)
         .eq("merchant_id", refreshedMerchant.id)
         .single();
+      let product = productResult.data as Product | null;
+      let productError: unknown = productResult.error;
+
+      if (isMissingFaqsColumn(productError)) {
+        const fallback = await supabase
+          .from("products")
+          .select(PRODUCT_SELECT_BASE)
+          .eq("id", productId)
+          .eq("merchant_id", refreshedMerchant.id)
+          .single();
+
+        product = fallback.data as Product | null;
+        productError = fallback.error;
+      }
 
       if (!isMounted) {
         return;
@@ -323,7 +340,7 @@ export function ProductForm({ productId }: ProductFormProps) {
         images.map((image) => uploadMedia(image, merchant.id)),
       );
       const videoUrl = video ? await uploadMedia(video, merchant.id) : null;
-      const payload = {
+      const basePayload = {
         merchant_id: merchant.id,
         name: name.trim(),
         sale_price: Number(salePrice),
@@ -333,24 +350,39 @@ export function ProductForm({ productId }: ProductFormProps) {
         short_description: shortDescription.trim() || null,
         key_benefits: keyBenefits.map((benefit) => benefit.trim()).filter(Boolean),
         long_description: longDescription.trim() || null,
+        in_stock: inStock,
+      };
+      const payload = {
+        ...basePayload,
         faqs: faqs
           .map((faq) => ({
             question: faq.question.trim(),
             answer: faq.answer.trim(),
           }))
           .filter((faq) => faq.question && faq.answer),
-        in_stock: inStock,
       };
 
-      const request = productId
-        ? supabase
-            .from("products")
-            .update(payload)
-            .eq("id", productId)
-            .eq("merchant_id", merchant.id)
-        : supabase.from("products").insert(payload);
+      const saveProduct = (nextPayload: typeof basePayload | typeof payload) =>
+        productId
+          ? supabase
+              .from("products")
+              .update(nextPayload)
+              .eq("id", productId)
+              .eq("merchant_id", merchant.id)
+          : supabase.from("products").insert(nextPayload);
 
-      const { error } = await request;
+      let { error } = await saveProduct(payload);
+
+      if (isMissingFaqsColumn(error)) {
+        if (payload.faqs.length) {
+          throw new Error(
+            "FAQs are not enabled in the database yet. Run the products.faqs SQL migration, then save again.",
+          );
+        }
+
+        const fallback = await saveProduct(basePayload);
+        error = fallback.error;
+      }
 
       if (error) {
         throw error;

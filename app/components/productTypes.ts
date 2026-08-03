@@ -4,6 +4,8 @@ export type Merchant = {
   business_name?: string | null;
   tagline?: string | null;
   delivery_info?: string | null;
+  payment_options?: string | null;
+  why_choose_us?: string | null;
   slug?: string | null;
   whatsapp_number?: string | null;
   logo_url?: string | null;
@@ -65,7 +67,7 @@ export function formatGhsPrice(value: number | null | undefined) {
     return "";
   }
 
-  return `GHS ${new Intl.NumberFormat("en-US", {
+  return `₵${new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value)}`;

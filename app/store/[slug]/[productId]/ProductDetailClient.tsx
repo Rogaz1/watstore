@@ -7,8 +7,10 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronUp,
+  CreditCard,
   MapPin,
   Share2,
+  ShieldCheck,
   Truck,
   User,
   X,
@@ -153,7 +155,7 @@ function OrderSheet({
       "Hello, I'd like to order:",
       `Product: ${product.name}`,
       `Quantity: ${quantity}`,
-      `Total: GHS ${total.toFixed(2)}`,
+      `Total: ₵${total.toFixed(2)}`,
       `Name: ${customerName.trim()}`,
       `Delivery Location: ${deliveryLocation.trim()}`,
       `Order #${order.order_number}`,
@@ -280,11 +282,36 @@ function OrderSheet({
   );
 }
 
-function DeliveryInfoSheet({
-  deliveryInfo,
+type InfoSheetContent = {
+  id: "delivery" | "payment" | "why";
+  title: string;
+  body: string;
+  icon: "delivery" | "payment" | "why";
+};
+
+function InfoIcon({
+  type,
+  className = "h-4 w-4",
+}: {
+  type: InfoSheetContent["icon"];
+  className?: string;
+}) {
+  if (type === "payment") {
+    return <CreditCard aria-hidden="true" className={className} strokeWidth={1.7} />;
+  }
+
+  if (type === "why") {
+    return <ShieldCheck aria-hidden="true" className={className} strokeWidth={1.7} />;
+  }
+
+  return <Truck aria-hidden="true" className={className} strokeWidth={1.7} />;
+}
+
+function InfoSheet({
+  content,
   onClose,
 }: {
-  deliveryInfo: string;
+  content: InfoSheetContent;
   onClose: () => void;
 }) {
   return (
@@ -294,14 +321,14 @@ function DeliveryInfoSheet({
         <div className="mb-5 flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F4F4F5] text-[#111111]">
-              <Truck aria-hidden="true" className="h-4 w-4" strokeWidth={1.7} />
+              <InfoIcon type={content.icon} />
             </span>
             <h2 className="min-w-0 flex-1 truncate text-[15px] font-bold">
-              Delivery Information
+              {content.title}
             </h2>
           </div>
           <button
-            aria-label="Close delivery information"
+            aria-label={`Close ${content.title.toLowerCase()}`}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#888888] transition hover:bg-[#F4F4F5] hover:text-[#111111]"
             type="button"
             onClick={onClose}
@@ -310,10 +337,30 @@ function DeliveryInfoSheet({
           </button>
         </div>
         <p className="whitespace-pre-wrap break-words text-sm font-medium leading-7 text-[#555555] [overflow-wrap:anywhere]">
-          {deliveryInfo}
+          {content.body}
         </p>
       </section>
     </div>
+  );
+}
+
+function ProductInfoRow({
+  content,
+  onOpen,
+}: {
+  content: InfoSheetContent;
+  onOpen: (content: InfoSheetContent) => void;
+}) {
+  return (
+    <button
+      className="flex w-full min-w-0 items-center gap-3 border-t border-[#E5E5E5] px-0 py-4 text-left text-[13px] font-medium text-[#111111]"
+      type="button"
+      onClick={() => onOpen(content)}
+    >
+      <InfoIcon type={content.icon} className="h-4 w-4 shrink-0 text-[#111111]" />
+      <span className="min-w-0 flex-1 truncate">{content.title}</span>
+      <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-[#888888]" strokeWidth={1.8} />
+    </button>
   );
 }
 
@@ -331,7 +378,7 @@ export function ProductDetailClient({
   const [activeIndex, setActiveIndex] = useState(0);
   const [shareMessage, setShareMessage] = useState("");
   const [isOrderOpen, setIsOrderOpen] = useState(false);
-  const [isDeliveryInfoOpen, setIsDeliveryInfoOpen] = useState(false);
+  const [activeInfoSheet, setActiveInfoSheet] = useState<InfoSheetContent | null>(null);
   const [isNameExpanded, setIsNameExpanded] = useState(false);
   const [isNameExpandable, setIsNameExpandable] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
@@ -341,6 +388,38 @@ export function ProductDetailClient({
   const media = useMemo(() => (product ? buildProductMedia(product) : []), [product]);
   const benefits = product?.key_benefits?.filter(Boolean) ?? [];
   const faqs = product?.faqs?.filter((faq) => faq.question && faq.answer) ?? [];
+  const productInfoRows = useMemo<InfoSheetContent[]>(() => {
+    if (!merchant) {
+      return [];
+    }
+
+    return [
+      merchant.delivery_info
+        ? {
+            id: "delivery" as const,
+            title: "Delivery Information",
+            body: merchant.delivery_info,
+            icon: "delivery" as const,
+          }
+        : null,
+      merchant.payment_options
+        ? {
+            id: "payment" as const,
+            title: "Payment Options",
+            body: merchant.payment_options,
+            icon: "payment" as const,
+          }
+        : null,
+      merchant.why_choose_us
+        ? {
+            id: "why" as const,
+            title: "Why Choose Us",
+            body: merchant.why_choose_us,
+            icon: "why" as const,
+          }
+        : null,
+    ].filter(Boolean) as InfoSheetContent[];
+  }, [merchant]);
   const discountPercent =
     product?.original_price && product.original_price > product.sale_price
       ? Math.round((1 - product.sale_price / product.original_price) * 100)
@@ -585,18 +664,20 @@ export function ProductDetailClient({
           </p>
         ) : null}
 
-        <div className="min-w-0">
+        <div className="relative min-w-0">
           <h1
             ref={nameRef}
-            className={`min-w-0 break-words text-[22px] font-bold leading-[30px] [overflow-wrap:anywhere] ${
+            className={`min-w-0 break-words text-[20px] font-bold leading-[27px] [overflow-wrap:anywhere] ${
               isNameExpanded ? "" : "line-clamp-2"
-            }`}
+            } ${isNameExpandable ? "pr-7" : ""}`}
           >
             {product.name}
           </h1>
           {isNameExpandable ? (
             <button
-              className="mt-1 flex h-6 w-6 items-center justify-center rounded-full text-[#555555] transition hover:bg-[#F4F4F5]"
+              className={`flex h-6 w-6 items-center justify-center rounded-full text-[#555555] transition hover:bg-[#F4F4F5] ${
+                isNameExpanded ? "mt-1" : "absolute bottom-0 right-0"
+              }`}
               type="button"
               aria-label={isNameExpanded ? "Collapse product name" : "Expand product name"}
               onClick={() => setIsNameExpanded((current) => !current)}
@@ -611,11 +692,11 @@ export function ProductDetailClient({
         </div>
 
         <div className="mt-3 flex min-w-0 flex-wrap items-center gap-3 overflow-hidden">
-          <span className="shrink-0 text-[26px] font-bold leading-none">
+          <span className="shrink-0 text-[24px] font-bold leading-none">
             {formatGhsPrice(product.sale_price)}
           </span>
           {product.original_price ? (
-            <span className="min-w-0 truncate text-[15px] font-bold text-[#BDB9B2] line-through">
+            <span className="min-w-0 truncate text-[14px] font-bold text-[#BDB9B2] line-through">
               {formatGhsPrice(product.original_price)}
             </span>
           ) : null}
@@ -647,22 +728,12 @@ export function ProductDetailClient({
           </section>
         ) : null}
 
-        {merchant.delivery_info ? (
-          <button
-            className="mt-6 flex w-full min-w-0 items-center gap-3 border-t border-[#E5E5E5] px-0 py-4 text-left text-[13px] font-medium text-[#111111]"
-            type="button"
-            onClick={() => setIsDeliveryInfoOpen(true)}
-          >
-            <Truck
-              aria-hidden="true"
-              className="h-4 w-4 shrink-0 text-[#111111]"
-              strokeWidth={1.5}
-            />
-            <span className="min-w-0 flex-1 truncate">
-              Delivery Information
-            </span>
-            <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-[#888888]" strokeWidth={1.8} />
-          </button>
+        {productInfoRows.length ? (
+          <section className="mt-6">
+            {productInfoRows.map((row) => (
+              <ProductInfoRow content={row} key={row.id} onOpen={setActiveInfoSheet} />
+            ))}
+          </section>
         ) : null}
 
         <a
@@ -674,7 +745,7 @@ export function ProductDetailClient({
           target="_blank"
           rel="noreferrer"
         >
-          Chat Us on WhatsApp
+          Have a Question? Chat Us
         </a>
 
         {product.long_description ? (
@@ -766,10 +837,10 @@ export function ProductDetailClient({
         />
       ) : null}
 
-      {isDeliveryInfoOpen && merchant.delivery_info ? (
-        <DeliveryInfoSheet
-          deliveryInfo={merchant.delivery_info}
-          onClose={() => setIsDeliveryInfoOpen(false)}
+      {activeInfoSheet ? (
+        <InfoSheet
+          content={activeInfoSheet}
+          onClose={() => setActiveInfoSheet(null)}
         />
       ) : null}
     </main>

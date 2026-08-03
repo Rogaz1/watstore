@@ -32,7 +32,9 @@ import {
   Pencil,
   Phone,
   Plus,
+  CreditCard,
   Settings,
+  ShieldCheck,
   ShoppingBag,
   Store,
   Tag,
@@ -66,6 +68,8 @@ const LOGO_BUCKET = "merchant-logos";
 const PLATFORM_HELP_NUMBER = "233509396861";
 const MAX_TAGLINE_CHARS = 60;
 const MAX_DELIVERY_INFO_CHARS = 200;
+const MAX_PAYMENT_OPTIONS_CHARS = 150;
+const MAX_WHY_CHOOSE_US_CHARS = 300;
 
 const sellingTips = [
   {
@@ -268,9 +272,17 @@ function buildPlanWhatsAppUrl(
   );
 }
 
-function SettingsFieldIcon({ children }: { children: ReactNode }) {
+function SettingsFieldIcon({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center text-[#888888]">
+    <span
+      className={`flex h-10 w-10 shrink-0 items-center justify-center text-[#888888] ${className}`}
+    >
       {children}
     </span>
   );
@@ -397,7 +409,7 @@ function HomeRecentOrderCard({
   const thumbnail = order.product?.photo_urls?.[0];
 
   return (
-    <article className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
+    <article className="min-w-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="flex min-w-0 items-center gap-1.5 text-[13px] font-bold">
@@ -425,7 +437,7 @@ function HomeRecentOrderCard({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center gap-3 border-b border-[#EDECEA] pb-3">
+      <div className="mt-3 flex min-w-0 items-center gap-3 border-b border-[#EDECEA] pb-3">
         <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-[#EDECEA] bg-[#F7F5F2]">
           {thumbnail ? (
             <img
@@ -439,11 +451,11 @@ function HomeRecentOrderCard({
             </span>
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold text-[#25D366]">
+        <div className="min-w-0 flex-[1_1_0%] overflow-hidden">
+          <p className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#25D366]">
             {order.product?.name ?? "Product unavailable"}
           </p>
-          <p className="mt-0.5 text-[13px] font-medium text-[#888888]">
+          <p className="mt-0.5 block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium text-[#888888]">
             Qty {order.quantity} &middot; {formatGhsPrice(order.total)}
           </p>
         </div>
@@ -478,7 +490,7 @@ function OrderSummaryCard({
   const thumbnail = order.product?.photo_urls?.[0];
 
   return (
-    <article className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
+    <article className="min-w-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="flex min-w-0 items-center gap-1.5 text-[13px] font-bold">
@@ -522,7 +534,7 @@ function OrderSummaryCard({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center gap-3 border-b border-[#EDECEA] pb-3">
+      <div className="mt-3 flex min-w-0 items-center gap-3 border-b border-[#EDECEA] pb-3">
         <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-[#EDECEA] bg-[#F7F5F2]">
           {thumbnail ? (
             <img
@@ -536,11 +548,11 @@ function OrderSummaryCard({
             </span>
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold text-[#25D366]">
+        <div className="min-w-0 flex-[1_1_0%] overflow-hidden">
+          <p className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#25D366]">
             {order.product?.name ?? "Product unavailable"}
           </p>
-          <p className="mt-0.5 text-[13px] font-medium text-[#888888]">
+          <p className="mt-0.5 block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium text-[#888888]">
             Qty {order.quantity} &middot; {formatGhsPrice(order.total)}
           </p>
         </div>
@@ -579,6 +591,8 @@ export default function DashboardPage() {
   const [settingsBusinessName, setSettingsBusinessName] = useState("");
   const [settingsTagline, setSettingsTagline] = useState("");
   const [settingsDeliveryInfo, setSettingsDeliveryInfo] = useState("");
+  const [settingsPaymentOptions, setSettingsPaymentOptions] = useState("");
+  const [settingsWhyChooseUs, setSettingsWhyChooseUs] = useState("");
   const [settingsSlug, setSettingsSlug] = useState("");
   const [settingsWhatsappNumber, setSettingsWhatsappNumber] = useState("");
   const [settingsLogoFile, setSettingsLogoFile] = useState<File | null>(null);
@@ -651,6 +665,8 @@ export default function DashboardPage() {
       setSettingsBusinessName(refreshedMerchant.business_name ?? "");
       setSettingsTagline(refreshedMerchant.tagline ?? "");
       setSettingsDeliveryInfo(refreshedMerchant.delivery_info ?? "");
+      setSettingsPaymentOptions(refreshedMerchant.payment_options ?? "");
+      setSettingsWhyChooseUs(refreshedMerchant.why_choose_us ?? "");
       setSettingsSlug(refreshedMerchant.slug ?? "");
       setSettingsWhatsappNumber(refreshedMerchant.whatsapp_number ?? "");
       setSettingsLogoPreviewUrl(refreshedMerchant.logo_url ?? "");
@@ -1008,9 +1024,18 @@ export default function DashboardPage() {
 
     const deliveryInfo =
       settingsDeliveryInfo.trim().slice(0, MAX_DELIVERY_INFO_CHARS) || null;
+    const paymentOptions =
+      settingsPaymentOptions.trim().slice(0, MAX_PAYMENT_OPTIONS_CHARS) ||
+      null;
+    const whyChooseUs =
+      settingsWhyChooseUs.trim().slice(0, MAX_WHY_CHOOSE_US_CHARS) || null;
     const { error } = await supabase
       .from("merchants")
-      .update({ delivery_info: deliveryInfo })
+      .update({
+        delivery_info: deliveryInfo,
+        payment_options: paymentOptions,
+        why_choose_us: whyChooseUs,
+      })
       .eq("id", merchant.id);
 
     if (error) {
@@ -1020,10 +1045,19 @@ export default function DashboardPage() {
     }
 
     setMerchant((current) =>
-      current ? { ...current, delivery_info: deliveryInfo } : current,
+      current
+        ? {
+            ...current,
+            delivery_info: deliveryInfo,
+            payment_options: paymentOptions,
+            why_choose_us: whyChooseUs,
+          }
+        : current,
     );
     setSettingsDeliveryInfo(deliveryInfo ?? "");
-    setDeliveryInfoMessage("Delivery info saved.");
+    setSettingsPaymentOptions(paymentOptions ?? "");
+    setSettingsWhyChooseUs(whyChooseUs ?? "");
+    setDeliveryInfoMessage("Customer info saved.");
     setIsSavingDeliveryInfo(false);
   }
 
@@ -1474,10 +1508,10 @@ export default function DashboardPage() {
                       : `${window.location.origin}${liveProductPath}`;
 
                   return (
-                    <article
-                      className="flex min-h-[106px] min-w-0 items-start gap-3 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
-                      key={product.id}
-                    >
+                      <article
+                        className="flex min-h-[106px] w-full max-w-full min-w-0 items-start gap-3 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
+                        key={product.id}
+                      >
                       <Link
                         className="block h-[68px] w-[68px] shrink-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-[#F7F5F2]"
                         href={`/dashboard/products/${product.id}`}
@@ -1495,13 +1529,13 @@ export default function DashboardPage() {
                         )}
                       </Link>
 
-                      <Link
-                        className="min-w-0 flex-1 overflow-hidden pt-1"
-                        href={`/dashboard/products/${product.id}`}
-                      >
-                        <h3 className="block max-w-full truncate whitespace-nowrap text-[13px] font-bold leading-snug text-[#1A1A18]">
-                          {product.name}
-                        </h3>
+                        <Link
+                          className="min-w-0 flex-[1_1_0%] overflow-hidden pt-1"
+                          href={`/dashboard/products/${product.id}`}
+                        >
+                          <h3 className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-bold leading-snug text-[#1A1A18]">
+                            {product.name}
+                          </h3>
                         <div className="mt-1 flex min-w-0 items-baseline gap-2 overflow-hidden">
                           <span className="shrink-0 text-[13px] font-bold text-[#1A1A18]">
                             {formatPrice(product.sale_price)}
@@ -1820,28 +1854,85 @@ export default function DashboardPage() {
               className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
               onSubmit={handleDeliveryInfoSubmit}
             >
-              <h2 className="text-[18px] font-bold">Delivery Info</h2>
+              <h2 className="text-[18px] font-bold">Customer Info</h2>
               <p className="mt-1 text-xs font-medium text-[#888888]">
                 Optional details for your customers
               </p>
-              <textarea
-                className="mt-4 min-h-24 w-full resize-none rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-3 py-3 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:border-[#1A1A18] focus:ring-2 focus:ring-[#1A1A18]/10"
-                maxLength={MAX_DELIVERY_INFO_CHARS}
-                placeholder="e.g. Same-day delivery in Accra, 2-3 days nationwide."
-                value={settingsDeliveryInfo}
-                onChange={(event) =>
-                  setSettingsDeliveryInfo(
-                    event.target.value.slice(0, MAX_DELIVERY_INFO_CHARS),
-                  )
-                }
-              />
-              <div className="mt-3 flex min-w-0 items-start justify-between gap-4">
-                <p className="min-w-0 flex-1 text-xs font-medium leading-5 text-[#888888]">
-                  To help customers understand your delivery terms.
-                </p>
-                <p className="shrink-0 text-xs font-bold text-[#888888]">
-                  {settingsDeliveryInfo.length}/{MAX_DELIVERY_INFO_CHARS}
-                </p>
+              <div className="mt-4 grid gap-4">
+                <label className="block">
+                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
+                    Delivery Info
+                  </span>
+                  <textarea
+                    className="min-h-24 w-full resize-none rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-3 py-3 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:border-[#1A1A18] focus:ring-2 focus:ring-[#1A1A18]/10"
+                    maxLength={MAX_DELIVERY_INFO_CHARS}
+                    placeholder="e.g. Same-day delivery in Accra, 2-3 days nationwide."
+                    value={settingsDeliveryInfo}
+                    onChange={(event) =>
+                      setSettingsDeliveryInfo(
+                        event.target.value.slice(0, MAX_DELIVERY_INFO_CHARS),
+                      )
+                    }
+                  />
+                  <div className="mt-2 flex min-w-0 items-start justify-between gap-4">
+                    <p className="min-w-0 flex-1 text-xs font-medium leading-5 text-[#888888]">
+                      To help customers understand your delivery terms.
+                    </p>
+                    <p className="shrink-0 text-xs font-bold text-[#888888]">
+                      {settingsDeliveryInfo.length}/{MAX_DELIVERY_INFO_CHARS}
+                    </p>
+                  </div>
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
+                    Payment Options (optional)
+                  </span>
+                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
+                    <SettingsFieldIcon>
+                      <CreditCard className="h-4 w-4" />
+                    </SettingsFieldIcon>
+                    <input
+                      className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1A1A18] outline-none placeholder:text-[#888888]"
+                      maxLength={MAX_PAYMENT_OPTIONS_CHARS}
+                      placeholder="e.g. MTN MoMo, Cash on Delivery, Bank Transfer"
+                      value={settingsPaymentOptions}
+                      onChange={(event) =>
+                        setSettingsPaymentOptions(
+                          event.target.value.slice(0, MAX_PAYMENT_OPTIONS_CHARS),
+                        )
+                      }
+                    />
+                  </div>
+                  <p className="mt-2 text-right text-xs font-bold text-[#888888]">
+                    {settingsPaymentOptions.length}/{MAX_PAYMENT_OPTIONS_CHARS}
+                  </p>
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
+                    Why Choose Us (optional)
+                  </span>
+                  <div className="flex min-h-24 min-w-0 overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
+                    <SettingsFieldIcon className="self-start pt-4">
+                      <ShieldCheck className="h-4 w-4" />
+                    </SettingsFieldIcon>
+                    <textarea
+                      className="min-h-24 min-w-0 flex-1 resize-none bg-transparent py-3 pr-3 text-sm font-medium leading-6 text-[#1A1A18] outline-none placeholder:text-[#888888]"
+                      maxLength={MAX_WHY_CHOOSE_US_CHARS}
+                      placeholder="e.g. 100% original products, fast response on WhatsApp, trusted by our community"
+                      value={settingsWhyChooseUs}
+                      onChange={(event) =>
+                        setSettingsWhyChooseUs(
+                          event.target.value.slice(0, MAX_WHY_CHOOSE_US_CHARS),
+                        )
+                      }
+                    />
+                  </div>
+                  <p className="mt-2 text-right text-xs font-bold text-[#888888]">
+                    {settingsWhyChooseUs.length}/{MAX_WHY_CHOOSE_US_CHARS}
+                  </p>
+                </label>
               </div>
               {deliveryInfoMessage ? (
                 <p className="mt-3 rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-4 py-3.5 text-sm text-[#1A1A18]">
@@ -1918,7 +2009,7 @@ export default function DashboardPage() {
               </button>
             </form>
 
-            <section className="grid gap-3 rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
+            <section className="grid gap-4 rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
               <h2 className="text-lg font-bold">Subscription Plan</h2>
               <div className="rounded-2xl border border-[#EDECEA] bg-[#F7F5F2] p-4">
                 <h3 className="text-[13px] font-bold">What&apos;s included</h3>
@@ -1938,13 +2029,13 @@ export default function DashboardPage() {
                 {
                   name: "Monthly" as const,
                   cycle: 1,
-                  price: "GHS 49",
+                  price: "₵49",
                   suffix: "/month",
                 },
                 {
                   name: "Annual" as const,
                   cycle: 12,
-                  price: "GHS 399",
+                  price: "₵399",
                   suffix: "/year",
                 },
               ].map((plan) => {
@@ -1962,7 +2053,7 @@ export default function DashboardPage() {
                   >
                     {plan.cycle === 12 ? (
                       <span className="absolute right-3 top-0 -translate-y-1/2 rounded-sm bg-[#25D366] px-2 py-1 text-[9px] font-bold text-white">
-                        Best Value - Save GHS 189
+                        Best Value - Save ₵189
                       </span>
                     ) : null}
                     {isActivePlan ? (

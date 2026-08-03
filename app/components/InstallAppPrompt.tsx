@@ -72,7 +72,7 @@ export function InstallAppPrompt() {
     return (
       <div className="mt-4 rounded-2xl border border-[#E7E4DF] bg-[#FAF9F7] p-4 text-center">
         <p className="text-xs font-medium leading-5 text-[#78716C]">
-          Add Watstore to your home screen for quick access.
+          Add to your home screen for quick access.
         </p>
         <button
           className="mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-[#1C1917] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition active:scale-[0.99]"

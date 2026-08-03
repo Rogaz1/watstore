@@ -11,6 +11,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 import {
   ArrowRight,
@@ -64,7 +65,7 @@ import { useRequireUser } from "../components/useRequireUser";
 const LOGO_BUCKET = "merchant-logos";
 const PLATFORM_HELP_NUMBER = "233509396861";
 const MAX_TAGLINE_CHARS = 60;
-const MAX_DELIVERY_INFO_CHARS = 60;
+const MAX_DELIVERY_INFO_CHARS = 200;
 
 const sellingTips = [
   {
@@ -154,6 +155,20 @@ function isDashboardTab(value: string | null): value is DashboardTab {
     value === "orders" ||
     value === "settings"
   );
+}
+
+function getDashboardTabFromUrl(): DashboardTab {
+  if (typeof window === "undefined") {
+    return "home";
+  }
+
+  const requestedTab = new URLSearchParams(window.location.search).get("tab");
+  return isDashboardTab(requestedTab) ? requestedTab : "home";
+}
+
+function subscribeToDashboardTab(callback: () => void) {
+  window.addEventListener("popstate", callback);
+  return () => window.removeEventListener("popstate", callback);
 }
 
 function normalizeSlug(value: string) {
@@ -545,8 +560,11 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, isCheckingAuth } = useRequireUser();
   const userId = user?.id;
-  const [activeTab, setActiveTab] = useState<DashboardTab>("home");
-  const [hasResolvedInitialTab, setHasResolvedInitialTab] = useState(false);
+  const activeTab = useSyncExternalStore(
+    subscribeToDashboardTab,
+    getDashboardTabFromUrl,
+    () => "home",
+  );
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
   const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -577,16 +595,6 @@ export default function DashboardPage() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
-
-  useEffect(() => {
-    const requestedTab = new URLSearchParams(window.location.search).get("tab");
-
-    if (isDashboardTab(requestedTab)) {
-      setActiveTab(requestedTab);
-    }
-
-    setHasResolvedInitialTab(true);
-  }, []);
 
   useEffect(() => {
     if (!isSellingTipsOpen) {
@@ -768,8 +776,6 @@ export default function DashboardPage() {
   }
 
   function handleTabChange(tab: DashboardTab) {
-    setActiveTab(tab);
-
     const url = new URL(window.location.href);
     if (tab === "home") {
       url.searchParams.delete("tab");
@@ -782,6 +788,7 @@ export default function DashboardPage() {
       "",
       `${url.pathname}${url.search}${url.hash}`,
     );
+    window.dispatchEvent(new PopStateEvent("popstate"));
   }
 
   async function handleDelete(product: Product) {
@@ -1083,10 +1090,10 @@ export default function DashboardPage() {
     settingsDigitsOnlyWhatsapp.startsWith("0");
   const helpUrl = buildWhatsAppUrl(
     PLATFORM_HELP_NUMBER,
-    "Hi, I need help with my Watstore account.",
+    "Hi, I need help with my account.",
   );
 
-  if (isCheckingAuth || !hasResolvedInitialTab) {
+  if (isCheckingAuth) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-6 text-[#1A1A18]">
         <p className="text-sm font-medium text-[#888888]">
@@ -1261,7 +1268,7 @@ export default function DashboardPage() {
                     Selling Tips
                   </h2>
                   <p className="mt-0.5 truncate text-xs font-medium text-[#888888]">
-                    Simple ways to improve your product pages
+                    Ways to improve your product pages
                   </p>
                 </div>
               </div>
@@ -1324,8 +1331,7 @@ export default function DashboardPage() {
                     {planName}
                   </p>
                   <p className="mt-1 text-[13px] font-medium leading-5 text-[#B45309]">
-                    Expires in {daysRemaining ?? 0} days - don&apos;t lose
-                    access!
+                    Expires in {daysRemaining ?? 0} days
                   </p>
                 </div>
                 <a
@@ -1371,20 +1377,20 @@ export default function DashboardPage() {
             <section>
               <div className="mb-3 flex min-w-0 items-center justify-between gap-4">
                 <h2 className="min-w-0 flex-1 truncate text-[15px] font-bold">
-                  Recent orders
+                  Recent Orders
                 </h2>
                 <button
                   className="inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#25D366]"
                   type="button"
                   onClick={() => handleTabChange("orders")}
                 >
-                  View all
+                  View All
                   <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
                 </button>
               </div>
               {isLoadingOrders ? (
                 <p className="rounded-2xl border border-[#EDECEA] bg-white p-4 py-8 text-center text-sm font-medium text-[#888888]">
-                  Loading orders...
+                  Loading Orders...
                 </p>
               ) : recentOrders.length ? (
                 <div className="grid gap-3">
@@ -1424,7 +1430,7 @@ export default function DashboardPage() {
                 href="/dashboard/products/new"
               >
                 <PlusIcon />
-                Add product
+                Add Product
               </Link>
             </div>
 
@@ -1436,7 +1442,7 @@ export default function DashboardPage() {
 
             {isLoadingProducts ? (
               <p className="py-10 text-sm font-medium text-[#888888]">
-                Loading products...
+                Loading Products...
               </p>
             ) : null}
 
@@ -1469,7 +1475,7 @@ export default function DashboardPage() {
 
                   return (
                     <article
-                      className="flex min-h-[106px] items-start gap-3 rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
+                      className="flex min-h-[106px] min-w-0 items-start gap-3 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
                       key={product.id}
                     >
                       <Link
@@ -1490,18 +1496,18 @@ export default function DashboardPage() {
                       </Link>
 
                       <Link
-                        className="min-w-0 flex-1 pt-1"
+                        className="min-w-0 flex-1 overflow-hidden pt-1"
                         href={`/dashboard/products/${product.id}`}
                       >
-                        <h3 className="line-clamp-2 text-[13px] font-bold leading-snug text-[#1A1A18]">
+                        <h3 className="block max-w-full truncate whitespace-nowrap text-[13px] font-bold leading-snug text-[#1A1A18]">
                           {product.name}
                         </h3>
-                        <div className="mt-1 flex flex-wrap items-baseline gap-2">
-                          <span className="text-[13px] font-bold text-[#1A1A18]">
+                        <div className="mt-1 flex min-w-0 items-baseline gap-2 overflow-hidden">
+                          <span className="shrink-0 text-[13px] font-bold text-[#1A1A18]">
                             {formatPrice(product.sale_price)}
                           </span>
                           {product.original_price ? (
-                            <span className="text-xs text-[#BDB9B2] line-through">
+                            <span className="min-w-0 truncate text-xs text-[#BDB9B2] line-through">
                               {formatPrice(product.original_price)}
                             </span>
                           ) : null}
@@ -1582,7 +1588,7 @@ export default function DashboardPage() {
 
             {isLoadingOrders ? (
               <p className="py-10 text-sm font-medium text-[#888888]">
-                Loading orders...
+                Loading Orders...
               </p>
             ) : null}
 
@@ -1818,10 +1824,10 @@ export default function DashboardPage() {
               <p className="mt-1 text-xs font-medium text-[#888888]">
                 Optional details for your customers
               </p>
-              <input
-                className="mt-4 h-12 w-full rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-3 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:border-[#1A1A18] focus:ring-2 focus:ring-[#1A1A18]/10"
+              <textarea
+                className="mt-4 min-h-24 w-full resize-none rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-3 py-3 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:border-[#1A1A18] focus:ring-2 focus:ring-[#1A1A18]/10"
                 maxLength={MAX_DELIVERY_INFO_CHARS}
-                placeholder="e.g. Same-day delivery in Accra"
+                placeholder="e.g. Same-day delivery in Accra, 2-3 days nationwide."
                 value={settingsDeliveryInfo}
                 onChange={(event) =>
                   setSettingsDeliveryInfo(
@@ -1831,7 +1837,7 @@ export default function DashboardPage() {
               />
               <div className="mt-3 flex min-w-0 items-start justify-between gap-4">
                 <p className="min-w-0 flex-1 text-xs font-medium leading-5 text-[#888888]">
-                  To help customers understand your delivery times and offers.
+                  To help customers understand your delivery terms.
                 </p>
                 <p className="shrink-0 text-xs font-bold text-[#888888]">
                   {settingsDeliveryInfo.length}/{MAX_DELIVERY_INFO_CHARS}
@@ -1964,7 +1970,7 @@ export default function DashboardPage() {
                         <p className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-medium text-[#888888]">
                           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
                           <span className="min-w-0 flex-1 truncate">
-                            {plan.name} Plan · Active
+                            {plan.name} Plan
                           </span>
                         </p>
                         <span className="shrink-0 text-xs font-medium text-[#999999]">

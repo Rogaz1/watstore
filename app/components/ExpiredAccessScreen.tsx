@@ -45,14 +45,16 @@ export function ExpiredAccessScreen({
           <LockIcon />
         </div>
         <h1 className="text-[22px] font-bold leading-tight">
-          {wasTrial ? "Your free trial has ended" : "Your subscription has ended"}
+          {wasTrial
+            ? "Your free trial has ended"
+            : "Your subscription has ended"}
         </h1>
         <div className="mt-5 flex flex-col gap-2">
           <span className="rounded-full border border-[#E5E5E5] bg-[#F4F4F5] px-3.5 py-1.5 text-[11px] font-semibold">
             Product Management Locked
           </span>
           <span className="rounded-full border border-[#E5E5E5] bg-[#F4F4F5] px-3.5 py-1.5 text-[11px] font-semibold">
-            Storefront Hidden from Web
+            Storefront Hidden from Customers
           </span>
         </div>
         <a

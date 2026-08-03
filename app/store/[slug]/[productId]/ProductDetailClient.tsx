@@ -3,7 +3,16 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { FormEvent, TouchEvent, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, MapPin, Share2, Truck, User } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  MapPin,
+  Share2,
+  Truck,
+  User,
+  X,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
 import {
@@ -271,6 +280,43 @@ function OrderSheet({
   );
 }
 
+function DeliveryInfoSheet({
+  deliveryInfo,
+  onClose,
+}: {
+  deliveryInfo: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-40 flex items-end bg-black/45">
+      <section className="max-h-[72vh] w-full overflow-y-auto rounded-t-3xl bg-white px-6 pb-8 pt-6 text-[#111111] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] sm:mx-auto sm:max-w-md">
+        <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-[#E5E5E5]" />
+        <div className="mb-5 flex min-w-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F4F4F5] text-[#111111]">
+              <Truck aria-hidden="true" className="h-4 w-4" strokeWidth={1.7} />
+            </span>
+            <h2 className="min-w-0 flex-1 truncate text-[15px] font-bold">
+              Delivery Information
+            </h2>
+          </div>
+          <button
+            aria-label="Close delivery information"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#888888] transition hover:bg-[#F4F4F5] hover:text-[#111111]"
+            type="button"
+            onClick={onClose}
+          >
+            <X aria-hidden="true" className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="whitespace-pre-wrap break-words text-sm font-medium leading-7 text-[#555555] [overflow-wrap:anywhere]">
+          {deliveryInfo}
+        </p>
+      </section>
+    </div>
+  );
+}
+
 export function ProductDetailClient({
   slug,
   productId,
@@ -285,8 +331,12 @@ export function ProductDetailClient({
   const [activeIndex, setActiveIndex] = useState(0);
   const [shareMessage, setShareMessage] = useState("");
   const [isOrderOpen, setIsOrderOpen] = useState(false);
+  const [isDeliveryInfoOpen, setIsDeliveryInfoOpen] = useState(false);
+  const [isNameExpanded, setIsNameExpanded] = useState(false);
+  const [isNameExpandable, setIsNameExpandable] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const touchStartX = useRef(0);
+  const nameRef = useRef<HTMLHeadingElement | null>(null);
 
   const media = useMemo(() => (product ? buildProductMedia(product) : []), [product]);
   const benefits = product?.key_benefits?.filter(Boolean) ?? [];
@@ -295,6 +345,29 @@ export function ProductDetailClient({
     product?.original_price && product.original_price > product.sale_price
       ? Math.round((1 - product.sale_price / product.original_price) * 100)
       : null;
+
+  useEffect(() => {
+    if (!nameRef.current || isNameExpanded) {
+      return;
+    }
+
+    function checkTitleOverflow() {
+      const title = nameRef.current;
+      if (!title) {
+        return;
+      }
+
+      const nextValue = title.scrollHeight > title.clientHeight + 1;
+      setIsNameExpandable((current) =>
+        current === nextValue ? current : nextValue,
+      );
+    }
+
+    checkTitleOverflow();
+    window.addEventListener("resize", checkTitleOverflow);
+
+    return () => window.removeEventListener("resize", checkTitleOverflow);
+  }, [product?.name, isNameExpanded]);
 
   useEffect(() => {
     if (initialMerchant || initialProduct || initialMessage) {
@@ -505,20 +578,44 @@ export function ProductDetailClient({
         </div>
       </section>
 
-      <section className="relative z-10 -mt-6 mx-auto w-full max-w-3xl rounded-t-[28px] bg-white px-5 pb-6 pt-5">
+      <section className="relative z-10 -mt-6 mx-auto w-full max-w-3xl min-w-0 overflow-hidden rounded-t-[28px] bg-white px-5 pb-6 pt-5">
         {shareMessage ? (
           <p className="mb-4 rounded-2xl bg-[#EDFBF3] px-4 py-3.5 text-sm font-medium text-[#0A5C2B]">
             {shareMessage}
           </p>
         ) : null}
 
-        <h1 className="text-[22px] font-bold leading-tight">{product.name}</h1>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <span className="text-[26px] font-bold leading-none">
+        <div className="min-w-0">
+          <h1
+            ref={nameRef}
+            className={`min-w-0 break-words text-[22px] font-bold leading-[30px] [overflow-wrap:anywhere] ${
+              isNameExpanded ? "" : "line-clamp-2"
+            }`}
+          >
+            {product.name}
+          </h1>
+          {isNameExpandable ? (
+            <button
+              className="mt-1 flex h-6 w-6 items-center justify-center rounded-full text-[#555555] transition hover:bg-[#F4F4F5]"
+              type="button"
+              aria-label={isNameExpanded ? "Collapse product name" : "Expand product name"}
+              onClick={() => setIsNameExpanded((current) => !current)}
+            >
+              {isNameExpanded ? (
+                <ChevronUp aria-hidden="true" className="h-4 w-4" strokeWidth={2} />
+              ) : (
+                <ChevronDown aria-hidden="true" className="h-4 w-4" strokeWidth={2} />
+              )}
+            </button>
+          ) : null}
+        </div>
+
+        <div className="mt-3 flex min-w-0 flex-wrap items-center gap-3 overflow-hidden">
+          <span className="shrink-0 text-[26px] font-bold leading-none">
             {formatGhsPrice(product.sale_price)}
           </span>
           {product.original_price ? (
-            <span className="text-[15px] font-bold text-[#BDB9B2] line-through">
+            <span className="min-w-0 truncate text-[15px] font-bold text-[#BDB9B2] line-through">
               {formatGhsPrice(product.original_price)}
             </span>
           ) : null}
@@ -530,7 +627,7 @@ export function ProductDetailClient({
         </div>
 
         {product.short_description ? (
-          <div className="mt-5 rounded-2xl bg-[#EDFBF3] px-4 py-4 text-[13.5px] font-medium leading-6 text-[#0A5C2B]">
+          <div className="mt-5 min-w-0 break-words rounded-2xl bg-[#EDFBF3] px-4 py-4 text-[13.5px] font-medium leading-6 text-[#0A5C2B] [overflow-wrap:anywhere]">
             {product.short_description}
           </div>
         ) : null}
@@ -541,7 +638,9 @@ export function ProductDetailClient({
               {benefits.map((benefit) => (
                 <li className="flex min-w-0 gap-3 text-[13.5px] font-medium leading-6" key={benefit}>
                   <CheckIcon />
-                  <span className="min-w-0 flex-1">{benefit}</span>
+                  <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+                    {benefit}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -549,16 +648,21 @@ export function ProductDetailClient({
         ) : null}
 
         {merchant.delivery_info ? (
-          <div className="mt-6 flex min-w-0 items-center gap-2 rounded-2xl border border-[#E5E5E5] bg-white px-4 py-3.5 text-[11px] font-medium leading-5 text-[#555555] shadow-sm">
+          <button
+            className="mt-6 flex w-full min-w-0 items-center gap-3 border-t border-[#E5E5E5] px-0 py-4 text-left text-[13px] font-medium text-[#111111]"
+            type="button"
+            onClick={() => setIsDeliveryInfoOpen(true)}
+          >
             <Truck
               aria-hidden="true"
-              className="h-3.5 w-3.5 shrink-0 text-[#888888]"
+              className="h-4 w-4 shrink-0 text-[#111111]"
               strokeWidth={1.5}
             />
             <span className="min-w-0 flex-1 truncate">
-              {merchant.delivery_info}
+              Delivery Information
             </span>
-          </div>
+            <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-[#888888]" strokeWidth={1.8} />
+          </button>
         ) : null}
 
         <a
@@ -578,7 +682,7 @@ export function ProductDetailClient({
             <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#888888]">
               About this product
             </p>
-            <div className="whitespace-pre-line text-sm font-normal leading-7 text-[#111111]">
+            <div className="whitespace-pre-line break-words text-sm font-normal leading-7 text-[#111111] [overflow-wrap:anywhere]">
               {product.long_description}
             </div>
           </section>
@@ -659,6 +763,13 @@ export function ProductDetailClient({
           merchant={merchant}
           product={product}
           onClose={() => setIsOrderOpen(false)}
+        />
+      ) : null}
+
+      {isDeliveryInfoOpen && merchant.delivery_info ? (
+        <DeliveryInfoSheet
+          deliveryInfo={merchant.delivery_info}
+          onClose={() => setIsDeliveryInfoOpen(false)}
         />
       ) : null}
     </main>

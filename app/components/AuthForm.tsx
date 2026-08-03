@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { InstallAppPrompt } from "./InstallAppPrompt";
 import { getPostAuthDestination } from "./merchantProfile";
 
 type AuthMode = "login" | "signup";
@@ -234,6 +235,8 @@ export function AuthForm({ mode }: AuthFormProps) {
             </Link>
           </p>
         </div>
+
+        <InstallAppPrompt />
       </section>
     </main>
   );

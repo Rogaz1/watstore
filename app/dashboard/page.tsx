@@ -109,6 +109,21 @@ const sellingTips = [
     ],
   },
   {
+    title: "Payment Options",
+    items: [
+      'Keep it short and specific - list the actual methods you accept, e.g. "MTN MoMo, Cash on Delivery"',
+      "Don't leave this blank if you accept more than just cash - buyers often hesitate simply because they don't know how they'll pay before they message you",
+    ],
+  },
+  {
+    title: "Why Choose Us",
+    items: [
+      "This is your chance to say, in your own words, why a buyer should trust you specifically - keep it honest and specific to your business",
+      'Good examples: "5 years selling quality Kente fabric," "Same-day response on WhatsApp," "Family-run business in Accra"',
+      "Avoid vague claims that could apply to anyone - specific details are more convincing than generic praise",
+    ],
+  },
+  {
     title: "Frequently Asked Questions",
     items: [
       "Add answers to the questions you get asked most often on WhatsApp - this saves you time and helps hesitant buyers order without needing to ask first",

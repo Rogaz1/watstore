@@ -160,7 +160,7 @@ export default function ForgotPasswordPage() {
                     type="email"
                     autoComplete="email"
                     inputMode="email"
-                    placeholder="you@example.com"
+                    placeholder="kwekumensah@gmail.com"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     required

@@ -25,13 +25,11 @@ function LockIcon() {
 
 export function ExpiredAccessScreen({
   merchant,
-  expiredFrom,
 }: {
   merchant: Pick<Merchant, "business_name" | "slug">;
   expiredFrom: SubscriptionExpiredFrom | null;
 }) {
   const router = useRouter();
-  const wasTrial = expiredFrom !== "active";
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -39,31 +37,29 @@ export function ExpiredAccessScreen({
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white px-7 py-12 text-[#111111]">
-      <section className="w-full max-w-md text-center">
-        <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-[#F4F4F5] text-[#888888]">
+    <main className="flex min-h-screen items-center justify-center bg-white px-8 py-12 text-[#111111]">
+      <section className="flex min-h-[72vh] w-full max-w-sm flex-col items-center justify-center text-center">
+        <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#F4F4F5] text-[#888888]">
           <LockIcon />
         </div>
-        <h1 className="text-[22px] font-bold leading-tight">
-          {wasTrial
-            ? "Your free trial has ended"
-            : "Your subscription has ended"}
+        <h1 className="text-[18px] font-bold leading-tight">
+          Your store is temporarily offline
         </h1>
-        <div className="mt-5 flex flex-col gap-2">
-          <span className="rounded-full border border-[#E5E5E5] bg-[#F4F4F5] px-3.5 py-1.5 text-[11px] font-semibold">
-            Product Management Locked
-          </span>
-          <span className="rounded-full border border-[#E5E5E5] bg-[#F4F4F5] px-3.5 py-1.5 text-[11px] font-semibold">
-            Storefront Hidden from Customers
-          </span>
-        </div>
+        <p className="mt-3 max-w-[18rem] text-[12px] font-medium leading-5 text-[#888888]">
+          Your subscription has expired, so your storefront is currently hidden
+          from customers.
+        </p>
+        <p className="mt-2 max-w-[18rem] text-[12px] font-medium leading-5 text-[#888888]">
+          Renew your subscription to put your store back online and continue
+          receiving WhatsApp orders.
+        </p>
         <a
-          className="mt-7 flex w-full items-center justify-center rounded-xl bg-[#25D366] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99]"
+          className="mt-7 flex h-12 w-full items-center justify-center rounded-xl bg-[#25D366] px-4 text-[14px] font-bold text-white transition active:scale-[0.99]"
           href={buildUpgradeUrl(merchant)}
           target="_blank"
           rel="noreferrer"
         >
-          Upgrade - Message Us on WhatsApp
+          Reactivate via WhatsApp
         </a>
         <button
           className="mt-5 text-sm font-medium text-[#888888] underline-offset-4 hover:text-[#111111] hover:underline"

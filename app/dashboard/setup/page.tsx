@@ -261,7 +261,7 @@ export default function StoreSetupPage() {
               <Store aria-hidden="true" className="h-4 w-4 shrink-0" />
               <input
                 className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-[#111111] outline-none placeholder:text-[#888888]"
-                placeholder="e.g. Lagos Fashion Hub"
+                placeholder="e.g. Accra Fashion Hub"
                 value={businessName}
                 onChange={(event) => {
                   const nextBusinessName = event.target.value;

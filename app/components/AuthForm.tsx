@@ -167,7 +167,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                   className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-[#111111] outline-none placeholder:text-[#888888]"
                   type="email"
                   autoComplete="email"
-                  placeholder="name@business.com"
+                  placeholder="kwekumensah@gmail.com"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   required

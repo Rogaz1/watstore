@@ -89,7 +89,8 @@ export function InstallAppPrompt() {
   if (showIosInstructions) {
     return (
       <p className="mt-4 rounded-2xl border border-[#E7E4DF] bg-[#FAF9F7] px-4 py-3 text-center text-xs font-medium leading-5 text-[#78716C]">
-        On iPhone: tap the Share icon, then &quot;Add to Home Screen&quot;.
+        Install the app on your Home Screen for quick access. Tap the Share
+        icon, then select &quot;Add to Home Screen&quot;.
       </p>
     );
   }

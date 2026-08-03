@@ -76,7 +76,7 @@ function LoginBrandHeader() {
       </div>
       <h1 className="mt-4 text-[24px] font-bold leading-none">Watstore</h1>
       <p className="mx-auto mt-3 max-w-full text-sm font-medium leading-5 text-[#888888]">
-        Your WhatsApp store, beautifully managed.
+        Simple. Fast. Professional.
       </p>
     </div>
   );

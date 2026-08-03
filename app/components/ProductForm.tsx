@@ -9,6 +9,7 @@ import {
   Check,
   ChevronLeft,
   GripVertical,
+  Lightbulb,
   Plus,
   X,
 } from "lucide-react";
@@ -441,7 +442,7 @@ export function ProductForm({ productId }: ProductFormProps) {
         onSubmit={handleSubmit}
       >
         <section className="min-w-0 overflow-hidden">
-          <h2 className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#666666]">
+          <h2 className="mb-3 text-[13px] font-semibold">
             Product Images
           </h2>
           <div className="-mx-1 flex max-w-full min-w-0 gap-3 overflow-x-auto px-1 pb-2">
@@ -738,9 +739,16 @@ export function ProductForm({ productId }: ProductFormProps) {
           </button>
         </label>
 
-        <p className="text-xs font-medium leading-5 text-[#888888]">
-          Tip: Products with at least 3 high-quality photos and clear benefits
-          lists sell 45% faster.
+        <p className="flex min-w-0 items-start gap-2 text-[11px] font-medium leading-5 text-[#888888]">
+          <Lightbulb
+            aria-hidden="true"
+            className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#25D366]"
+            strokeWidth={1.8}
+          />
+          <span className="min-w-0 flex-1">
+            Tip: Products with at least 3 high-quality photos and clear
+            benefits lists sell 45% faster.
+          </span>
         </p>
 
         {message ? (

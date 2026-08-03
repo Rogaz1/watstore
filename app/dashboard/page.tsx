@@ -124,11 +124,14 @@ const sellingTips = [
 ];
 
 const includedFeatures = [
-  "Unlimited products",
-  "Public storefront",
-  "WhatsApp ordering",
-  "Order management",
-  "Product photos, benefits, descriptions, and FAQs",
+  "Branded online store",
+  "Conversion-optimized product pages",
+  "Easy product & order management",
+  "Organized WhatsApp orders",
+  "A shareable store link",
+  "Secure cloud hosting",
+  "Free updates and new features",
+  "Dedicated customer support",
 ];
 
 type DashboardTab = "home" | "products" | "orders" | "settings";
@@ -1496,7 +1499,7 @@ export default function DashboardPage() {
             ) : null}
 
             {!isLoadingProducts && products.length ? (
-              <div className="flex flex-col gap-3">
+              <div className="grid w-full max-w-full min-w-0 gap-3 overflow-hidden">
                 {products.map((product) => {
                   const thumbnail = product.photo_urls?.[0];
                   const liveProductPath = merchant?.slug
@@ -1508,10 +1511,10 @@ export default function DashboardPage() {
                       : `${window.location.origin}${liveProductPath}`;
 
                   return (
-                      <article
-                        className="flex min-h-[106px] w-full max-w-full min-w-0 items-start gap-3 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
-                        key={product.id}
-                      >
+                    <article
+                      className="grid min-h-[106px] w-full max-w-full min-w-0 grid-cols-[68px_minmax(0,1fr)_24px] items-start gap-3 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
+                      key={product.id}
+                    >
                       <Link
                         className="block h-[68px] w-[68px] shrink-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-[#F7F5F2]"
                         href={`/dashboard/products/${product.id}`}
@@ -1529,13 +1532,13 @@ export default function DashboardPage() {
                         )}
                       </Link>
 
-                        <Link
-                          className="min-w-0 flex-[1_1_0%] overflow-hidden pt-1"
-                          href={`/dashboard/products/${product.id}`}
-                        >
-                          <h3 className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-bold leading-snug text-[#1A1A18]">
-                            {product.name}
-                          </h3>
+                      <Link
+                        className="block w-full min-w-0 max-w-full overflow-hidden pt-1"
+                        href={`/dashboard/products/${product.id}`}
+                      >
+                        <h3 className="block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-bold leading-snug text-[#1A1A18]">
+                          {product.name}
+                        </h3>
                         <div className="mt-1 flex min-w-0 items-baseline gap-2 overflow-hidden">
                           <span className="shrink-0 text-[13px] font-bold text-[#1A1A18]">
                             {formatPrice(product.sale_price)}
@@ -1557,7 +1560,7 @@ export default function DashboardPage() {
                         </p>
                       </Link>
 
-                      <div className="flex shrink-0 flex-col items-center gap-1.5 pt-1">
+                      <div className="flex w-6 shrink-0 flex-col items-center gap-1.5 pt-1">
                         <Link
                           aria-label={`Edit ${product.name}`}
                           className="flex h-6 w-6 items-center justify-center rounded-lg text-[#BBBBBB] transition hover:bg-[#F7F5F2] hover:text-[#1A1A18]"
@@ -2012,7 +2015,7 @@ export default function DashboardPage() {
             <section className="grid gap-4 rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
               <h2 className="text-lg font-bold">Subscription Plan</h2>
               <div className="rounded-2xl border border-[#EDECEA] bg-[#F7F5F2] p-4">
-                <h3 className="text-[13px] font-bold">What&apos;s included</h3>
+                <h3 className="text-[13px] font-bold">Everything You Need</h3>
                 <ul className="mt-3 grid gap-2">
                   {includedFeatures.map((feature) => (
                     <li

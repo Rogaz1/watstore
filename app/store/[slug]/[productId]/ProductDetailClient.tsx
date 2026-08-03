@@ -745,7 +745,7 @@ export function ProductDetailClient({
           target="_blank"
           rel="noreferrer"
         >
-          Have a Question? Chat Us
+          Have a Question? Chat Us on WhatsApp
         </a>
 
         {product.long_description ? (

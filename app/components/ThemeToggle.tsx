@@ -67,7 +67,7 @@ export function ThemeToggle() {
             Dark Mode
           </span>
           <span className="mt-1 block text-xs font-medium text-[#888888]">
-            Use a darker interface in low light.
+            Darker interface in low light.
           </span>
         </span>
       </span>

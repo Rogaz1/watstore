@@ -720,7 +720,7 @@ export function ProductForm({ productId }: ProductFormProps) {
           <span className="min-w-0 flex-1">
             <span className="block text-[13px] font-semibold">In stock</span>
             <span className="block text-xs font-medium text-[#888888]">
-              Turn off to show &quot;Out of stock&quot; on storefront
+              Turn off to show &quot;Out of stock&quot;
             </span>
           </span>
           <button
@@ -746,8 +746,8 @@ export function ProductForm({ productId }: ProductFormProps) {
             strokeWidth={1.8}
           />
           <span className="min-w-0 flex-1">
-            Tip: Products with at least 3 high-quality photos and clear
-            benefits lists sell 45% faster.
+            Tip: Products with at least 3 high-quality photos and lists of
+            clear benefits or highlights tend to sell 45% faster.
           </span>
         </p>
 

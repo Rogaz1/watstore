@@ -322,7 +322,7 @@ function getSubscriptionPlanCta({
     return {
       disabled: true,
       intent: "upgrade" as const,
-      label: "Current Plan: Annual",
+      label: "Annual Plan Active",
     };
   }
 

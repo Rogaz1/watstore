@@ -5,11 +5,11 @@ import { supabase } from "@/lib/supabase";
 import type { Merchant, SubscriptionExpiredFrom } from "./productTypes";
 import { buildUpgradeUrl } from "./subscription";
 
-function LockIcon() {
+function StoreIcon() {
   return (
     <svg
       aria-hidden="true"
-      className="h-9 w-9"
+      className="h-8 w-8"
       fill="none"
       stroke="currentColor"
       strokeLinecap="round"
@@ -17,8 +17,11 @@ function LockIcon() {
       strokeWidth="1.5"
       viewBox="0 0 24 24"
     >
-      <rect height="11" rx="2" ry="2" width="18" x="3" y="11" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      <path d="M4 10h16" />
+      <path d="M5 10v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9" />
+      <path d="M7 10V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v5" />
+      <path d="M9 21v-6h6v6" />
+      <path d="M4 10l1.2-4.2A2 2 0 0 1 7.1 4h9.8a2 2 0 0 1 1.9 1.8L20 10" />
     </svg>
   );
 }
@@ -40,7 +43,7 @@ export function ExpiredAccessScreen({
     <main className="flex min-h-screen items-center justify-center bg-white px-8 py-12 text-[#111111]">
       <section className="flex min-h-[72vh] w-full max-w-sm flex-col items-center justify-center text-center">
         <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#F4F4F5] text-[#888888]">
-          <LockIcon />
+          <StoreIcon />
         </div>
         <h1 className="text-[18px] font-bold leading-tight">
           Your store is temporarily offline

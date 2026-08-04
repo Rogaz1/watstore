@@ -161,8 +161,9 @@ function OrderSheet({
       `Order #${order.order_number}`,
     ].join("\n");
 
-    window.open(buildWhatsAppUrl(merchant.whatsapp_number, whatsappMessage), "_blank");
-    onClose();
+    window.location.assign(
+      buildWhatsAppUrl(merchant.whatsapp_number, whatsappMessage),
+    );
   }
 
   return (

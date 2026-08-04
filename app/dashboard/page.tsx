@@ -48,6 +48,7 @@ import { supabase } from "@/lib/supabase";
 import { ExpiredAccessScreen } from "../components/ExpiredAccessScreen";
 import { compressImageForUpload } from "../components/imageCompression";
 import { getMerchantForUser } from "../components/merchantProfile";
+import { ThemeToggle } from "../components/ThemeToggle";
 import {
   formatGhsPrice,
   formatPrice,
@@ -408,7 +409,7 @@ function StatCard({
       </p>
       <p
         className={`mt-1 text-[22px] font-bold leading-none ${
-          highlight ? "text-[#25D366]" : "text-[#1A1A18]"
+          highlight ? "text-[#1DA851]" : "text-[#1A1A18]"
         }`}
       >
         {displayValue}
@@ -470,7 +471,7 @@ function HomeRecentOrderCard({
           )}
         </div>
         <div className="min-w-0 flex-[1_1_0%] overflow-hidden">
-          <p className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#25D366]">
+          <p className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#1DA851]">
             {order.product?.name ?? "Product unavailable"}
           </p>
           <p className="mt-0.5 block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium text-[#888888]">
@@ -487,7 +488,7 @@ function HomeRecentOrderCard({
           </span>
         </p>
         <button
-          className="shrink-0 text-xs font-bold text-[#25D366]"
+          className="shrink-0 text-xs font-bold text-[#1DA851]"
           type="button"
           onClick={onDetails}
         >
@@ -567,7 +568,7 @@ function OrderSummaryCard({
           )}
         </div>
         <div className="min-w-0 flex-[1_1_0%] overflow-hidden">
-          <p className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#25D366]">
+          <p className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#1DA851]">
             {order.product?.name ?? "Product unavailable"}
           </p>
           <p className="mt-0.5 block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium text-[#888888]">
@@ -599,6 +600,7 @@ export default function DashboardPage() {
   const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<OrderWithProduct[]>([]);
+  const [todayChatClicks, setTodayChatClicks] = useState(0);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [message, setMessage] = useState("");
@@ -666,6 +668,7 @@ export default function DashboardPage() {
         setMerchant(null);
         setProducts([]);
         setOrders([]);
+        setTodayChatClicks(0);
         setIsLoadingProducts(false);
         setIsLoadingOrders(false);
         router.replace("/dashboard/setup");
@@ -692,10 +695,23 @@ export default function DashboardPage() {
       if (!access.canAccess) {
         setProducts([]);
         setOrders([]);
+        setTodayChatClicks(0);
         setIsLoadingProducts(false);
         setIsLoadingOrders(false);
         return;
       }
+
+      const { data: chatClickCount } = await supabase.rpc(
+        "get_current_merchant_today_chat_count",
+      );
+
+      if (!isMounted) {
+        return;
+      }
+
+      setTodayChatClicks(
+        typeof chatClickCount === "number" ? chatClickCount : 0,
+      );
 
       const { data: productData, error: productError } = await supabase
         .from("products")
@@ -1231,7 +1247,7 @@ export default function DashboardPage() {
                   <div className="mx-5 h-px bg-[#EDECEA]" />
                   {merchant ? (
                     <a
-                      className="flex h-[60px] w-full min-w-0 items-center gap-4 px-5 text-[13px] font-bold text-[#25D366] transition hover:bg-[#F7F5F2]"
+                      className="flex h-[60px] w-full min-w-0 items-center gap-4 px-5 text-[13px] font-bold text-[#1DA851] transition hover:bg-[#F7F5F2]"
                       href={buildUpgradeUrl(merchant)}
                       target="_blank"
                       rel="noreferrer"
@@ -1349,7 +1365,7 @@ export default function DashboardPage() {
                           className="flex min-w-0 gap-2 text-[12px] font-medium leading-5 text-[#666666]"
                           key={item}
                         >
-                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#1DA851]" />
                           <span className="min-w-0 flex-1">{item}</span>
                         </li>
                       ))}
@@ -1387,7 +1403,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <a
-                  className="flex h-10 shrink-0 items-center justify-center rounded-xl bg-[#25D366] px-5 py-3.5 text-[13px] font-semibold text-white transition hover:opacity-90"
+                  className="flex h-10 shrink-0 items-center justify-center rounded-xl bg-[#1DA851] px-5 py-3.5 text-[13px] font-semibold text-white transition hover:opacity-90"
                   href={buildUpgradeUrl(merchant)}
                   target="_blank"
                   rel="noreferrer"
@@ -1398,7 +1414,7 @@ export default function DashboardPage() {
             ) : merchant.subscription_status === "active" ? (
               <div className="flex min-w-0 items-center justify-between gap-3 rounded-full border border-[#EDECEA] bg-white px-4 py-3 shadow-sm">
                 <p className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-medium text-[#888888]">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#1DA851]" />
                   <span className="min-w-0 flex-1 truncate">
                     {activeHomePlanName} · Active
                   </span>
@@ -1423,7 +1439,7 @@ export default function DashboardPage() {
                 value={orderStats.pendingOrders}
                 highlight
               />
-              <StatCard label="Chats" value={0} />
+              <StatCard label="Chats" value={todayChatClicks} />
             </div>
 
             <section>
@@ -1432,7 +1448,7 @@ export default function DashboardPage() {
                   Recent Orders
                 </h2>
                 <button
-                  className="inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#25D366]"
+                  className="inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#1DA851]"
                   type="button"
                   onClick={() => handleTabChange("orders")}
                 >
@@ -1471,7 +1487,7 @@ export default function DashboardPage() {
         ) : null}
 
         {activeTab === "products" ? (
-          <section className="-mx-4 -my-6 grid min-h-[calc(100vh-9rem)] gap-4 bg-[#F7F5F2] px-4 py-6 sm:-mx-6 sm:px-6">
+          <section className="-mx-4 -my-6 flex min-h-[calc(100vh-9rem)] flex-col gap-4 bg-[#F7F5F2] px-4 py-6 sm:-mx-6 sm:px-6">
             <div className="flex min-w-0 items-center justify-between gap-3">
               <p className="min-w-0 flex-1 truncate text-xs font-medium text-[#999999]">
                 {products.length}{" "}
@@ -1514,7 +1530,7 @@ export default function DashboardPage() {
             ) : null}
 
             {!isLoadingProducts && products.length ? (
-              <div className="grid w-full max-w-full min-w-0 gap-3 overflow-hidden">
+              <div className="grid w-full max-w-full min-w-0 auto-rows-max content-start gap-3 overflow-hidden">
                 {products.map((product) => {
                   const thumbnail = product.photo_urls?.[0];
                   const liveProductPath = merchant?.slug
@@ -1527,7 +1543,7 @@ export default function DashboardPage() {
 
                   return (
                     <article
-                      className="grid min-h-[106px] w-full max-w-full min-w-0 grid-cols-[68px_minmax(0,1fr)_24px] items-start gap-3 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
+                      className="grid h-[106px] w-full max-w-full min-w-0 grid-cols-[68px_minmax(0,1fr)_24px] items-start gap-3 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
                       key={product.id}
                     >
                       <Link
@@ -1567,7 +1583,7 @@ export default function DashboardPage() {
                         <p
                           className={`mt-2 inline-flex w-fit rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                             product.in_stock
-                              ? "bg-[#EDFBF3] text-[#15803D]"
+                              ? "bg-[#EAF7EF] text-[#15803D]"
                               : "bg-[#FEF2F2] text-[#B91C1C]"
                           }`}
                         >
@@ -1675,6 +1691,11 @@ export default function DashboardPage() {
 
         {activeTab === "settings" ? (
           <section className="grid gap-4 bg-[#F7F5F2]">
+            <section className="grid gap-3">
+              <h2 className="text-[18px] font-bold">Appearance</h2>
+              <ThemeToggle />
+            </section>
+
             <form
               className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
               onSubmit={handleSettingsSubmit}
@@ -1751,7 +1772,7 @@ export default function DashboardPage() {
                     </p>
                   ) : null}
                   {isSlugAvailable ? (
-                    <p className="mt-2 text-sm font-medium text-[#25D366]">
+                    <p className="mt-2 text-sm font-medium text-[#1DA851]">
                       /store/{normalizeSlug(settingsSlug)} is available.
                     </p>
                   ) : null}
@@ -2037,7 +2058,7 @@ export default function DashboardPage() {
                       className="flex min-w-0 items-center gap-2 text-[12px] font-medium text-[#666666]"
                       key={feature}
                     >
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#1DA851]" />
                       <span className="min-w-0 flex-1">{feature}</span>
                     </li>
                   ))}
@@ -2064,20 +2085,20 @@ export default function DashboardPage() {
                   <article
                     className={`relative rounded-2xl border p-4 ${
                       plan.cycle === 12
-                        ? "border-[#25D366]/20 bg-[#EDFBF3]"
+                        ? "border-[#1DA851]/20 bg-[#EAF7EF]"
                         : "border-[#EDECEA] bg-white"
                     }`}
                     key={plan.name}
                   >
                     {plan.cycle === 12 ? (
-                      <span className="absolute right-3 top-0 -translate-y-1/2 rounded-sm bg-[#25D366] px-2 py-1 text-[9px] font-bold text-white">
+                      <span className="absolute right-3 top-0 -translate-y-1/2 rounded-sm bg-[#1DA851] px-2 py-1 text-[9px] font-bold text-white">
                         Best Value - Save ₵189
                       </span>
                     ) : null}
                     {isActivePlan ? (
                       <div className="mb-4 flex min-w-0 items-center justify-between gap-3 rounded-full border border-[#EDECEA] bg-white px-3 py-2">
                         <p className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-medium text-[#888888]">
-                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#1DA851]" />
                           <span className="min-w-0 flex-1 truncate">
                             {plan.name} Plan
                           </span>
@@ -2101,7 +2122,7 @@ export default function DashboardPage() {
                     )}
                     {merchant ? (
                       <a
-                        className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99]"
+                        className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#1DA851] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99]"
                         href={buildPlanWhatsAppUrl(merchant, plan.name, intent)}
                         target="_blank"
                         rel="noreferrer"
@@ -2144,7 +2165,7 @@ export default function DashboardPage() {
                 Having trouble with your settings?
               </p>
               <a
-                className="mt-2 inline-flex min-w-0 items-center justify-center gap-1.5 text-sm font-bold text-[#25D366] underline-offset-4 hover:underline"
+                className="mt-2 inline-flex min-w-0 items-center justify-center gap-1.5 text-sm font-bold text-[#1DA851] underline-offset-4 hover:underline"
                 href={helpUrl}
                 target="_blank"
                 rel="noreferrer"
@@ -2160,7 +2181,7 @@ export default function DashboardPage() {
       </section>
 
       {!isSellingTipsOpen ? (
-        <nav className="fixed bottom-0 left-0 right-0 z-30 w-full border-t border-[#EDECEA] bg-white px-2 py-2">
+        <nav className="fixed inset-x-0 bottom-0 z-[80] w-full translate-y-0 transform-gpu border-t border-[#EDECEA] bg-white px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_18px_rgba(0,0,0,0.06)]">
           <div
             className="grid w-full grid-cols-4 items-stretch"
             style={{

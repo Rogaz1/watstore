@@ -448,7 +448,7 @@ export function ProductForm({ productId }: ProductFormProps) {
           <div className="-mx-1 flex max-w-full min-w-0 gap-3 overflow-x-auto px-1 pb-2">
             {images.length < MAX_IMAGES ? (
               <label className="flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[#BBBBBB] bg-white text-center transition hover:border-[#111111]">
-                <Plus aria-hidden="true" className="h-5 w-5 text-[#25D366]" strokeWidth={1.8} />
+                <Plus aria-hidden="true" className="h-5 w-5 text-[#1DA851]" strokeWidth={1.8} />
                 <span className="mt-2 text-[10px] font-semibold uppercase text-[#888888]">
                   Add photo
                 </span>
@@ -482,7 +482,7 @@ export function ProductForm({ productId }: ProductFormProps) {
                   alt={name || "Product photo"}
                 />
                 {index === 0 ? (
-                  <span className="absolute left-2 top-2 rounded-full bg-[#25D366] px-2 py-0.5 text-[9px] font-bold text-white">
+                  <span className="absolute left-2 top-2 rounded-full bg-[#1DA851] px-2 py-0.5 text-[9px] font-bold text-white">
                     Main
                   </span>
                 ) : null}
@@ -726,7 +726,7 @@ export function ProductForm({ productId }: ProductFormProps) {
           <button
             aria-pressed={inStock}
             className={`flex h-5 w-10 shrink-0 items-center rounded-full p-0.5 transition ${
-              inStock ? "bg-[#25D366]" : "bg-[#E5E5E5]"
+              inStock ? "bg-[#1DA851]" : "bg-[#E5E5E5]"
             }`}
             type="button"
             onClick={() => setInStock((current) => !current)}
@@ -742,7 +742,7 @@ export function ProductForm({ productId }: ProductFormProps) {
         <p className="flex min-w-0 items-start gap-2 text-[11px] font-medium leading-5 text-[#888888]">
           <Lightbulb
             aria-hidden="true"
-            className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#25D366]"
+            className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#1DA851]"
             strokeWidth={1.8}
           />
           <span className="min-w-0 flex-1">

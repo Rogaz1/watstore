@@ -308,7 +308,7 @@ export default function StoreSetupPage() {
               </p>
             ) : null}
             {isSlugAvailable ? (
-              <p className="mt-2 text-xs font-semibold text-[#25D366]">
+              <p className="mt-2 text-xs font-semibold text-[#1DA851]">
                 /store/{normalizedSlug} is available.
               </p>
             ) : null}
@@ -328,7 +328,7 @@ export default function StoreSetupPage() {
               <span className="flex h-full shrink-0 items-center gap-2 border-r border-[#E5E5E5] bg-[#E5E5E5]/35 px-3 text-sm font-bold text-[#111111]">
                 <MessageSquare
                   aria-hidden="true"
-                  className="h-3.5 w-3.5 shrink-0 text-[#25D366]"
+                  className="h-3.5 w-3.5 shrink-0 text-[#1DA851]"
                 />
                 +233
               </span>

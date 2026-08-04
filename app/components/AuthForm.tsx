@@ -180,7 +180,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                 <span className="min-w-0 flex-1 truncate">Password</span>
                 {!isSignup ? (
                   <Link
-                    className="shrink-0 text-xs font-semibold text-[#25D366] underline-offset-4 hover:underline"
+                    className="shrink-0 text-xs font-semibold text-[#1DA851] underline-offset-4 hover:underline"
                     href="/forgot-password"
                   >
                     Forgot password?
@@ -228,7 +228,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           <p className="mt-6 text-center text-sm text-[#888888]">
             {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
             <Link
-              className="font-semibold text-[#25D366] underline-offset-4 hover:underline"
+              className="font-semibold text-[#1DA851] underline-offset-4 hover:underline"
               href={isSignup ? "/login" : "/signup"}
             >
               {isSignup ? "Log in" : "Sign up"}

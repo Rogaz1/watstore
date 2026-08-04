@@ -1,25 +1,78 @@
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap");
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #1c1917;
-  --type-photo-badge: 9px;
-  --type-stat-label: 9.5px;
-  --type-status-badge: 10px;
-  --type-eyebrow: 10.5px;
-  --type-meta: 11px;
-  --type-small-ui: 12px;
-  --type-card: 13px;
-  --type-callout: 13.5px;
-  --type-body: 14px;
-  --type-compact-title: 15px;
-  --type-store-heading: 18px;
-  --type-sticky-price: 20px;
-  --type-screen-title: 22px;
-  --type-auth-title: 24px;
-  --type-sale-price: 26px;
-  --type-trial-number: 30px;
+@layer base {
+  :root {
+    --background: #ffffff;
+    --foreground: #1c1917;
+    --c-bg: #ffffff;
+    --c-bg-warm: #f7f5f2;
+    --c-surface: #ffffff;
+    --c-surface-2: #fafaf8;
+    --c-input: #f4f4f5;
+    --c-input-warm: #f4f3f0;
+    --c-text: #1a1a18;
+    --c-text-medium: #333333;
+    --c-text-body: #555555;
+    --c-text-2: #888888;
+    --c-text-3: #999999;
+    --c-text-4: #bbbbbb;
+    --c-border: #edecea;
+    --c-border-subtle: #f0ede8;
+    --c-border-strong: #e5e5e5;
+    --c-btn-dark-bg: #1a1a18;
+    --c-btn-dark-bg-hover: #2e2e2c;
+    --c-btn-dark-text: #ffffff;
+    --c-toggle-inactive: #d1d5db;
+    --c-wa: #1da851;
+    --c-wa-light: #eaf7ef;
+    --c-wa-text: #0f6b34;
+    --c-focus-ring: rgb(26 26 24 / 10%);
+    --type-photo-badge: 9px;
+    --type-stat-label: 9.5px;
+    --type-status-badge: 10px;
+    --type-eyebrow: 10.5px;
+    --type-meta: 11px;
+    --type-small-ui: 12px;
+    --type-card: 13px;
+    --type-callout: 13.5px;
+    --type-body: 14px;
+    --type-compact-title: 15px;
+    --type-store-heading: 18px;
+    --type-sticky-price: 20px;
+    --type-screen-title: 22px;
+    --type-auth-title: 24px;
+    --type-sale-price: 26px;
+    --type-trial-number: 30px;
+  }
+
+  :root.dark {
+    --background: #111110;
+    --foreground: #f0ede8;
+    --c-bg: #111110;
+    --c-bg-warm: #141412;
+    --c-surface: #1c1c1a;
+    --c-surface-2: #242422;
+    --c-input: #252523;
+    --c-input-warm: #2a2a28;
+    --c-text: #f0ede8;
+    --c-text-medium: #c8c4be;
+    --c-text-body: #a8a49f;
+    --c-text-2: #9a9690;
+    --c-text-3: #807c78;
+    --c-text-4: #5c5854;
+    --c-border: rgb(255 255 255 / 9%);
+    --c-border-subtle: rgb(255 255 255 / 6%);
+    --c-border-strong: rgb(255 255 255 / 14%);
+    --c-btn-dark-bg: #e8e3dc;
+    --c-btn-dark-bg-hover: #d8d1c8;
+    --c-btn-dark-text: #111110;
+    --c-toggle-inactive: #3a3a38;
+    --c-wa-light: #0c2318;
+    --c-wa-text: #4ade80;
+    --c-focus-ring: rgb(232 227 220 / 16%);
+    color-scheme: dark;
+  }
 }
 
 @theme inline {
@@ -35,6 +88,14 @@ body {
   font-family: "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
 *,
 *::before,
 *::after {
@@ -47,4 +108,112 @@ input,
 textarea,
 select {
   letter-spacing: 0;
+}
+
+input,
+textarea,
+select {
+  color-scheme: inherit;
+}
+
+html.dark [class~="bg-white"],
+html.dark [class*="bg-white/"] {
+  background-color: var(--c-surface) !important;
+}
+
+html.dark [class*="bg-[#FFFFFF]"] {
+  background-color: var(--c-bg) !important;
+}
+
+html.dark [class*="bg-[#F7F5F2]"] {
+  background-color: var(--c-bg-warm) !important;
+}
+
+html.dark [class*="bg-[#F4F4F5]"] {
+  background-color: var(--c-input) !important;
+}
+
+html.dark [class*="bg-[#F4F3F0]"],
+html.dark [class*="bg-[#F8F8F8]"],
+html.dark [class*="bg-[#FAF9F7]"] {
+  background-color: var(--c-input-warm) !important;
+}
+
+html.dark [class*="bg-[#EAF7EF]"] {
+  background-color: var(--c-wa-light) !important;
+}
+
+html.dark [class*="bg-[#111111]"],
+html.dark [class*="bg-[#1A1A18]"] {
+  background-color: var(--c-btn-dark-bg) !important;
+}
+
+html.dark [class*="hover:bg-[#222222]"]:hover,
+html.dark [class*="hover:bg-[#2E2E2C]"]:hover {
+  background-color: var(--c-btn-dark-bg-hover) !important;
+}
+
+html.dark [class*="bg-[#111111]"][class*="text-white"],
+html.dark [class*="bg-[#1A1A18]"][class*="text-white"] {
+  color: var(--c-btn-dark-text) !important;
+}
+
+html.dark [class*="text-[#111111]"],
+html.dark [class*="text-[#1A1A18]"],
+html.dark [class*="text-[#222222]"] {
+  color: var(--c-text) !important;
+}
+
+html.dark [class*="text-[#333333]"] {
+  color: var(--c-text-medium) !important;
+}
+
+html.dark [class*="text-[#555555]"],
+html.dark [class*="text-[#666666]"] {
+  color: var(--c-text-body) !important;
+}
+
+html.dark [class*="text-[#888888]"] {
+  color: var(--c-text-2) !important;
+}
+
+html.dark [class*="text-[#999999]"],
+html.dark [class*="text-[#AAAAAA]"] {
+  color: var(--c-text-3) !important;
+}
+
+html.dark [class*="text-[#BBBBBB]"],
+html.dark [class*="text-[#CCCCCC]"],
+html.dark [class*="text-[#BDB9B2]"] {
+  color: var(--c-text-4) !important;
+}
+
+html.dark [class*="text-[#0F6B34]"] {
+  color: var(--c-wa-text) !important;
+}
+
+html.dark [class*="border-[#EDECEA]"],
+html.dark [class*="border-[#E5E5E5]"],
+html.dark [class*="border-[#E7E4DF]"],
+html.dark [class*="border-[#F0F0F0]"],
+html.dark [class*="ring-[#EDECEA]"] {
+  border-color: var(--c-border) !important;
+  --tw-ring-color: var(--c-border) !important;
+}
+
+html.dark [class*="border-[#BBBBBB]"],
+html.dark [class*="border-[#D8D4CE]"] {
+  border-color: var(--c-border-strong) !important;
+}
+
+html.dark [class*="focus-within:border-[#111111]"]:focus-within,
+html.dark [class*="focus-within:border-[#1A1A18]"]:focus-within,
+html.dark [class*="focus:border-[#1A1A18]"]:focus {
+  border-color: var(--c-btn-dark-bg) !important;
+}
+
+html.dark [class*="focus-within:ring-[#111111]"]:focus-within,
+html.dark [class*="focus-within:ring-[#1A1A18]"]:focus-within,
+html.dark [class*="focus:ring-[#111111]"]:focus {
+  --tw-ring-color: var(--c-focus-ring) !important;
 }

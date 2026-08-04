@@ -28,11 +28,22 @@ function StoreIcon() {
 
 export function ExpiredAccessScreen({
   merchant,
+  expiredFrom,
 }: {
   merchant: Pick<Merchant, "business_name" | "slug">;
   expiredFrom: SubscriptionExpiredFrom | null;
 }) {
   const router = useRouter();
+  const isTrialExpired = expiredFrom === "trial";
+  const title = isTrialExpired
+    ? "Your 30-day free trial has ended"
+    : "Your store is temporarily offline";
+  const description = isTrialExpired
+    ? "Thank you for trying the platform! Subscribe today to keep your storefront online, continue receiving WhatsApp orders, and access your merchant dashboard."
+    : "Your subscription has expired, so your storefront is currently hidden from customers. Renew your subscription to put your store back online and continue receiving WhatsApp orders.";
+  const buttonLabel = isTrialExpired
+    ? "Subscribe via WhatsApp"
+    : "Reactivate via WhatsApp";
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -46,23 +57,18 @@ export function ExpiredAccessScreen({
           <StoreIcon />
         </div>
         <h1 className="text-[18px] font-bold leading-tight">
-          Your store is temporarily offline
+          {title}
         </h1>
         <p className="mt-3 max-w-[18rem] text-[12px] font-medium leading-5 text-[#888888]">
-          Your subscription has expired, so your storefront is currently hidden
-          from customers.
-        </p>
-        <p className="mt-2 max-w-[18rem] text-[12px] font-medium leading-5 text-[#888888]">
-          Renew your subscription to put your store back online and continue
-          receiving WhatsApp orders.
+          {description}
         </p>
         <a
-          className="mt-7 flex h-12 w-full items-center justify-center rounded-xl bg-[#25D366] px-4 text-[14px] font-bold text-white transition active:scale-[0.99]"
+          className="mt-7 flex h-12 w-full items-center justify-center rounded-xl bg-[#1DA851] px-4 text-[14px] font-bold text-white transition active:scale-[0.99]"
           href={buildUpgradeUrl(merchant)}
           target="_blank"
           rel="noreferrer"
         >
-          Reactivate via WhatsApp
+          {buttonLabel}
         </a>
         <button
           className="mt-5 text-sm font-medium text-[#888888] underline-offset-4 hover:text-[#111111] hover:underline"
@@ -78,8 +84,8 @@ export function ExpiredAccessScreen({
 
 export function StoreUnavailableScreen() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white px-5 text-center text-[#111111]">
-      <p className="text-lg font-semibold">
+    <main className="flex min-h-screen items-center justify-center bg-white px-8 py-12 text-center text-[#111111]">
+      <p className="max-w-[18rem] text-[18px] font-bold leading-6 tracking-normal">
         This store is temporarily unavailable
       </p>
     </main>

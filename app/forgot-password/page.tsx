@@ -77,6 +77,21 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
+function getResetPasswordRedirectUrl() {
+  const configuredSiteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_APP_URL;
+
+  if (configuredSiteUrl) {
+    return `${configuredSiteUrl.replace(/\/$/, "")}/reset-password`;
+  }
+
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  return `${window.location.origin}/reset-password`;
+}
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -94,12 +109,8 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     setMessage("");
 
-    const redirectTo =
-      typeof window === "undefined"
-        ? undefined
-        : `${window.location.origin}/reset-password`;
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo,
+      redirectTo: getResetPasswordRedirectUrl(),
     });
 
     if (error) {

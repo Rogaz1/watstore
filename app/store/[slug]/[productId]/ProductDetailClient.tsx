@@ -45,7 +45,7 @@ type CreateOrderResponse = {
 
 function CheckIcon() {
   return (
-    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#25D366]">
+    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1DA851]">
       <svg
         aria-hidden="true"
         className="h-3 w-3 text-white"
@@ -183,7 +183,7 @@ function OrderSheet({
               <h2 className="truncate text-[15px] font-bold leading-tight">
                 {product.name}
               </h2>
-              <p className="mt-1 text-[13px] font-medium leading-none text-[#25D366]">
+              <p className="mt-1 text-[13px] font-medium leading-none text-[#1DA851]">
                 {formatGhsPrice(product.sale_price)}
               </p>
             </div>
@@ -271,7 +271,7 @@ function OrderSheet({
         ) : null}
 
         <button
-          className="mt-5 w-full rounded-xl bg-[#25D366] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:opacity-40"
+          className="mt-5 w-full rounded-xl bg-[#1DA851] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:opacity-40"
           type="submit"
           disabled={isSubmitting || !canSubmit}
         >
@@ -579,6 +579,28 @@ export function ProductDetailClient({
     }
   }
 
+  async function handleQuestionClick() {
+    const chatUrl = buildWhatsAppUrl(
+      merchant?.whatsapp_number,
+      `Hi, I have a question about ${product?.name}`,
+    );
+    const chatWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
+
+    try {
+      if (product?.id) {
+        await supabase.rpc("record_product_chat_click", {
+          requested_product_id: product.id,
+        });
+      }
+    } finally {
+      if (chatWindow) {
+        chatWindow.location.href = chatUrl;
+      } else {
+        window.location.href = chatUrl;
+      }
+    }
+  }
+
   if (isLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-5 text-[#111111]">
@@ -659,7 +681,7 @@ export function ProductDetailClient({
 
       <section className="relative z-10 -mt-6 mx-auto w-full max-w-3xl min-w-0 overflow-hidden rounded-t-[28px] bg-white px-5 pb-6 pt-5">
         {shareMessage ? (
-          <p className="mb-4 rounded-2xl bg-[#EDFBF3] px-4 py-3.5 text-sm font-medium text-[#0A5C2B]">
+          <p className="mb-4 rounded-2xl bg-[#EAF7EF] px-4 py-3.5 text-sm font-medium text-[#0F6B34]">
             {shareMessage}
           </p>
         ) : null}
@@ -708,7 +730,7 @@ export function ProductDetailClient({
         </div>
 
         {product.short_description ? (
-          <div className="mt-5 min-w-0 break-words rounded-2xl bg-[#EDFBF3] px-4 py-4 text-[13.5px] font-medium leading-6 text-[#0A5C2B] [overflow-wrap:anywhere]">
+          <div className="mt-5 min-w-0 break-words rounded-2xl bg-[#EAF7EF] px-4 py-4 text-[13.5px] font-medium leading-6 text-[#0F6B34] [overflow-wrap:anywhere]">
             {product.short_description}
           </div>
         ) : null}
@@ -736,17 +758,13 @@ export function ProductDetailClient({
           </section>
         ) : null}
 
-        <a
-          className="mt-7 flex w-full items-center justify-center rounded-xl border-[1.5px] border-[#25D366] px-4 py-3.5 text-[13px] font-semibold text-[#25D366] transition active:opacity-70"
-          href={buildWhatsAppUrl(
-            merchant.whatsapp_number,
-            `Hi, I have a question about ${product.name}`,
-          )}
-          target="_blank"
-          rel="noreferrer"
+        <button
+          className="mt-7 flex w-full items-center justify-center rounded-xl border-[1.5px] border-[#1DA851] px-4 py-3.5 text-[13px] font-semibold text-[#1DA851] transition active:opacity-70"
+          type="button"
+          onClick={handleQuestionClick}
         >
           Have a Question? Chat Us on WhatsApp
-        </a>
+        </button>
 
         {product.long_description ? (
           <section className="mt-9 border-t border-[#E5E5E5] pt-7">
@@ -819,7 +837,7 @@ export function ProductDetailClient({
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-[#E5E5E5] bg-white p-4">
         <div className="mx-auto max-w-3xl">
           <button
-            className="w-full rounded-xl bg-[#25D366] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:opacity-40"
+            className="w-full rounded-xl bg-[#1DA851] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:opacity-40"
             type="button"
             disabled={!product.in_stock}
             onClick={() => setIsOrderOpen(true)}

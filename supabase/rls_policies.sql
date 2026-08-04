@@ -72,6 +72,16 @@ create unique index if not exists orders_merchant_order_number_key
 on public.orders (merchant_id, order_number)
 where order_number is not null;
 
+create table if not exists public.product_chat_clicks (
+  id uuid primary key default gen_random_uuid(),
+  merchant_id uuid not null,
+  product_id uuid not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.product_chat_clicks enable row level security;
+revoke all on public.product_chat_clicks from anon, authenticated;
+
 create or replace function public.is_slug_available(requested_slug text)
 returns boolean
 language sql
@@ -325,6 +335,62 @@ end;
 $$;
 
 grant execute on function public.get_public_merchant_by_slug(text) to anon, authenticated;
+
+create or replace function public.record_product_chat_click(
+  requested_product_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  selected_product public.products%rowtype;
+  selected_merchant public.merchants%rowtype;
+begin
+  select *
+  into selected_product
+  from public.products
+  where id = requested_product_id;
+
+  if not found then
+    return;
+  end if;
+
+  perform public.refresh_merchant_subscription(selected_product.merchant_id);
+
+  select *
+  into selected_merchant
+  from public.merchants
+  where id = selected_product.merchant_id;
+
+  if selected_merchant.subscription_status = 'expired' then
+    return;
+  end if;
+
+  insert into public.product_chat_clicks (merchant_id, product_id)
+  values (selected_product.merchant_id, selected_product.id);
+end;
+$$;
+
+grant execute on function public.record_product_chat_click(uuid) to anon, authenticated;
+
+create or replace function public.get_current_merchant_today_chat_count()
+returns integer
+language sql
+security definer
+set search_path = public
+as $$
+  select count(*)::integer
+  from public.product_chat_clicks
+  where merchant_id in (
+    select id from public.merchants where user_id = auth.uid()
+  )
+    and created_at >= date_trunc('day', now())
+    and created_at < date_trunc('day', now()) + interval '1 day';
+$$;
+
+grant execute on function public.get_current_merchant_today_chat_count() to authenticated;
 
 -- Keep storefront-safe merchant columns public, but prevent direct browser
 -- queries from reading subscription and billing internals. Table-level SELECT

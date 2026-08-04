@@ -579,26 +579,25 @@ export function ProductDetailClient({
     }
   }
 
-  async function handleQuestionClick() {
+  function handleQuestionClick() {
     const chatUrl = buildWhatsAppUrl(
       merchant?.whatsapp_number,
       `Hi, I have a question about ${product?.name}`,
     );
-    const chatWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
 
-    try {
-      if (product?.id) {
-        await supabase.rpc("record_product_chat_click", {
-          requested_product_id: product.id,
-        });
-      }
-    } finally {
-      if (chatWindow) {
-        chatWindow.location.href = chatUrl;
-      } else {
-        window.location.href = chatUrl;
-      }
+    if (product?.id) {
+      void (async () => {
+        try {
+          await supabase.rpc("record_product_chat_click", {
+            requested_product_id: product.id,
+          });
+        } catch {
+          // Navigation to WhatsApp should never be blocked by analytics.
+        }
+      })();
     }
+
+    window.location.assign(chatUrl);
   }
 
   if (isLoading) {

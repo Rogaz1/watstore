@@ -222,6 +222,22 @@ function homeStatusClasses(status: OrderStatus) {
   return "border-transparent bg-[#FEF2F2] text-[#B91C1C]";
 }
 
+function statusChevronClasses(status: OrderStatus) {
+  if (status === "pending") {
+    return "text-[#B45309]";
+  }
+
+  if (status === "paid") {
+    return "text-[#1D4ED8]";
+  }
+
+  if (status === "fulfilled") {
+    return "text-[#15803D]";
+  }
+
+  return "text-[#B91C1C]";
+}
+
 function formatRelativeOrderDate(value: string) {
   const created = new Date(value);
   const now = new Date();
@@ -289,6 +305,52 @@ function buildPlanWhatsAppUrl(
       `Store: ${merchant.slug ?? ""}`,
     ].join("\n"),
   );
+}
+
+function getSubscriptionPlanCta({
+  activePlanCycle,
+  daysRemaining,
+  planCycle,
+}: {
+  activePlanCycle: number | null | undefined;
+  daysRemaining: number | null | undefined;
+  planCycle: 1 | 12;
+}) {
+  const isCurrentPlan = activePlanCycle === planCycle;
+
+  if (activePlanCycle === 12 && planCycle === 1) {
+    return {
+      disabled: true,
+      intent: "upgrade" as const,
+      label: "Current Plan: Annual",
+    };
+  }
+
+  if (!isCurrentPlan) {
+    return {
+      disabled: false,
+      intent: "upgrade" as const,
+      label: "Upgrade - Message Us",
+    };
+  }
+
+  const renewalThresholdDays = planCycle === 1 ? 7 : 30;
+  const isRenewalSoon =
+    typeof daysRemaining === "number" && daysRemaining <= renewalThresholdDays;
+
+  if (!isRenewalSoon) {
+    return {
+      disabled: true,
+      intent: "renew" as const,
+      label: "You Are All Set",
+    };
+  }
+
+  return {
+    disabled: false,
+    intent: "renew" as const,
+    label: "Renew Early - Message Us",
+  };
 }
 
 function SettingsFieldIcon({
@@ -546,7 +608,9 @@ function OrderSummaryCard({
             </select>
             <ChevronDown
               aria-hidden="true"
-              className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2"
+              className={`pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 ${statusChevronClasses(
+                order.status,
+              )}`}
               strokeWidth={2.4}
             />
           </label>
@@ -2067,19 +2131,23 @@ export default function DashboardPage() {
               {[
                 {
                   name: "Monthly" as const,
-                  cycle: 1,
+                  cycle: 1 as const,
                   price: "₵49",
                   suffix: "/month",
                 },
                 {
                   name: "Annual" as const,
-                  cycle: 12,
+                  cycle: 12 as const,
                   price: "₵399",
                   suffix: "/year",
                 },
               ].map((plan) => {
                 const isActivePlan = activePlanCycle === plan.cycle;
-                const intent = isActivePlan ? "renew" : "upgrade";
+                const cta = getSubscriptionPlanCta({
+                  activePlanCycle,
+                  daysRemaining,
+                  planCycle: plan.cycle,
+                });
 
                 return (
                   <article
@@ -2120,18 +2188,27 @@ export default function DashboardPage() {
                         </p>
                       </>
                     )}
-                    {merchant ? (
+                    {merchant && cta.disabled ? (
+                      <button
+                        className="subscription-neutral-button mt-4 flex h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border px-4 py-4 text-[14px] font-bold"
+                        type="button"
+                        disabled
+                      >
+                        <span className="min-w-0 truncate">{cta.label}</span>
+                      </button>
+                    ) : merchant ? (
                       <a
-                        className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#1DA851] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99]"
-                        href={buildPlanWhatsAppUrl(merchant, plan.name, intent)}
+                        className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99]"
+                        href={buildPlanWhatsAppUrl(
+                          merchant,
+                          plan.name,
+                          cta.intent,
+                        )}
                         target="_blank"
                         rel="noreferrer"
                       >
                         <MessageCircle className="h-4 w-4 shrink-0" />
-                        <span className="min-w-0 truncate">
-                          {isActivePlan ? "Renew Early" : "Upgrade"} - Message
-                          Us
-                        </span>
+                        <span className="min-w-0 truncate">{cta.label}</span>
                       </a>
                     ) : null}
                   </article>

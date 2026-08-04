@@ -82,6 +82,18 @@
   --font-mono: var(--font-geist-mono);
 }
 
+.subscription-neutral-button {
+  border-color: #e5e7eb;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+:root.dark .subscription-neutral-button {
+  border-color: var(--c-border);
+  background: var(--c-surface-2);
+  color: var(--c-text-2);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

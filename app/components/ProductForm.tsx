@@ -716,7 +716,7 @@ export function ProductForm({ productId }: ProductFormProps) {
           </div>
         </section>
 
-        <label className="flex min-w-0 items-center justify-between gap-4 rounded-2xl bg-white py-1">
+        <label className="flex w-full min-w-0 items-center justify-between gap-4 rounded-2xl bg-white px-4 py-3.5">
           <span className="min-w-0 flex-1">
             <span className="block text-[13px] font-semibold">In stock</span>
             <span className="block text-xs font-medium text-[#888888]">

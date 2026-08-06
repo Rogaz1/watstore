@@ -715,7 +715,7 @@ export function ProductDetailClient({
         </div>
 
         <div className="mt-3 flex min-w-0 flex-wrap items-center gap-3 overflow-hidden">
-          <span className="shrink-0 text-[24px] font-bold leading-none">
+          <span className="shrink-0 text-[20px] font-semibold leading-none">
             {formatGhsPrice(product.sale_price)}
           </span>
           {product.original_price ? (
@@ -731,7 +731,7 @@ export function ProductDetailClient({
         </div>
 
         {product.short_description ? (
-          <div className="mt-5 min-w-0 break-words rounded-2xl bg-[#EAF7EF] px-4 py-4 text-[13.5px] font-medium leading-6 text-[#0F6B34] [overflow-wrap:anywhere]">
+          <div className="mt-5 min-w-0 break-words rounded-2xl bg-[#EAF7EF] px-4 py-4 text-sm font-normal leading-7 text-[#0F6B34] [overflow-wrap:anywhere]">
             {product.short_description}
           </div>
         ) : null}
@@ -740,7 +740,7 @@ export function ProductDetailClient({
           <section className="mt-6">
             <ul className="grid gap-3">
               {benefits.map((benefit) => (
-                <li className="flex min-w-0 gap-3 text-[13.5px] font-medium leading-6" key={benefit}>
+                <li className="flex min-w-0 gap-3 text-sm font-normal leading-7" key={benefit}>
                   <CheckIcon />
                   <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
                     {benefit}

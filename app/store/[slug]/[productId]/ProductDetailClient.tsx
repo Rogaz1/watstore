@@ -660,13 +660,14 @@ export function ProductDetailClient({
           </button>
 
           {media.length > 1 ? (
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
+            <div className="absolute bottom-9 left-0 right-0 z-20 flex justify-center gap-1.5">
               {media.map((item, index) => (
                 <button
                   aria-label={`Show media ${index + 1}`}
-                  className="h-1.5 rounded-full bg-white transition-all"
+                  className="h-1.5 rounded-full shadow-sm transition-all"
                   key={item.id}
                   style={{
+                    backgroundColor: "#FFFFFF",
                     opacity: index === activeIndex ? 1 : 0.55,
                     width: index === activeIndex ? 18 : 6,
                   }}
@@ -689,7 +690,7 @@ export function ProductDetailClient({
         <div className="relative min-w-0">
           <h1
             ref={nameRef}
-            className={`min-w-0 break-words text-[20px] font-bold leading-[27px] [overflow-wrap:anywhere] ${
+            className={`min-w-0 break-words text-[18px] font-semibold leading-[25px] [overflow-wrap:anywhere] ${
               isNameExpanded ? "" : "line-clamp-2"
             } ${isNameExpandable ? "pr-7" : ""}`}
           >

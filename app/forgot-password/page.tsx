@@ -65,8 +65,7 @@ function AuthBrandHeader() {
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#111111] text-white shadow-sm">
         <AppLogoIcon />
       </div>
-      <h1 className="mt-4 text-[24px] font-bold leading-none">Watstore</h1>
-      <p className="mx-auto mt-3 max-w-full text-sm font-medium leading-5 text-[#888888]">
+      <p className="mx-auto mt-4 max-w-full text-sm font-medium leading-5 text-[#888888]">
         Simple. Fast. Professional.
       </p>
     </div>

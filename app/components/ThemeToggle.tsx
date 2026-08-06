@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 
-const THEME_STORAGE_KEY = "watstore-theme";
+const THEME_STORAGE_KEY = "floxto-theme";
 type ThemePreference = "light" | "dark";
 
 function getSystemTheme(): ThemePreference {

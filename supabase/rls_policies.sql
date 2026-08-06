@@ -1,4 +1,4 @@
--- Corrected merchant data isolation policies for Watstore.
+-- Corrected merchant data isolation policies for Floxto.
 -- Fixes an incorrect assumption in the Codex-generated version: merchants.id
 -- is NOT the same as the logged-in user's auth ID. The link is via
 -- merchants.user_id, which references auth.users. Run this in the Supabase

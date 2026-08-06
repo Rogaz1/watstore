@@ -4,13 +4,13 @@ import { ServiceWorkerRegistration } from "./components/ServiceWorkerRegistratio
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Watstore",
-  description: "Merchant dashboard for Watstore",
+  title: "Floxto",
+  description: "Merchant dashboard for Floxto",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Watstore",
+    title: "Floxto",
   },
   icons: {
     apple: "/icons/icon-192.png",
@@ -32,11 +32,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
-        <Script id="watstore-theme" strategy="beforeInteractive">
+        <Script id="floxto-theme" strategy="beforeInteractive">
           {`
             (function () {
               try {
-                var stored = window.localStorage.getItem("watstore-theme");
+                var stored = window.localStorage.getItem("floxto-theme");
                 var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
                 var theme = stored === "dark" || stored === "light"
                   ? stored

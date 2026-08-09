@@ -62,9 +62,9 @@ function ProductCard({
         {product.in_stock ? (
           <div className="mt-2 flex min-w-0 items-baseline gap-2">
             <span className="shrink-0 text-[13px] font-bold">
-              {formatGhsPrice(product.sale_price)}
+              {formatGhsPrice(product.sale_price) || "Price on request"}
             </span>
-            {product.original_price ? (
+            {product.sale_price !== null && product.original_price ? (
               <span className="min-w-0 truncate text-[12px] font-medium text-[#CCCCCC] line-through">
                 {formatGhsPrice(product.original_price)}
               </span>
@@ -128,6 +128,7 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
           "id,merchant_id,name,sale_price,original_price,photo_urls,video_url,short_description,long_description,key_benefits,in_stock",
         )
         .eq("merchant_id", publicMerchant.id)
+        .is("deleted_at", null)
         .order("name", { ascending: true });
 
       if (!isMounted) {

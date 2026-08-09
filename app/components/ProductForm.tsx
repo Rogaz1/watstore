@@ -88,8 +88,8 @@ export function ProductForm({ productId }: ProductFormProps) {
   const isEditing = Boolean(productId);
 
   const canSave = useMemo(
-    () => name.trim() && salePrice !== "" && merchant,
-    [merchant, name, salePrice],
+    () => name.trim() && merchant,
+    [merchant, name],
   );
 
   useEffect(() => {
@@ -136,6 +136,7 @@ export function ProductForm({ productId }: ProductFormProps) {
         .select(PRODUCT_SELECT_WITH_FAQS)
         .eq("id", productId)
         .eq("merchant_id", refreshedMerchant.id)
+        .is("deleted_at", null)
         .single();
       let product = productResult.data as Product | null;
       let productError: unknown = productResult.error;
@@ -146,6 +147,7 @@ export function ProductForm({ productId }: ProductFormProps) {
           .select(PRODUCT_SELECT_BASE)
           .eq("id", productId)
           .eq("merchant_id", refreshedMerchant.id)
+          .is("deleted_at", null)
           .single();
 
         product = fallback.data as Product | null;
@@ -344,7 +346,7 @@ export function ProductForm({ productId }: ProductFormProps) {
       const basePayload = {
         merchant_id: merchant.id,
         name: name.trim(),
-        sale_price: Number(salePrice),
+        sale_price: salePrice === "" ? null : Number(salePrice),
         original_price: originalPrice === "" ? null : Number(originalPrice),
         photo_urls: photoUrls,
         video_url: videoUrl,
@@ -370,6 +372,7 @@ export function ProductForm({ productId }: ProductFormProps) {
               .update(nextPayload)
               .eq("id", productId)
               .eq("merchant_id", merchant.id)
+              .is("deleted_at", null)
           : supabase.from("products").insert(nextPayload);
 
       let { error } = await saveProduct(payload);
@@ -530,7 +533,9 @@ export function ProductForm({ productId }: ProductFormProps) {
 
         <div className="grid grid-cols-2 gap-3">
           <label className="block min-w-0">
-            <span className="mb-2 block text-[13px] font-semibold">Sale price</span>
+            <span className="mb-2 block text-[13px] font-semibold">
+              Sale price
+            </span>
             <input
               className="h-12 w-full rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
               type="number"
@@ -539,7 +544,6 @@ export function ProductForm({ productId }: ProductFormProps) {
               placeholder="18500"
               value={salePrice}
               onChange={(event) => setSalePrice(event.target.value)}
-              required
             />
           </label>
           <label className="block min-w-0">

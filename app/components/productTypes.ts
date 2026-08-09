@@ -23,7 +23,7 @@ export type Product = {
   id: string;
   merchant_id: string;
   name: string;
-  sale_price: number;
+  sale_price: number | null;
   original_price: number | null;
   photo_urls: string[] | null;
   video_url: string | null;
@@ -45,10 +45,13 @@ export type Order = {
   id: string;
   merchant_id: string;
   product_id: string | null;
+  product_name: string | null;
+  product_sale_price: number | null;
+  product_photo_url: string | null;
   quantity: number;
   customer_name: string;
   delivery_location: string;
-  total: number;
+  total: number | null;
   status: OrderStatus;
   order_number: number;
   created_at: string;

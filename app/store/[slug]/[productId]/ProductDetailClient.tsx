@@ -123,7 +123,8 @@ function OrderSheet({
   const [deliveryLocation, setDeliveryLocation] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
-  const total = product.sale_price * quantity;
+  const total =
+    typeof product.sale_price === "number" ? product.sale_price * quantity : null;
   const canSubmit = customerName.trim() && deliveryLocation.trim();
   const thumbnail = product.photo_urls?.[0];
 
@@ -155,7 +156,7 @@ function OrderSheet({
       "Hello, I'd like to order:",
       `Product: ${product.name}`,
       `Quantity: ${quantity}`,
-      `Total: ₵${total.toFixed(2)}`,
+      ...(total !== null ? [`Total: ${formatGhsPrice(total)}`] : []),
       `Name: ${customerName.trim()}`,
       `Delivery Location: ${deliveryLocation.trim()}`,
       `Order #${order.order_number}`,
@@ -185,7 +186,7 @@ function OrderSheet({
                 {product.name}
               </h2>
               <p className="mt-1 text-[13px] font-medium leading-none text-[#1DA851]">
-                {formatGhsPrice(product.sale_price)}
+                {formatGhsPrice(product.sale_price) || "Price on request"}
               </p>
             </div>
           </div>
@@ -226,7 +227,7 @@ function OrderSheet({
             Total Payable
           </span>
           <span className="shrink-0 text-base font-bold">
-            {formatGhsPrice(total)}
+            {formatGhsPrice(total) || "Price on request"}
           </span>
         </div>
 
@@ -422,7 +423,9 @@ export function ProductDetailClient({
     ].filter(Boolean) as InfoSheetContent[];
   }, [merchant]);
   const discountPercent =
-    product?.original_price && product.original_price > product.sale_price
+    typeof product?.sale_price === "number" &&
+    product.original_price &&
+    product.original_price > product.sale_price
       ? Math.round((1 - product.sale_price / product.original_price) * 100)
       : null;
 
@@ -487,6 +490,7 @@ export function ProductDetailClient({
         .select(PRODUCT_SELECT_WITH_FAQS)
         .eq("id", productId)
         .eq("merchant_id", publicMerchant.id)
+        .is("deleted_at", null)
         .maybeSingle();
       let productData = productResult.data as PublicProduct | null;
       let productError: unknown = productResult.error;
@@ -497,6 +501,7 @@ export function ProductDetailClient({
           .select(PRODUCT_SELECT_BASE)
           .eq("id", productId)
           .eq("merchant_id", publicMerchant.id)
+          .is("deleted_at", null)
           .maybeSingle();
 
         productData = fallback.data as PublicProduct | null;
@@ -553,7 +558,9 @@ export function ProductDetailClient({
       return;
     }
 
-    const shareText = `${product.name} - ${formatGhsPrice(product.sale_price)}`;
+    const shareText = `${product.name} - ${
+      formatGhsPrice(product.sale_price) || "Price on request"
+    }`;
     const shareUrl = window.location.href;
 
     try {
@@ -716,9 +723,9 @@ export function ProductDetailClient({
 
         <div className="mt-3 flex min-w-0 flex-wrap items-center gap-3 overflow-hidden">
           <span className="shrink-0 text-[20px] font-semibold leading-none">
-            {formatGhsPrice(product.sale_price)}
+            {formatGhsPrice(product.sale_price) || "Price on request"}
           </span>
-          {product.original_price ? (
+          {product.sale_price !== null && product.original_price ? (
             <span className="min-w-0 truncate text-[14px] font-bold text-[#BDB9B2] line-through">
               {formatGhsPrice(product.original_price)}
             </span>

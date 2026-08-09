@@ -157,6 +157,13 @@ type OrderWithProduct = Order & {
   product?: ProductSummary;
 };
 
+function getOrderProductSnapshot(order: OrderWithProduct) {
+  return {
+    name: order.product_name ?? order.product?.name ?? "Product unavailable",
+    photoUrl: order.product_photo_url ?? order.product?.photo_urls?.[0] ?? null,
+  };
+}
+
 const orderStatuses: OrderStatus[] = [
   "pending",
   "paid",
@@ -487,7 +494,8 @@ function HomeRecentOrderCard({
   order: OrderWithProduct;
   onDetails: () => void;
 }) {
-  const thumbnail = order.product?.photo_urls?.[0];
+  const productSnapshot = getOrderProductSnapshot(order);
+  const thumbnail = productSnapshot.photoUrl;
 
   return (
     <article className="min-w-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
@@ -524,7 +532,7 @@ function HomeRecentOrderCard({
             <img
               className="h-full w-full object-cover"
               src={thumbnail}
-              alt={order.product?.name ?? "Ordered product"}
+              alt={productSnapshot.name}
             />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-[9px] font-semibold text-[#888888]">
@@ -534,10 +542,11 @@ function HomeRecentOrderCard({
         </div>
         <div className="min-w-0 flex-[1_1_0%] overflow-hidden">
           <p className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#1DA851]">
-            {order.product?.name ?? "Product unavailable"}
+            {productSnapshot.name}
           </p>
           <p className="mt-0.5 block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium text-[#888888]">
-            Qty {order.quantity} &middot; {formatGhsPrice(order.total)}
+            Qty {order.quantity} &middot;{" "}
+            {formatGhsPrice(order.total) || "Price on request"}
           </p>
         </div>
       </div>
@@ -568,7 +577,8 @@ function OrderSummaryCard({
   order: OrderWithProduct;
   onStatusChange: (order: Order, status: OrderStatus) => void;
 }) {
-  const thumbnail = order.product?.photo_urls?.[0];
+  const productSnapshot = getOrderProductSnapshot(order);
+  const thumbnail = productSnapshot.photoUrl;
 
   return (
     <article className="min-w-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
@@ -623,7 +633,7 @@ function OrderSummaryCard({
             <img
               className="h-full w-full object-cover"
               src={thumbnail}
-              alt={order.product?.name ?? "Ordered product"}
+              alt={productSnapshot.name}
             />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-[9px] font-semibold text-[#888888]">
@@ -633,10 +643,11 @@ function OrderSummaryCard({
         </div>
         <div className="min-w-0 flex-[1_1_0%] overflow-hidden">
           <p className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#1DA851]">
-            {order.product?.name ?? "Product unavailable"}
+            {productSnapshot.name}
           </p>
           <p className="mt-0.5 block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium text-[#888888]">
-            Qty {order.quantity} &middot; {formatGhsPrice(order.total)}
+            Qty {order.quantity} &middot;{" "}
+            {formatGhsPrice(order.total) || "Price on request"}
           </p>
         </div>
       </div>
@@ -783,6 +794,7 @@ export default function DashboardPage() {
           "id,merchant_id,name,sale_price,original_price,photo_urls,video_url,short_description,long_description,key_benefits,in_stock",
         )
         .eq("merchant_id", refreshedMerchant.id)
+        .is("deleted_at", null)
         .order("name", { ascending: true });
 
       if (!isMounted) {
@@ -801,7 +813,7 @@ export default function DashboardPage() {
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .select(
-          "id,merchant_id,product_id,quantity,customer_name,delivery_location,total,status,order_number,created_at",
+          "id,merchant_id,product_id,product_name,product_sale_price,product_photo_url,quantity,customer_name,delivery_location,total,status,order_number,created_at",
         )
         .eq("merchant_id", refreshedMerchant.id)
         .order("created_at", { ascending: false });
@@ -918,7 +930,7 @@ export default function DashboardPage() {
 
     const { error } = await supabase
       .from("products")
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq("id", product.id)
       .eq("merchant_id", merchant.id);
 
@@ -928,6 +940,7 @@ export default function DashboardPage() {
     }
 
     setProducts((current) => current.filter((item) => item.id !== product.id));
+    setMessage("Product deleted.");
   }
 
   async function handleOrderStatusChange(order: Order, status: OrderStatus) {
@@ -1567,7 +1580,13 @@ export default function DashboardPage() {
             </div>
 
             {message ? (
-              <p className="mb-3 rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-4 py-3.5 text-sm text-[#B91C1C]">
+              <p
+                className={`mb-3 rounded-xl border px-4 py-3.5 text-sm ${
+                  message === "Product deleted."
+                    ? "border-[#1DA851]/20 bg-[#EAF7EF] text-[#0F6B34]"
+                    : "border-[#EDECEA] bg-[#F4F3F0] text-[#B91C1C]"
+                }`}
+              >
                 {message}
               </p>
             ) : null}
@@ -1636,9 +1655,9 @@ export default function DashboardPage() {
                         </h3>
                         <div className="mt-1 flex min-w-0 items-baseline gap-2 overflow-hidden">
                           <span className="shrink-0 text-[13px] font-bold text-[#1A1A18]">
-                            {formatPrice(product.sale_price)}
+                            {formatPrice(product.sale_price) || "Price on request"}
                           </span>
-                          {product.original_price ? (
+                          {product.sale_price !== null && product.original_price ? (
                             <span className="min-w-0 truncate text-xs text-[#BDB9B2] line-through">
                               {formatPrice(product.original_price)}
                             </span>

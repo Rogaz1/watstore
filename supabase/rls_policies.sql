@@ -55,18 +55,33 @@ on public.merchants (slug)
 where slug is not null;
 
 -- Product FAQs are merchant-authored question/answer rows used on product pages.
+-- deleted_at enables soft deletes so existing orders can keep their product FK.
 alter table public.products
-  add column if not exists faqs jsonb;
+  add column if not exists faqs jsonb,
+  add column if not exists deleted_at timestamptz default null;
+
+alter table public.products
+  alter column sale_price drop not null;
+
+create index if not exists products_active_merchant_name_idx
+on public.products (merchant_id, name)
+where deleted_at is null;
 
 -- Public order fields used by the storefront WhatsApp order flow.
 alter table public.orders
   add column if not exists product_id uuid,
+  add column if not exists product_name text,
+  add column if not exists product_sale_price numeric,
+  add column if not exists product_photo_url text,
   add column if not exists quantity integer,
   add column if not exists customer_name text,
   add column if not exists delivery_location text,
   add column if not exists total numeric,
   add column if not exists status text,
   add column if not exists order_number integer;
+
+alter table public.orders
+  alter column total drop not null;
 
 create unique index if not exists orders_merchant_order_number_key
 on public.orders (merchant_id, order_number)
@@ -351,7 +366,8 @@ begin
   select *
   into selected_product
   from public.products
-  where id = requested_product_id;
+  where id = requested_product_id
+    and deleted_at is null;
 
   if not found then
     return;
@@ -440,7 +456,8 @@ begin
   select *
   into selected_product
   from public.products
-  where id = requested_product_id;
+  where id = requested_product_id
+    and deleted_at is null;
 
   if not found then
     raise exception 'Product not found.';
@@ -473,6 +490,9 @@ begin
   insert into public.orders (
     merchant_id,
     product_id,
+    product_name,
+    product_sale_price,
+    product_photo_url,
     quantity,
     customer_name,
     delivery_location,
@@ -483,6 +503,9 @@ begin
   values (
     selected_product.merchant_id,
     selected_product.id,
+    selected_product.name,
+    selected_product.sale_price,
+    selected_product.photo_urls[1],
     requested_quantity,
     trim(requested_customer_name),
     trim(requested_delivery_location),

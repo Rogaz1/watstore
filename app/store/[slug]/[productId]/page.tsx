@@ -52,6 +52,7 @@ export default async function ProductDetailPage({
     .select(PRODUCT_SELECT_WITH_FAQS)
     .eq("id", productId)
     .eq("merchant_id", merchant.id)
+    .is("deleted_at", null)
     .maybeSingle();
   let productData = productResult.data as PublicProduct | null;
   let productError: unknown = productResult.error;
@@ -62,6 +63,7 @@ export default async function ProductDetailPage({
       .select(PRODUCT_SELECT_BASE)
       .eq("id", productId)
       .eq("merchant_id", merchant.id)
+      .is("deleted_at", null)
       .maybeSingle();
 
     productData = fallback.data as PublicProduct | null;

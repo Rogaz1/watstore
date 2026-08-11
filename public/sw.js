@@ -1,4 +1,4 @@
-const CACHE_VERSION = "floxto-pwa-v3";
+const CACHE_VERSION = "floxto-pwa-v4";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -15,6 +15,8 @@ const STATIC_PATHS = [
   "/branding/floxto-logo-dark.png",
   "/branding/floxto-wordmark-light-transparent.png",
   "/branding/floxto-wordmark-dark-transparent.png",
+  "/branding/floxto-auth-wordmark-light.png",
+  "/branding/floxto-auth-wordmark-dark.png",
   "/branding/floxto-mark-black-background.png",
   "/branding/floxto-mark-white-background.png",
 ];

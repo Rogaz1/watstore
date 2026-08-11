@@ -11,7 +11,7 @@ export function FloxtoWordmark({ className = "" }: FloxtoWordmarkProps) {
     <div className="mx-auto w-[148px] max-w-full sm:w-[160px]" aria-label="Floxto">
       <Image
         className={`${logoClassName} dark:hidden`}
-        src="/branding/floxto-wordmark-light-transparent.png"
+        src="/branding/floxto-auth-wordmark-light.png"
         alt="Floxto"
         width={1422}
         height={415}
@@ -20,7 +20,7 @@ export function FloxtoWordmark({ className = "" }: FloxtoWordmarkProps) {
       <Image
         aria-hidden="true"
         className={`${logoClassName} hidden dark:block`}
-        src="/branding/floxto-wordmark-dark-transparent.png"
+        src="/branding/floxto-auth-wordmark-dark.png"
         alt=""
         width={1473}
         height={436}

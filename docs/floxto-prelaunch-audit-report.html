@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Floxto Final Pre-Launch Audit Report</title>
+    <style>
+      @page {
+        margin: 20mm 18mm;
+      }
+
+      :root {
+        color: #1c1917;
+        background: #ffffff;
+        font-family:
+          "Plus Jakarta Sans",
+          "Inter",
+          "Segoe UI",
+          Arial,
+          sans-serif;
+      }
+
+      body {
+        margin: 0;
+        background: #ffffff;
+        color: #1c1917;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      main {
+        max-width: 820px;
+        margin: 0 auto;
+      }
+
+      header {
+        border-bottom: 1px solid #e7e4df;
+        margin-bottom: 22px;
+        padding-bottom: 18px;
+      }
+
+      .eyebrow {
+        color: #78716c;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        margin: 0 0 8px;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        font-size: 28px;
+        line-height: 1.12;
+        margin: 0 0 8px;
+      }
+
+      h2 {
+        break-after: avoid;
+        border-top: 1px solid #e7e4df;
+        font-size: 18px;
+        line-height: 1.2;
+        margin: 24px 0 10px;
+        padding-top: 18px;
+      }
+
+      h3 {
+        break-after: avoid;
+        font-size: 14px;
+        margin: 18px 0 6px;
+      }
+
+      p {
+        margin: 0 0 8px;
+      }
+
+      ul,
+      ol {
+        margin: 6px 0 12px 18px;
+        padding: 0;
+      }
+
+      li {
+        margin: 4px 0;
+      }
+
+      code {
+        background: #faf9f7;
+        border: 1px solid #e7e4df;
+        border-radius: 4px;
+        font-family: "Cascadia Mono", Consolas, monospace;
+        font-size: 11px;
+        padding: 1px 4px;
+      }
+
+      pre {
+        background: #faf9f7;
+        border: 1px solid #e7e4df;
+        border-radius: 8px;
+        font-family: "Cascadia Mono", Consolas, monospace;
+        font-size: 10.5px;
+        line-height: 1.45;
+        margin: 8px 0 14px;
+        overflow-wrap: anywhere;
+        padding: 12px;
+        white-space: pre-wrap;
+      }
+
+      .decision {
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 10px;
+        color: #7c2d12;
+        font-size: 13px;
+        font-weight: 700;
+        margin: 14px 0;
+        padding: 12px 14px;
+      }
+
+      .finding {
+        break-inside: avoid;
+        border: 1px solid #e7e4df;
+        border-radius: 10px;
+        margin: 12px 0;
+        padding: 12px 14px;
+      }
+
+      .severity {
+        display: inline-block;
+        border-radius: 999px;
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        margin-bottom: 8px;
+        padding: 4px 8px;
+        text-transform: uppercase;
+      }
+
+      .critical {
+        background: #991b1b;
+      }
+
+      .high {
+        background: #c2410c;
+      }
+
+      .medium {
+        background: #a16207;
+      }
+
+      .low {
+        background: #57534e;
+      }
+
+      .passed {
+        background: #eaf7ef;
+        border: 1px solid #bde8cb;
+        border-radius: 10px;
+        color: #0f6b34;
+        padding: 12px 14px;
+      }
+
+      table {
+        border-collapse: collapse;
+        margin: 10px 0 16px;
+        width: 100%;
+      }
+
+      th,
+      td {
+        border: 1px solid #e7e4df;
+        padding: 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #faf9f7;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .muted {
+        color: #78716c;
+      }
+
+      .page-break {
+        break-before: page;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Floxto</p>
+        <h1>Final Pre-Launch Security, Privacy, Reliability, Performance & Code Quality Audit</h1>
+        <p class="muted">Prepared from the current local codebase and Supabase SQL model in <code>c:\Users\user\Desktop\watstore</code>.</p>
+      </header>
+
+      <section>
+        <h2>A. Executive Summary</h2>
+        <p>I audited the current Floxto codebase and SQL security model. I did not apply changes, because the meaningful issues are DB/RLS/permissions/dependency changes that the audit instructions said to report first.</p>
+        <div class="decision">Launch decision: not ready for public production launch yet.</div>
+        <p>Main blockers:</p>
+        <ul>
+          <li>Merchants may be able to self-change subscription fields through direct Supabase calls.</li>
+          <li>Public product RLS currently allows reading soft-deleted products.</li>
+          <li><code>npm audit</code> reports high-severity dependency advisories, including <code>next</code>.</li>
+          <li>Security headers are not configured.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>B. Launch Decision</h2>
+        <p><strong>Do not launch until the Critical and High items below are fixed and verified in the live Supabase project.</strong></p>
+      </section>
+
+      <section>
+        <h2>C. Critical Findings</h2>
+
+        <article class="finding">
+          <span class="severity critical">Critical</span>
+          <h3>1. Merchant subscription bypass risk</h3>
+          <p><strong>Evidence:</strong> broad owner update policy on merchants in <code>supabase/rls_policies.sql</code>.</p>
+          <p><strong>Risk:</strong> a logged-in merchant could potentially update their own <code>subscription_status</code>, <code>billing_cycle_months</code>, <code>last_payment_date</code>, or <code>trial_start_date</code> directly via Supabase client tools, bypassing billing/trial enforcement.</p>
+          <p><strong>Fixed:</strong> No, approval needed.</p>
+          <p><strong>Proposed fix:</strong></p>
+          <pre>revoke update on public.merchants from authenticated;
+
+grant update (
+  business_name,
+  tagline,
+  delivery_info,
+  payment_options,
+  why_choose_us,
+  slug,
+  whatsapp_number,
+  logo_url
+) on public.merchants to authenticated;</pre>
+          <p>Also update onboarding code to rely on DB defaults for trial fields rather than inserting subscription fields from the browser.</p>
+        </article>
+
+        <article class="finding">
+          <span class="severity critical">Critical</span>
+          <h3>2. Merchant insert can set subscription fields</h3>
+          <p><strong>Evidence:</strong> setup inserts subscription fields from the client in <code>app/dashboard/setup/page.tsx</code>.</p>
+          <p><strong>Risk:</strong> direct client calls could insert an “active” merchant row if insert privileges are broad.</p>
+          <p><strong>Fixed:</strong> No.</p>
+          <p><strong>Proposed fix:</strong></p>
+          <pre>revoke insert on public.merchants from authenticated;
+
+grant insert (
+  user_id,
+  business_name,
+  tagline,
+  delivery_info,
+  payment_options,
+  why_choose_us,
+  slug,
+  whatsapp_number,
+  logo_url
+) on public.merchants to authenticated;</pre>
+        </article>
+
+        <article class="finding">
+          <span class="severity critical">Critical</span>
+          <h3>3. Soft-deleted products are still publicly readable via direct API</h3>
+          <p><strong>Evidence:</strong> public products policy is <code>using (true)</code> in <code>supabase/rls_policies.sql</code>.</p>
+          <p><strong>Risk:</strong> storefront UI hides deleted products, but anonymous users could query soft-deleted product rows directly.</p>
+          <p><strong>Fixed:</strong> No.</p>
+          <p><strong>Proposed fix:</strong></p>
+          <pre>drop policy if exists "Anyone can read public products" on public.products;
+
+create policy "Anyone can read public products"
+on public.products
+for select
+to anon, authenticated
+using (deleted_at is null);</pre>
+        </article>
+      </section>
+
+      <section class="page-break">
+        <h2>D. High Findings</h2>
+
+        <article class="finding">
+          <span class="severity high">High</span>
+          <h3>1. Dependency vulnerabilities</h3>
+          <p><code>npm audit --audit-level=low</code> reported six high-severity vulnerabilities, including <code>next</code>, <code>postcss</code>, <code>sharp</code>, <code>nanoid</code>, <code>js-yaml</code>, and <code>brace-expansion</code>.</p>
+          <p><strong>Fixed:</strong> No.</p>
+          <p><strong>Reason:</strong> <code>npm audit fix --force</code> would upgrade Next to <code>16.3.0</code>, outside the current declared version.</p>
+          <p><strong>Action:</strong> test and upgrade dependencies before launch.</p>
+        </article>
+
+        <article class="finding">
+          <span class="severity high">High</span>
+          <h3>2. Orders can be broadly updated/deleted by merchants</h3>
+          <p><strong>Evidence:</strong> order update/delete policies in <code>supabase/rls_policies.sql</code>.</p>
+          <p><strong>Risk:</strong> a merchant cannot access another merchant’s orders, but they may alter more than just <code>status</code>, or delete order history.</p>
+          <p><strong>Proposed fix:</strong></p>
+          <pre>revoke update, delete on public.orders from authenticated;
+grant update (status) on public.orders to authenticated;
+drop policy if exists "Merchants can delete own orders" on public.orders;</pre>
+        </article>
+
+        <article class="finding">
+          <span class="severity high">High</span>
+          <h3>3. Merchants can delete their own merchant row</h3>
+          <p><strong>Evidence:</strong> delete policy in <code>supabase/rls_policies.sql</code>.</p>
+          <p><strong>Risk:</strong> accidental or malicious self-deletion can break store/order continuity.</p>
+          <p><strong>Proposed fix:</strong> remove merchant delete policy unless there is a real account deletion flow.</p>
+        </article>
+
+        <article class="finding">
+          <span class="severity high">High</span>
+          <h3>4. No security headers configured</h3>
+          <p><strong>Evidence:</strong> <code>next.config.ts</code> has no headers.</p>
+          <p><strong>Risk:</strong> weaker browser hardening.</p>
+          <p><strong>Proposed:</strong> add <code>X-Frame-Options</code>, <code>X-Content-Type-Options</code>, <code>Referrer-Policy</code>, <code>Permissions-Policy</code>, and a carefully tested CSP.</p>
+        </article>
+
+        <article class="finding">
+          <span class="severity high">High</span>
+          <h3>5. Public order RPC has no rate limiting</h3>
+          <p><strong>Evidence:</strong> <code>create_public_order()</code> is executable by <code>anon</code>.</p>
+          <p><strong>Risk:</strong> spam orders.</p>
+          <p><strong>Proposed:</strong> add CAPTCHA/rate limiting via Edge Function or server-side route before public launch.</p>
+        </article>
+      </section>
+
+      <section>
+        <h2>E. Medium Findings</h2>
+        <ul>
+          <li>Public storage buckets expose uploaded media permanently if someone has the URL.</li>
+          <li>Storage policies do not appear to enforce MIME type.</li>
+          <li>Service worker caches same-origin runtime GET responses network-first; Supabase data is cross-origin and not cached, but private route shells may still be cached.</li>
+          <li>No live Supabase verification was possible from local code; the SQL file may differ from production.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>F. Low/Cleanup</h2>
+        <ul>
+          <li>PWA manifest currently uses the tagline as <code>name</code> and <code>short_name</code>. This matches the splash-screen request, but is unusual for installed app labels.</li>
+          <li>Some old default static assets may still exist if not used.</li>
+          <li><code>NEXT_PUBLIC_ADMIN_EMAIL</code> is only a UX shortcut, not real security. The real security correctly sits in the DB RPC.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>G. Passed Controls</h2>
+        <div class="passed">
+          <ul>
+            <li>No <code>app/api</code>, route handlers, server actions, or middleware found.</li>
+            <li>Auth pages use Supabase Auth client calls.</li>
+            <li>Admin renewals page calls <code>get_admin_renewals()</code> instead of querying merchants directly.</li>
+            <li>Product detail route checks both <code>productId</code> and <code>merchant_id</code>.</li>
+            <li>Store/product UI queries filter <code>deleted_at is null</code>.</li>
+            <li>Product delete UI uses soft delete.</li>
+            <li>Order creation snapshots product name, sale price, and first photo.</li>
+            <li>Root <code>/</code> redirects by auth/profile state.</li>
+            <li>Password reset redirects to <code>/reset-password</code>.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="page-break">
+        <h2>H. Supabase Table/RLS Matrix</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Table</th>
+              <th>Status</th>
+              <th>Risk / Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>merchants</code></td>
+              <td>RLS enabled; public SELECT policy plus owner select/insert/update/delete.</td>
+              <td>Needs narrowed insert/update/delete.</td>
+            </tr>
+            <tr>
+              <td><code>products</code></td>
+              <td>RLS enabled; owner policies use <code>is_own_merchant()</code>.</td>
+              <td>Public SELECT currently too broad because it does not exclude <code>deleted_at</code>.</td>
+            </tr>
+            <tr>
+              <td><code>orders</code></td>
+              <td>RLS enabled; owner select/update/delete.</td>
+              <td>Update should be status-only; delete should likely be removed.</td>
+            </tr>
+            <tr>
+              <td><code>product_chat_clicks</code></td>
+              <td>RLS enabled, table access revoked.</td>
+              <td>RPC records/counts clicks.</td>
+            </tr>
+            <tr>
+              <td><code>admin_users</code></td>
+              <td>RLS enabled, table access revoked.</td>
+              <td>Used by admin RPC.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>I. Merchant Isolation</h2>
+        <p>Cross-merchant isolation for products/orders is generally sound because policies use <code>public.is_own_merchant(merchant_id)</code>. The issue is not cross-merchant access; it is over-broad control of a merchant’s own billing/order rows.</p>
+      </section>
+
+      <section>
+        <h2>J. <code>create_public_order()</code></h2>
+        <p><strong>Good:</strong></p>
+        <ul>
+          <li>Rejects missing quantity/name/location.</li>
+          <li>Rejects deleted/missing/out-of-stock products.</li>
+          <li>Refreshes subscription and blocks expired stores.</li>
+          <li>Uses advisory lock for per-merchant order number.</li>
+          <li>Stores product snapshots.</li>
+        </ul>
+        <p><strong>Concern:</strong></p>
+        <ul>
+          <li>No rate limit or CAPTCHA.</li>
+          <li>No SQL length limits for customer name/location.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>K. Admin Security</h2>
+        <ul>
+          <li><code>get_admin_renewals()</code> checks <code>public.admin_users</code> against <code>auth.uid()</code>.</li>
+          <li>Client email check is only a shortcut.</li>
+          <li>Manual action: confirm your actual Supabase <code>auth.users.id</code> is inserted into <code>public.admin_users</code>.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>L. Subscription Security</h2>
+        <p>Trial/expiry calculation exists in SQL and app code. The critical gap is write permissions: merchants must not be able to directly write subscription columns.</p>
+      </section>
+
+      <section>
+        <h2>M. Storage/Upload</h2>
+        <p><strong>Good:</strong></p>
+        <ul>
+          <li>Product images compressed client-side to WebP.</li>
+          <li>Product media paths are scoped by merchant ID.</li>
+          <li>Logo paths are scoped by auth user ID.</li>
+        </ul>
+        <p><strong>Concern:</strong> add MIME/content-type enforcement in storage policies if possible.</p>
+      </section>
+
+      <section>
+        <h2>N. Secret/Git-History</h2>
+        <p>Current tracked source scan found no service-role key, private DB URL, or obvious app secret. <code>.env.local</code> is not tracked.</p>
+      </section>
+
+      <section>
+        <h2>O. PWA/Cache</h2>
+        <ul>
+          <li>Manifest and service worker exist.</li>
+          <li>Cross-origin Supabase requests are not intercepted.</li>
+          <li>Runtime pages use network-first.</li>
+          <li>Consider excluding authenticated route shells from runtime caching for extra caution.</li>
+        </ul>
+      </section>
+
+      <section class="page-break">
+        <h2>P. Dependency Audit</h2>
+        <p>Result: <strong>failed due high vulnerabilities</strong>. Needs dependency upgrade/testing before launch.</p>
+      </section>
+
+      <section>
+        <h2>Q. Security Headers</h2>
+        <p>Missing. Add before launch.</p>
+      </section>
+
+      <section>
+        <h2>R. Privacy</h2>
+        <p>Customer PII stored: <code>customer_name</code>, <code>delivery_location</code>, WhatsApp number. Add a privacy policy before real launch, and limit who can read orders to merchant/admin only.</p>
+      </section>
+
+      <section>
+        <h2>S. Performance</h2>
+        <p>Build passes. Product images are compressed. Public pages avoid unnecessary complex features. Good baseline.</p>
+      </section>
+
+      <section>
+        <h2>T. Code Cleanup</h2>
+        <p>No broad refactor recommended before launch. Fix the security items first.</p>
+      </section>
+
+      <section>
+        <h2>U. Manual Config Required</h2>
+        <ul>
+          <li>Supabase Auth redirect URLs include <code>https://floxto.com/reset-password</code>.</li>
+          <li>Production env vars set: Supabase URL, anon key, site URL.</li>
+          <li><code>admin_users</code> contains your exact auth UUID.</li>
+          <li>Run the SQL verification queries in production after policy changes.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>V. Manual Pre-Launch Checklist</h2>
+        <ol>
+          <li>Apply approved RLS/permission fixes.</li>
+          <li>Upgrade vulnerable dependencies and rebuild.</li>
+          <li>Add security headers.</li>
+          <li>Test signup, setup, login, reset password.</li>
+          <li>Test expired trial and expired subscription.</li>
+          <li>Test public storefront/product pages.</li>
+          <li>Test order creation on Android and iPhone.</li>
+          <li>Test installed PWA after service worker update.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>W. Final Launch Blockers</h2>
+        <ol>
+          <li>Lock down merchant subscription insert/update permissions.</li>
+          <li>Change public products policy to exclude soft-deleted products.</li>
+          <li>Restrict order updates to <code>status</code> only and remove order delete unless needed.</li>
+          <li>Resolve high-severity npm audit findings.</li>
+          <li>Add security headers.</li>
+          <li>Verify live Supabase policies match the reviewed SQL.</li>
+        </ol>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { AppLaunchSplash } from "./components/AppLaunchSplash";
 import { ServiceWorkerRegistration } from "./components/ServiceWorkerRegistration";
 import { getCanonicalSiteOrigin } from "./components/siteUrl";
 import "./globals.css";
@@ -80,6 +81,7 @@ export default function RootLayout({
           `}
         </Script>
         <ServiceWorkerRegistration />
+        <AppLaunchSplash />
         {children}
       </body>
     </html>

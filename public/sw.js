@@ -6,6 +6,17 @@ const STATIC_PATHS = [
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/maskable-icon-512.png",
+  "/icons/apple-touch-icon.png",
+  "/icons/favicon.ico",
+  "/icons/favicon-16.png",
+  "/icons/favicon-32.png",
+  "/icons/favicon-64.png",
+  "/branding/floxto-logo-light.png",
+  "/branding/floxto-logo-dark.png",
+  "/branding/floxto-wordmark-light-transparent.png",
+  "/branding/floxto-wordmark-dark-transparent.png",
+  "/branding/floxto-mark-black-background.png",
+  "/branding/floxto-mark-white-background.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -37,7 +48,8 @@ function isStaticAsset(request, url) {
     request.destination === "font" ||
     request.destination === "image" ||
     url.pathname.startsWith("/_next/static/") ||
-    url.pathname.startsWith("/icons/")
+    url.pathname.startsWith("/icons/") ||
+    url.pathname.startsWith("/branding/")
   );
 }
 

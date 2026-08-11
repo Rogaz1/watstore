@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { InstallAppPrompt } from "./InstallAppPrompt";
+import { FloxtoWordmark } from "./FloxtoBrand";
 import { getPostAuthDestination } from "./merchantProfile";
+import { buildAbsoluteUrl } from "./siteUrl";
 
 type AuthMode = "login" | "signup";
 
@@ -49,32 +51,11 @@ function LockIcon() {
   );
 }
 
-function AppLogoIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-6 w-6"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-    >
-      <path d="M3 9h18l-1.4-4.2A2 2 0 0 0 17.7 3H6.3a2 2 0 0 0-1.9 1.8L3 9Z" />
-      <path d="M4 9v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9" />
-      <path d="M8 13h8v8H8z" />
-    </svg>
-  );
-}
-
 function LoginBrandHeader() {
   return (
     <div className="text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#111111] text-white shadow-sm">
-        <AppLogoIcon />
-      </div>
-      <p className="mx-auto mt-4 max-w-full text-sm font-medium leading-5 text-[#888888]">
+      <FloxtoWordmark />
+      <p className="mx-auto mt-2 max-w-full text-sm font-medium leading-5 text-[#888888]">
         Simple. Fast. Professional.
       </p>
     </div>
@@ -95,14 +76,18 @@ export function AuthForm({ mode }: AuthFormProps) {
     setIsLoading(true);
     setMessage("");
 
-    const credentials = {
-      email: email.trim(),
-      password,
-    };
-
     const { data, error } = isSignup
-      ? await supabase.auth.signUp(credentials)
-      : await supabase.auth.signInWithPassword(credentials);
+      ? await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            emailRedirectTo: buildAbsoluteUrl("/dashboard/setup"),
+          },
+        })
+      : await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
 
     if (error) {
       setIsLoading(false);
@@ -143,7 +128,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           <LoginBrandHeader />
         )}
 
-        <div className={`${isSignup ? "mt-5" : "mt-8"} rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-sm`}>
+        <div className="mt-7 rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-sm">
           {isSignup ? (
             <div className="mb-5 text-center">
               <h1 className="text-[22px] font-bold leading-tight">
@@ -179,7 +164,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                 <span className="min-w-0 flex-1 truncate">Password</span>
                 {!isSignup ? (
                   <Link
-                    className="shrink-0 text-xs font-semibold text-[#1DA851] underline-offset-4 hover:underline"
+                    className="shrink-0 text-xs font-semibold text-[#25D366] underline-offset-4 hover:underline"
                     href="/forgot-password"
                   >
                     Forgot password?
@@ -227,7 +212,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           <p className="mt-6 text-center text-sm text-[#888888]">
             {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
             <Link
-              className="font-semibold text-[#1DA851] underline-offset-4 hover:underline"
+              className="font-semibold text-[#25D366] underline-offset-4 hover:underline"
               href={isSignup ? "/login" : "/signup"}
             >
               {isSignup ? "Log in" : "Sign up"}

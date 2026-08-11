@@ -1,21 +1,54 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { ServiceWorkerRegistration } from "./components/ServiceWorkerRegistration";
+import { getCanonicalSiteOrigin } from "./components/siteUrl";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getCanonicalSiteOrigin()),
+  applicationName: "Floxto",
   title: "Floxto",
-  description: "Merchant dashboard for Floxto",
+  description: "Simple. Fast. Professional.",
+  alternates: {
+    canonical: "/",
+  },
   manifest: "/manifest.webmanifest",
+  openGraph: {
+    title: "Floxto",
+    description: "Simple. Fast. Professional.",
+    url: "/",
+    siteName: "Floxto",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Floxto",
+    description: "Simple. Fast. Professional.",
+  },
   appleWebApp: {
+    title: "Floxto",
     capable: true,
     statusBarStyle: "black-translucent",
   },
   icons: {
-    apple: "/icons/icon-192.png",
+    icon: [
+      { url: "/icons/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/favicon-64.png", sizes: "64x64", type: "image/png" },
+      { url: "/icons/favicon.ico" },
+    ],
+    shortcut: "/icons/favicon.ico",
+    apple: [
+      {
+        url: "/icons/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
   },
   other: {
     "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-title": "Floxto",
   },
 };
 

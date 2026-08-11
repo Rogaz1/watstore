@@ -63,7 +63,7 @@ export function ExpiredAccessScreen({
           {description}
         </p>
         <a
-          className="mt-7 flex h-12 w-full items-center justify-center rounded-xl bg-[#1DA851] px-4 text-[14px] font-bold text-white transition active:scale-[0.99]"
+          className="mt-7 flex h-12 w-full items-center justify-center rounded-xl bg-[#25D366] px-4 text-[14px] font-bold text-white transition active:scale-[0.99]"
           href={buildUpgradeUrl(merchant)}
           target="_blank"
           rel="noreferrer"

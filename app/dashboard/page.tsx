@@ -59,6 +59,7 @@ import {
 } from "../components/productTypes";
 import { buildUpgradeUrl } from "../components/subscription";
 import { buildWhatsAppUrl } from "../components/publicStoreTypes";
+import { buildAbsoluteUrl } from "../components/siteUrl";
 import {
   getSubscriptionAccess,
   refreshMerchantSubscription,
@@ -478,7 +479,7 @@ function StatCard({
       </p>
       <p
         className={`mt-1 text-[22px] font-bold leading-none ${
-          highlight ? "text-[#1DA851]" : "text-[#1A1A18]"
+          highlight ? "text-[#25D366]" : "text-[#1A1A18]"
         }`}
       >
         {displayValue}
@@ -541,7 +542,7 @@ function HomeRecentOrderCard({
           )}
         </div>
         <div className="min-w-0 flex-[1_1_0%] overflow-hidden">
-          <p className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#1DA851]">
+          <p className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#25D366]">
             {productSnapshot.name}
           </p>
           <p className="mt-0.5 block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium text-[#888888]">
@@ -559,7 +560,7 @@ function HomeRecentOrderCard({
           </span>
         </p>
         <button
-          className="shrink-0 text-xs font-bold text-[#1DA851]"
+          className="shrink-0 text-xs font-bold text-[#25D366]"
           type="button"
           onClick={onDetails}
         >
@@ -642,7 +643,7 @@ function OrderSummaryCard({
           )}
         </div>
         <div className="min-w-0 flex-[1_1_0%] overflow-hidden">
-          <p className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#1DA851]">
+          <p className="block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold text-[#25D366]">
             {productSnapshot.name}
           </p>
           <p className="mt-0.5 block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium text-[#888888]">
@@ -1206,10 +1207,7 @@ export default function DashboardPage() {
       ? orders
       : orders.filter((order) => order.status === orderFilter);
   const storePath = merchant?.slug ? `/store/${merchant.slug}` : "";
-  const storeUrl =
-    typeof window === "undefined" || !storePath
-      ? storePath
-      : `${window.location.origin}${storePath}`;
+  const storeUrl = storePath ? buildAbsoluteUrl(storePath) : "";
   const orderStats = useMemo(() => {
     const today = new Date().toDateString();
 
@@ -1324,7 +1322,7 @@ export default function DashboardPage() {
                   <div className="mx-5 h-px bg-[#EDECEA]" />
                   {merchant ? (
                     <a
-                      className="flex h-[60px] w-full min-w-0 items-center gap-4 px-5 text-[13px] font-bold text-[#1DA851] transition hover:bg-[#F7F5F2]"
+                      className="flex h-[60px] w-full min-w-0 items-center gap-4 px-5 text-[13px] font-bold text-[#25D366] transition hover:bg-[#F7F5F2]"
                       href={buildUpgradeUrl(merchant)}
                       target="_blank"
                       rel="noreferrer"
@@ -1442,7 +1440,7 @@ export default function DashboardPage() {
                           className="flex min-w-0 gap-2 text-[12px] font-medium leading-5 text-[#666666]"
                           key={item}
                         >
-                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#1DA851]" />
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
                           <span className="min-w-0 flex-1">{item}</span>
                         </li>
                       ))}
@@ -1480,7 +1478,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <a
-                  className="flex h-10 shrink-0 items-center justify-center rounded-xl bg-[#1DA851] px-5 py-3.5 text-[13px] font-semibold text-white transition hover:opacity-90"
+                  className="flex h-10 shrink-0 items-center justify-center rounded-xl bg-[#25D366] px-5 py-3.5 text-[13px] font-semibold text-white transition hover:opacity-90"
                   href={buildUpgradeUrl(merchant)}
                   target="_blank"
                   rel="noreferrer"
@@ -1491,7 +1489,7 @@ export default function DashboardPage() {
             ) : merchant.subscription_status === "active" ? (
               <div className="flex min-w-0 items-center justify-between gap-3 rounded-full border border-[#EDECEA] bg-white px-4 py-3 shadow-sm">
                 <p className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-medium text-[#888888]">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#1DA851]" />
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
                   <span className="min-w-0 flex-1 truncate">
                     {activeHomePlanName} · Active
                   </span>
@@ -1525,7 +1523,7 @@ export default function DashboardPage() {
                   Recent Orders
                 </h2>
                 <button
-                  className="inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#1DA851]"
+                  className="inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#25D366]"
                   type="button"
                   onClick={() => handleTabChange("orders")}
                 >
@@ -1583,7 +1581,7 @@ export default function DashboardPage() {
               <p
                 className={`mb-3 rounded-xl border px-4 py-3.5 text-sm ${
                   message === "Product deleted."
-                    ? "border-[#1DA851]/20 bg-[#EAF7EF] text-[#0F6B34]"
+                    ? "border-[#25D366]/20 bg-[#EAF7EF] text-[#0F6B34]"
                     : "border-[#EDECEA] bg-[#F4F3F0] text-[#B91C1C]"
                 }`}
               >
@@ -1619,10 +1617,9 @@ export default function DashboardPage() {
                   const liveProductPath = merchant?.slug
                     ? `/store/${merchant.slug}/${product.id}`
                     : "";
-                  const liveProductUrl =
-                    typeof window === "undefined" || !liveProductPath
-                      ? liveProductPath
-                      : `${window.location.origin}${liveProductPath}`;
+                  const liveProductUrl = liveProductPath
+                    ? buildAbsoluteUrl(liveProductPath)
+                    : "";
 
                   return (
                     <article
@@ -1855,7 +1852,7 @@ export default function DashboardPage() {
                     </p>
                   ) : null}
                   {isSlugAvailable ? (
-                    <p className="mt-2 text-sm font-medium text-[#1DA851]">
+                    <p className="mt-2 text-sm font-medium text-[#25D366]">
                       /store/{normalizeSlug(settingsSlug)} is available.
                     </p>
                   ) : null}
@@ -2141,7 +2138,7 @@ export default function DashboardPage() {
                       className="flex min-w-0 items-center gap-2 text-[12px] font-medium text-[#666666]"
                       key={feature}
                     >
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#1DA851]" />
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
                       <span className="min-w-0 flex-1">{feature}</span>
                     </li>
                   ))}
@@ -2172,20 +2169,20 @@ export default function DashboardPage() {
                   <article
                     className={`relative rounded-2xl border p-4 ${
                       plan.cycle === 12
-                        ? "border-[#1DA851]/20 bg-[#EAF7EF]"
+                        ? "border-[#25D366]/20 bg-[#EAF7EF]"
                         : "border-[#EDECEA] bg-white"
                     }`}
                     key={plan.name}
                   >
                     {plan.cycle === 12 ? (
-                      <span className="absolute right-3 top-0 -translate-y-1/2 rounded-sm bg-[#1DA851] px-2 py-1 text-[9px] font-bold text-white">
+                      <span className="absolute right-3 top-0 -translate-y-1/2 rounded-sm bg-[#25D366] px-2 py-1 text-[9px] font-bold text-white">
                         Best Value - Save ₵189
                       </span>
                     ) : null}
                     {isActivePlan ? (
                       <div className="mb-4 flex min-w-0 items-center justify-between gap-3 rounded-full border border-[#EDECEA] bg-white px-3 py-2">
                         <p className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-medium text-[#888888]">
-                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#1DA851]" />
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
                           <span className="min-w-0 flex-1 truncate">
                             {plan.name} Plan
                           </span>
@@ -2261,7 +2258,7 @@ export default function DashboardPage() {
                 Having trouble with your settings?
               </p>
               <a
-                className="mt-2 inline-flex min-w-0 items-center justify-center gap-1.5 text-sm font-bold text-[#1DA851] underline-offset-4 hover:underline"
+                className="mt-2 inline-flex min-w-0 items-center justify-center gap-1.5 text-sm font-bold text-[#25D366] underline-offset-4 hover:underline"
                 href={helpUrl}
                 target="_blank"
                 rel="noreferrer"

@@ -45,7 +45,7 @@ type CreateOrderResponse = {
 
 function CheckIcon() {
   return (
-    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1DA851]">
+    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#25D366]">
       <svg
         aria-hidden="true"
         className="h-3 w-3 text-white"
@@ -185,7 +185,7 @@ function OrderSheet({
               <h2 className="truncate text-[15px] font-bold leading-tight">
                 {product.name}
               </h2>
-              <p className="mt-1 text-[13px] font-medium leading-none text-[#1DA851]">
+              <p className="mt-1 text-[13px] font-medium leading-none text-[#25D366]">
                 {formatGhsPrice(product.sale_price) || "Price on request"}
               </p>
             </div>
@@ -273,7 +273,7 @@ function OrderSheet({
         ) : null}
 
         <button
-          className="mt-5 w-full rounded-xl bg-[#1DA851] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:opacity-40"
+          className="mt-5 w-full rounded-xl bg-[#25D366] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:opacity-40"
           type="submit"
           disabled={isSubmitting || !canSubmit}
         >
@@ -767,7 +767,7 @@ export function ProductDetailClient({
         ) : null}
 
         <button
-          className="mt-7 flex w-full items-center justify-center rounded-xl border-[1.5px] border-[#1DA851] px-4 py-3.5 text-[13px] font-semibold text-[#1DA851] transition active:opacity-70"
+          className="mt-7 flex w-full items-center justify-center rounded-xl border-[1.5px] border-[#25D366] px-4 py-3.5 text-[13px] font-semibold text-[#25D366] transition active:opacity-70"
           type="button"
           onClick={handleQuestionClick}
         >
@@ -845,7 +845,7 @@ export function ProductDetailClient({
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-[#E5E5E5] bg-white p-4">
         <div className="mx-auto max-w-3xl">
           <button
-            className="w-full rounded-xl bg-[#1DA851] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:opacity-40"
+            className="w-full rounded-xl bg-[#25D366] px-4 py-4 text-[14px] font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:opacity-40"
             type="button"
             disabled={!product.in_stock}
             onClick={() => setIsOrderOpen(true)}

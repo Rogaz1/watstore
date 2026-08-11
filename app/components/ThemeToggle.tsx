@@ -73,7 +73,7 @@ export function ThemeToggle() {
       </span>
       <span
         className={`flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition ${
-          isDark ? "bg-[#1DA851]" : "bg-[#E5E5E5]"
+          isDark ? "bg-[#25D366]" : "bg-[#E5E5E5]"
         }`}
       >
         <span

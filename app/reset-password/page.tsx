@@ -30,7 +30,7 @@ function AuthBrandHeader() {
   return (
     <div className="text-center">
       <FloxtoWordmark />
-      <p className="mx-auto mt-2 max-w-full text-sm font-medium leading-5 text-[#888888]">
+      <p className="mx-auto mt-1.5 max-w-full text-xs font-medium leading-5 text-[var(--c-text-2)]">
         Simple. Fast. Professional.
       </p>
     </div>
@@ -135,11 +135,11 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#FFFFFF] px-6 py-12 text-[#111111]">
+    <main className="flex min-h-screen items-start justify-center bg-[var(--c-bg)] px-6 pb-12 pt-24 text-[var(--c-text)]">
       <section className="w-full" style={{ maxWidth: "18.75rem" }}>
         <AuthBrandHeader />
 
-        <div className="mt-7 rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-sm">
+        <div className="mt-9 rounded-2xl border border-[var(--c-border-strong)] bg-[var(--c-surface)] p-6 shadow-sm">
           {resetState === "checking" ? (
             <p className="py-4 text-center text-sm font-medium text-[#888888]">
               Checking reset link...

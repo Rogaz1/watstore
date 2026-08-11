@@ -46,7 +46,7 @@ function AuthBrandHeader() {
   return (
     <div className="text-center">
       <FloxtoWordmark />
-      <p className="mx-auto mt-2 max-w-full text-sm font-medium leading-5 text-[#888888]">
+      <p className="mx-auto mt-1.5 max-w-full text-xs font-medium leading-5 text-[var(--c-text-2)]">
         Simple. Fast. Professional.
       </p>
     </div>
@@ -89,9 +89,9 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FFFFFF] px-6 py-8 text-[#111111]">
+    <main className="min-h-screen bg-[var(--c-bg)] px-6 py-8 text-[var(--c-text)]">
       <Link
-        className="inline-flex max-w-full items-center gap-2 text-sm font-medium text-[#111111] underline-offset-4 hover:underline"
+        className="inline-flex max-w-full items-center gap-2 text-sm font-medium text-[var(--c-text)] underline-offset-4 hover:underline"
         href="/login"
       >
         <ArrowLeftIcon />
@@ -99,12 +99,12 @@ export default function ForgotPasswordPage() {
       </Link>
 
       <section
-        className="mx-auto mt-16 w-full"
+        className="mx-auto mt-14 w-full"
         style={{ maxWidth: "18.75rem" }}
       >
         <AuthBrandHeader />
 
-        <div className="mt-7 rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-sm">
+        <div className="mt-9 rounded-2xl border border-[var(--c-border-strong)] bg-[var(--c-surface)] p-6 shadow-sm">
           {isSent ? (
             <div className="py-3 text-center">
               <h2 className="text-[22px] font-bold leading-tight">

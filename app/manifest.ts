@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
-const APP_NAME = "Floxto";
-const SHORT_NAME = "Floxto";
+const APP_NAME = "Simple. Fast. Professional.";
+const SHORT_NAME = "Simple. Fast. Professional.";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {

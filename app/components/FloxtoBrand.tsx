@@ -8,7 +8,7 @@ export function FloxtoWordmark({ className = "" }: FloxtoWordmarkProps) {
   const logoClassName = `h-auto w-full object-contain ${className}`;
 
   return (
-    <div className="mx-auto w-[170px] max-w-full sm:w-[180px]" aria-label="Floxto">
+    <div className="mx-auto w-[148px] max-w-full sm:w-[160px]" aria-label="Floxto">
       <Image
         className={`${logoClassName} dark:hidden`}
         src="/branding/floxto-wordmark-light-transparent.png"

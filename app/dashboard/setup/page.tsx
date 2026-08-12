@@ -200,11 +200,6 @@ export default function StoreSetupPage() {
         slug: normalizedSlug,
         whatsapp_number: digitsOnlyWhatsapp,
         logo_url: logoUrl,
-        trial_start_date: new Date().toISOString(),
-        subscription_status: "trial",
-        billing_cycle_months: null,
-        last_payment_date: null,
-        subscription_expired_from: null,
       });
 
       if (error) {

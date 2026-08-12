@@ -424,6 +424,57 @@ grant select (
   logo_url
 ) on public.merchants to anon, authenticated;
 
+-- Merchants can write their row through normal PostgREST table-level grants.
+-- A trigger below strips subscription/billing fields from browser writes so
+-- PostgREST can behave normally without exposing billing control to merchants.
+revoke update on public.merchants from authenticated;
+grant update on public.merchants to authenticated;
+
+revoke insert on public.merchants from authenticated;
+revoke insert on public.merchants from anon;
+grant insert on public.merchants to authenticated;
+
+create or replace function public.strip_subscription_fields()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- Only strip values coming from public API clients. Direct SQL/admin
+  -- operations must still be able to set renewals and paid subscriptions.
+  if coalesce(auth.role(), '') not in ('anon', 'authenticated') then
+    return NEW;
+  end if;
+
+  if TG_OP = 'INSERT' then
+    NEW.subscription_status := 'trial';
+    NEW.trial_start_date := now();
+    NEW.billing_cycle_months := null;
+    NEW.last_payment_date := null;
+    NEW.subscription_expired_from := null;
+  end if;
+
+  if TG_OP = 'UPDATE' then
+    NEW.subscription_status := OLD.subscription_status;
+    NEW.trial_start_date := OLD.trial_start_date;
+    NEW.billing_cycle_months := OLD.billing_cycle_months;
+    NEW.last_payment_date := OLD.last_payment_date;
+    NEW.subscription_expired_from := OLD.subscription_expired_from;
+  end if;
+
+  return NEW;
+end;
+$$;
+
+drop trigger if exists enforce_subscription_fields
+on public.merchants;
+
+create trigger enforce_subscription_fields
+before insert or update on public.merchants
+for each row
+execute function public.strip_subscription_fields();
+
 create or replace function public.create_public_order(
   requested_product_id uuid,
   requested_quantity integer,
@@ -575,11 +626,8 @@ to authenticated
 using (user_id = auth.uid())
 with check (user_id = auth.uid());
 
-create policy "Merchants can delete own merchant row"
-on public.merchants
-for delete
-to authenticated
-using (user_id = auth.uid());
+-- Merchant self-delete is intentionally not recreated. There is no account
+-- deletion flow, and deleting a merchant row can break store/order history.
 
 -- PRODUCTS: matched via merchant_id -> merchants.id -> merchants.user_id
 drop policy if exists "Merchants can read own products" on public.products;
@@ -591,13 +639,16 @@ create policy "Merchants can read own products"
 on public.products
 for select
 to authenticated
-using (public.is_own_merchant(merchant_id));
+using (
+  public.is_own_merchant(merchant_id)
+  and deleted_at is null
+);
 
 create policy "Anyone can read public products"
 on public.products
 for select
 to anon, authenticated
-using (true);
+using (deleted_at is null);
 
 -- Public read policy verification: after running this file, this should return
 -- exactly one row for merchants and one row for products.
@@ -617,20 +668,29 @@ create policy "Merchants can insert own products"
 on public.products
 for insert
 to authenticated
-with check (public.is_own_merchant(merchant_id));
+with check (
+  public.is_own_merchant(merchant_id)
+  and deleted_at is null
+);
 
 create policy "Merchants can update own products"
 on public.products
 for update
 to authenticated
-using (public.is_own_merchant(merchant_id))
+using (
+  public.is_own_merchant(merchant_id)
+  and deleted_at is null
+)
 with check (public.is_own_merchant(merchant_id));
 
 create policy "Merchants can delete own products"
 on public.products
 for delete
 to authenticated
-using (public.is_own_merchant(merchant_id));
+using (
+  public.is_own_merchant(merchant_id)
+  and deleted_at is null
+);
 
 -- ORDERS: same pattern as products
 drop policy if exists "Merchants can read own orders" on public.orders;
@@ -645,6 +705,10 @@ for select
 to authenticated
 using (public.is_own_merchant(merchant_id));
 
+-- Merchants can only update order status from the browser.
+revoke update, delete on public.orders from authenticated;
+grant update (status) on public.orders to authenticated;
+
 create policy "Merchants can update own orders"
 on public.orders
 for update
@@ -652,11 +716,8 @@ to authenticated
 using (public.is_own_merchant(merchant_id))
 with check (public.is_own_merchant(merchant_id));
 
-create policy "Merchants can delete own orders"
-on public.orders
-for delete
-to authenticated
-using (public.is_own_merchant(merchant_id));
+-- Order hard-delete is intentionally not recreated. Orders are business
+-- history and should remain available to the owning merchant.
 
 -- Public order creation is handled by the create_public_order RPC above so
 -- order numbers are generated server-side and scoped per merchant.

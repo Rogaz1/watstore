@@ -71,10 +71,9 @@ export default function RootLayout({
             (function () {
               try {
                 var stored = window.localStorage.getItem("floxto-theme");
-                var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
                 var theme = stored === "dark" || stored === "light"
                   ? stored
-                  : prefersDark ? "dark" : "light";
+                  : "light";
                 document.documentElement.classList.toggle("dark", theme === "dark");
                 document.documentElement.style.colorScheme = theme;
               } catch (error) {}

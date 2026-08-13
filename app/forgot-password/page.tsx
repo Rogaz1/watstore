@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { FloxtoWordmark } from "../components/FloxtoBrand";
 import { buildAbsoluteUrl } from "../components/siteUrl";
+import { useForceLightTheme } from "../components/useForceLightTheme";
 
 function ArrowLeftIcon() {
   return (
@@ -58,6 +59,8 @@ function isValidEmail(value: string) {
 }
 
 export default function ForgotPasswordPage() {
+  useForceLightTheme();
+
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);

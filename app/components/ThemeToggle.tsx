@@ -6,24 +6,13 @@ import { Moon, Sun } from "lucide-react";
 const THEME_STORAGE_KEY = "floxto-theme";
 type ThemePreference = "light" | "dark";
 
-function getSystemTheme(): ThemePreference {
-  if (
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches
-  ) {
-    return "dark";
-  }
-
-  return "light";
-}
-
 function getStoredTheme(): ThemePreference {
   if (typeof window === "undefined") {
     return "light";
   }
 
   const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return stored === "dark" || stored === "light" ? stored : getSystemTheme();
+  return stored === "dark" || stored === "light" ? stored : "light";
 }
 
 function applyTheme(theme: ThemePreference) {

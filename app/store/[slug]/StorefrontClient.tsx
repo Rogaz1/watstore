@@ -8,6 +8,7 @@ import { Store } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
 import { formatGhsPrice } from "@/app/components/productTypes";
+import { useForceLightTheme } from "@/app/components/useForceLightTheme";
 import type {
   PublicMerchant,
   PublicProduct,
@@ -85,6 +86,8 @@ function ProductCard({
 }
 
 export function StorefrontClient({ slug }: StorefrontClientProps) {
+  useForceLightTheme();
+
   const [merchant, setMerchant] = useState<PublicMerchant | null>(null);
   const [products, setProducts] = useState<PublicProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);

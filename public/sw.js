@@ -1,4 +1,4 @@
-const CACHE_VERSION = "floxto-pwa-v4";
+const CACHE_VERSION = "floxto-pwa-v5";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

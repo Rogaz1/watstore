@@ -8,6 +8,7 @@ import { InstallAppPrompt } from "./InstallAppPrompt";
 import { FloxtoWordmark } from "./FloxtoBrand";
 import { getPostAuthDestination } from "./merchantProfile";
 import { buildAbsoluteUrl } from "./siteUrl";
+import { useForceLightTheme } from "./useForceLightTheme";
 
 type AuthMode = "login" | "signup";
 
@@ -63,6 +64,8 @@ function LoginBrandHeader() {
 }
 
 export function AuthForm({ mode }: AuthFormProps) {
+  useForceLightTheme();
+
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { FloxtoWordmark } from "../components/FloxtoBrand";
+import { useForceLightTheme } from "../components/useForceLightTheme";
 
 type ResetState = "checking" | "valid" | "invalid" | "success";
 
@@ -38,6 +39,8 @@ function AuthBrandHeader() {
 }
 
 export default function ResetPasswordPage() {
+  useForceLightTheme();
+
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

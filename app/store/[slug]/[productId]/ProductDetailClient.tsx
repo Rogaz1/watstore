@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
+import { useForceLightTheme } from "@/app/components/useForceLightTheme";
 import {
   isMissingFaqsColumn,
   PRODUCT_SELECT_BASE,
@@ -373,6 +374,8 @@ export function ProductDetailClient({
   initialProduct = null,
   initialMessage = "",
 }: ProductDetailClientProps) {
+  useForceLightTheme();
+
   const [merchant, setMerchant] = useState<PublicMerchant | null>(initialMerchant);
   const [product, setProduct] = useState<PublicProduct | null>(initialProduct);
   const [isLoading, setIsLoading] = useState(!initialMerchant && !initialProduct && !initialMessage);

@@ -71,7 +71,11 @@ export default function RootLayout({
             (function () {
               try {
                 var stored = window.localStorage.getItem("floxto-theme");
-                var theme = stored === "dark" || stored === "light"
+                var pathname = window.location.pathname;
+                var isPublicStorefront = pathname === "/store" || pathname.indexOf("/store/") === 0;
+                var theme = isPublicStorefront
+                  ? "light"
+                  : stored === "dark" || stored === "light"
                   ? stored
                   : "light";
                 document.documentElement.classList.toggle("dark", theme === "dark");

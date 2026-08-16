@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 
 export function useForceLightTheme() {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     const hadDark = root.classList.contains("dark");
     const previousColorScheme = root.style.colorScheme;

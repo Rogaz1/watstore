@@ -6,6 +6,7 @@ export type Merchant = {
   delivery_info?: string | null;
   payment_options?: string | null;
   why_choose_us?: string | null;
+  currency_code?: CurrencyCode | null;
   slug?: string | null;
   whatsapp_number?: string | null;
   logo_url?: string | null;
@@ -48,6 +49,7 @@ export type Order = {
   product_name: string | null;
   product_sale_price: number | null;
   product_photo_url: string | null;
+  currency_code: CurrencyCode | null;
   quantity: number;
   customer_name: string;
   delivery_location: string;
@@ -61,17 +63,59 @@ export type PublicOrder = {
   order_number: number;
 };
 
-export function formatPrice(value: number | null | undefined) {
-  return formatGhsPrice(value);
+export const supportedCurrencies = [
+  { code: "GHS", label: "Ghana Cedi", symbol: "\u20B5" },
+  { code: "NGN", label: "Nigerian Naira", symbol: "\u20A6" },
+  { code: "XOF", label: "West African CFA franc", symbol: "CFA" },
+  { code: "XAF", label: "Central African CFA franc", symbol: "FCFA" },
+  { code: "USD", label: "US Dollar", symbol: "$" },
+  { code: "GBP", label: "British Pound", symbol: "\u00A3" },
+  { code: "EUR", label: "Euro", symbol: "\u20AC" },
+] as const;
+
+export type CurrencyCode = (typeof supportedCurrencies)[number]["code"];
+
+const currencySymbols = supportedCurrencies.reduce(
+  (symbols, currency) => ({
+    ...symbols,
+    [currency.code]: currency.symbol,
+  }),
+  {} as Record<CurrencyCode, string>,
+);
+
+export function normalizeCurrencyCode(
+  value: string | null | undefined,
+): CurrencyCode {
+  return supportedCurrencies.some((currency) => currency.code === value)
+    ? (value as CurrencyCode)
+    : "GHS";
 }
 
-export function formatGhsPrice(value: number | null | undefined) {
+export function formatPrice(
+  value: number | null | undefined,
+  currencyCode?: string | null,
+) {
+  return formatCurrency(value, currencyCode);
+}
+
+export function formatCurrency(
+  value: number | null | undefined,
+  currencyCode?: string | null,
+) {
   if (typeof value !== "number") {
     return "";
   }
 
-  return `₵${new Intl.NumberFormat("en-US", {
+  const normalizedCurrency = normalizeCurrencyCode(currencyCode);
+  const symbol = currencySymbols[normalizedCurrency];
+  const amount = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value)}`;
+  }).format(value);
+
+  return symbol.length > 1 ? `${symbol} ${amount}` : `${symbol}${amount}`;
+}
+
+export function formatGhsPrice(value: number | null | undefined) {
+  return formatCurrency(value, "GHS");
 }

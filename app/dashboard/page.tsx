@@ -50,12 +50,13 @@ import { compressImageForUpload } from "../components/imageCompression";
 import { getMerchantForUser } from "../components/merchantProfile";
 import { ThemeToggle } from "../components/ThemeToggle";
 import {
-  formatGhsPrice,
   formatPrice,
   Merchant,
+  normalizeCurrencyCode,
   Order,
   OrderStatus,
   Product,
+  supportedCurrencies,
 } from "../components/productTypes";
 import { buildUpgradeUrl } from "../components/subscription";
 import { buildWhatsAppUrl } from "../components/publicStoreTypes";
@@ -67,7 +68,7 @@ import {
 import { useRequireUser } from "../components/useRequireUser";
 
 const LOGO_BUCKET = "merchant-logos";
-const PLATFORM_HELP_NUMBER = "233509396861";
+const PLATFORM_HELP_NUMBER = "233592514232";
 const MAX_TAGLINE_CHARS = 60;
 const MAX_DELIVERY_INFO_CHARS = 200;
 const MAX_PAYMENT_OPTIONS_CHARS = 150;
@@ -491,12 +492,15 @@ function StatCard({
 function HomeRecentOrderCard({
   order,
   onDetails,
+  currencyCode,
 }: {
   order: OrderWithProduct;
   onDetails: () => void;
+  currencyCode?: string | null;
 }) {
   const productSnapshot = getOrderProductSnapshot(order);
   const thumbnail = productSnapshot.photoUrl;
+  const orderCurrencyCode = order.currency_code ?? currencyCode;
 
   return (
     <article className="min-w-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
@@ -547,7 +551,7 @@ function HomeRecentOrderCard({
           </p>
           <p className="mt-0.5 block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium text-[#888888]">
             Qty {order.quantity} &middot;{" "}
-            {formatGhsPrice(order.total) || "Price on request"}
+            {formatPrice(order.total, orderCurrencyCode) || "Price on request"}
           </p>
         </div>
       </div>
@@ -574,12 +578,15 @@ function HomeRecentOrderCard({
 function OrderSummaryCard({
   order,
   onStatusChange,
+  currencyCode,
 }: {
   order: OrderWithProduct;
   onStatusChange: (order: Order, status: OrderStatus) => void;
+  currencyCode?: string | null;
 }) {
   const productSnapshot = getOrderProductSnapshot(order);
   const thumbnail = productSnapshot.photoUrl;
+  const orderCurrencyCode = order.currency_code ?? currencyCode;
 
   return (
     <article className="min-w-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
@@ -648,7 +655,7 @@ function OrderSummaryCard({
           </p>
           <p className="mt-0.5 block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium text-[#888888]">
             Qty {order.quantity} &middot;{" "}
-            {formatGhsPrice(order.total) || "Price on request"}
+            {formatPrice(order.total, orderCurrencyCode) || "Price on request"}
           </p>
         </div>
       </div>
@@ -689,6 +696,7 @@ export default function DashboardPage() {
   const [settingsDeliveryInfo, setSettingsDeliveryInfo] = useState("");
   const [settingsPaymentOptions, setSettingsPaymentOptions] = useState("");
   const [settingsWhyChooseUs, setSettingsWhyChooseUs] = useState("");
+  const [settingsCurrencyCode, setSettingsCurrencyCode] = useState("GHS");
   const [settingsSlug, setSettingsSlug] = useState("");
   const [settingsWhatsappNumber, setSettingsWhatsappNumber] = useState("");
   const [settingsLogoFile, setSettingsLogoFile] = useState<File | null>(null);
@@ -705,6 +713,7 @@ export default function DashboardPage() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const merchantCurrencyCode = merchant?.currency_code ?? "GHS";
 
   useEffect(() => {
     if (!isSellingTipsOpen) {
@@ -764,6 +773,7 @@ export default function DashboardPage() {
       setSettingsDeliveryInfo(refreshedMerchant.delivery_info ?? "");
       setSettingsPaymentOptions(refreshedMerchant.payment_options ?? "");
       setSettingsWhyChooseUs(refreshedMerchant.why_choose_us ?? "");
+      setSettingsCurrencyCode(normalizeCurrencyCode(refreshedMerchant.currency_code));
       setSettingsSlug(refreshedMerchant.slug ?? "");
       setSettingsWhatsappNumber(refreshedMerchant.whatsapp_number ?? "");
       setSettingsLogoPreviewUrl(refreshedMerchant.logo_url ?? "");
@@ -814,7 +824,7 @@ export default function DashboardPage() {
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .select(
-          "id,merchant_id,product_id,product_name,product_sale_price,product_photo_url,quantity,customer_name,delivery_location,total,status,order_number,created_at",
+          "id,merchant_id,product_id,product_name,product_sale_price,product_photo_url,currency_code,quantity,customer_name,delivery_location,total,status,order_number,created_at",
         )
         .eq("merchant_id", refreshedMerchant.id)
         .order("created_at", { ascending: false });
@@ -1093,6 +1103,7 @@ export default function DashboardPage() {
       const payload = {
         business_name: settingsBusinessName.trim(),
         tagline: settingsTagline.trim().slice(0, MAX_TAGLINE_CHARS) || null,
+        currency_code: normalizeCurrencyCode(settingsCurrencyCode),
         slug: normalizedSlug,
         whatsapp_number: digitsOnlyWhatsapp,
         logo_url: logoUrl,
@@ -1110,6 +1121,7 @@ export default function DashboardPage() {
         current ? { ...current, ...payload } : current,
       );
       setSettingsSlug(normalizedSlug);
+      setSettingsCurrencyCode(payload.currency_code);
       setSettingsWhatsappNumber(digitsOnlyWhatsapp);
       setSettingsLogoFile(null);
       setSettingsLogoPreviewUrl(logoUrl ?? "");
@@ -1541,6 +1553,7 @@ export default function DashboardPage() {
                     <HomeRecentOrderCard
                       key={order.id}
                       order={order}
+                      currencyCode={merchantCurrencyCode}
                       onDetails={() => handleTabChange("orders")}
                     />
                   ))}
@@ -1652,11 +1665,15 @@ export default function DashboardPage() {
                         </h3>
                         <div className="mt-1 flex min-w-0 items-baseline gap-2 overflow-hidden">
                           <span className="shrink-0 text-[13px] font-bold text-[#1A1A18]">
-                            {formatPrice(product.sale_price) || "Price on request"}
+                            {formatPrice(product.sale_price, merchantCurrencyCode) ||
+                              "Price on request"}
                           </span>
                           {product.sale_price !== null && product.original_price ? (
                             <span className="min-w-0 truncate text-xs text-[#BDB9B2] line-through">
-                              {formatPrice(product.original_price)}
+                              {formatPrice(
+                                product.original_price,
+                                merchantCurrencyCode,
+                              )}
                             </span>
                           ) : null}
                         </div>
@@ -1761,6 +1778,7 @@ export default function DashboardPage() {
                   <OrderSummaryCard
                     key={order.id}
                     order={order}
+                    currencyCode={merchantCurrencyCode}
                     onStatusChange={handleOrderStatusChange}
                   />
                 ))}
@@ -1821,6 +1839,32 @@ export default function DashboardPage() {
                         )
                       }
                     />
+                  </div>
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
+                    Currency
+                  </span>
+                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
+                    <SettingsFieldIcon>
+                      <CreditCard className="h-4 w-4" />
+                    </SettingsFieldIcon>
+                    <select
+                      className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1A1A18] outline-none"
+                      value={settingsCurrencyCode}
+                      onChange={(event) =>
+                        setSettingsCurrencyCode(
+                          normalizeCurrencyCode(event.target.value),
+                        )
+                      }
+                    >
+                      {supportedCurrencies.map((currency) => (
+                        <option key={currency.code} value={currency.code}>
+                          {currency.label} ({currency.symbol})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </label>
 
@@ -2148,13 +2192,13 @@ export default function DashboardPage() {
                 {
                   name: "Monthly" as const,
                   cycle: 1 as const,
-                  price: "₵49",
+                  price: "₵39",
                   suffix: "/month",
                 },
                 {
                   name: "Annual" as const,
                   cycle: 12 as const,
-                  price: "₵399",
+                  price: "₵299",
                   suffix: "/year",
                 },
               ].map((plan) => {
@@ -2176,7 +2220,7 @@ export default function DashboardPage() {
                   >
                     {plan.cycle === 12 ? (
                       <span className="absolute right-3 top-0 -translate-y-1/2 rounded-sm bg-[#25D366] px-2 py-1 text-[9px] font-bold text-white">
-                        Best Value - Save ₵189
+                        Best Value - Save ₵169
                       </span>
                     ) : null}
                     {isActivePlan ? (

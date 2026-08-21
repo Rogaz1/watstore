@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { Store } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
-import { formatGhsPrice } from "@/app/components/productTypes";
+import { formatPrice } from "@/app/components/productTypes";
 import { useForceLightTheme } from "@/app/components/useForceLightTheme";
 import type {
   PublicMerchant,
@@ -21,9 +21,11 @@ type StorefrontClientProps = {
 function ProductCard({
   product,
   slug,
+  currencyCode,
 }: {
   product: PublicProduct;
   slug: string;
+  currencyCode?: string | null;
 }) {
   const thumbnail = product.photo_urls?.[0];
   const card = (
@@ -63,11 +65,11 @@ function ProductCard({
         {product.in_stock ? (
           <div className="mt-2 flex min-w-0 items-baseline gap-2">
             <span className="shrink-0 text-[13px] font-bold">
-              {formatGhsPrice(product.sale_price) || "Price on request"}
+              {formatPrice(product.sale_price, currencyCode) || "Price on request"}
             </span>
             {product.sale_price !== null && product.original_price ? (
               <span className="min-w-0 truncate text-[12px] font-medium text-[#CCCCCC] line-through">
-                {formatGhsPrice(product.original_price)}
+                {formatPrice(product.original_price, currencyCode)}
               </span>
             ) : null}
           </div>
@@ -220,7 +222,12 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
         {products.length ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} slug={slug} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                slug={slug}
+                currencyCode={merchant.currency_code}
+              />
             ))}
           </div>
         ) : null}

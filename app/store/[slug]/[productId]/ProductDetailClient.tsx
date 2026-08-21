@@ -23,7 +23,7 @@ import {
   PRODUCT_SELECT_BASE,
   PRODUCT_SELECT_WITH_FAQS,
 } from "@/app/components/productQueries";
-import { formatGhsPrice } from "@/app/components/productTypes";
+import { formatPrice } from "@/app/components/productTypes";
 import {
   buildProductMedia,
   buildWhatsAppUrl,
@@ -128,6 +128,7 @@ function OrderSheet({
     typeof product.sale_price === "number" ? product.sale_price * quantity : null;
   const canSubmit = customerName.trim() && deliveryLocation.trim();
   const thumbnail = product.photo_urls?.[0];
+  const currencyCode = merchant.currency_code;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -157,7 +158,7 @@ function OrderSheet({
       "Hello, I'd like to order:",
       `Product: ${product.name}`,
       `Quantity: ${quantity}`,
-      ...(total !== null ? [`Total: ${formatGhsPrice(total)}`] : []),
+      ...(total !== null ? [`Total: ${formatPrice(total, currencyCode)}`] : []),
       `Name: ${customerName.trim()}`,
       `Delivery Location: ${deliveryLocation.trim()}`,
       `Order #${order.order_number}`,
@@ -187,7 +188,7 @@ function OrderSheet({
                 {product.name}
               </h2>
               <p className="mt-1 text-[13px] font-medium leading-none text-[#25D366]">
-                {formatGhsPrice(product.sale_price) || "Price on request"}
+                {formatPrice(product.sale_price, currencyCode) || "Price on request"}
               </p>
             </div>
           </div>
@@ -228,7 +229,7 @@ function OrderSheet({
             Total Payable
           </span>
           <span className="shrink-0 text-base font-bold">
-            {formatGhsPrice(total) || "Price on request"}
+            {formatPrice(total, currencyCode) || "Price on request"}
           </span>
         </div>
 
@@ -562,7 +563,8 @@ export function ProductDetailClient({
     }
 
     const shareText = `${product.name} - ${
-      formatGhsPrice(product.sale_price) || "Price on request"
+      formatPrice(product.sale_price, merchant?.currency_code) ||
+      "Price on request"
     }`;
     const shareUrl = window.location.href;
 
@@ -726,11 +728,12 @@ export function ProductDetailClient({
 
         <div className="mt-3 flex min-w-0 flex-wrap items-center gap-3 overflow-hidden">
           <span className="shrink-0 text-[20px] font-semibold leading-none">
-            {formatGhsPrice(product.sale_price) || "Price on request"}
+            {formatPrice(product.sale_price, merchant.currency_code) ||
+              "Price on request"}
           </span>
           {product.sale_price !== null && product.original_price ? (
             <span className="min-w-0 truncate text-[14px] font-bold text-[#BDB9B2] line-through">
-              {formatGhsPrice(product.original_price)}
+              {formatPrice(product.original_price, merchant.currency_code)}
             </span>
           ) : null}
           {discountPercent ? (

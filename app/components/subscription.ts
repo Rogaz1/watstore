@@ -4,7 +4,7 @@ import { buildWhatsAppUrl } from "./publicStoreTypes";
 
 const TRIAL_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const PLATFORM_WHATSAPP_NUMBER = "233509396861";
+const PLATFORM_WHATSAPP_NUMBER = "233592514232";
 
 export type SubscriptionAccess = {
   canAccess: boolean;

@@ -15,6 +15,7 @@ alter table public.merchants
   add column if not exists delivery_info text,
   add column if not exists payment_options text,
   add column if not exists why_choose_us text,
+  add column if not exists currency_code text default 'GHS',
   add column if not exists whatsapp_number text,
   add column if not exists logo_url text,
   add column if not exists subscription_expired_from text;
@@ -48,6 +49,14 @@ begin
       add constraint merchants_subscription_expired_from_check
       check (subscription_expired_from is null or subscription_expired_from in ('trial', 'active'));
   end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'merchants_currency_code_check'
+  ) then
+    alter table public.merchants
+      add constraint merchants_currency_code_check
+      check (currency_code in ('GHS', 'NGN', 'XOF', 'XAF', 'USD', 'GBP', 'EUR'));
+  end if;
 end $$;
 
 create unique index if not exists merchants_slug_key
@@ -73,6 +82,7 @@ alter table public.orders
   add column if not exists product_name text,
   add column if not exists product_sale_price numeric,
   add column if not exists product_photo_url text,
+  add column if not exists currency_code text,
   add column if not exists quantity integer,
   add column if not exists customer_name text,
   add column if not exists delivery_location text,
@@ -246,6 +256,7 @@ returns table (
   delivery_info text,
   payment_options text,
   why_choose_us text,
+  currency_code text,
   slug text,
   whatsapp_number text,
   logo_url text,
@@ -267,6 +278,7 @@ as $$
     delivery_info,
     payment_options,
     why_choose_us,
+    coalesce(currency_code, 'GHS') as currency_code,
     slug,
     whatsapp_number,
     logo_url,
@@ -309,6 +321,7 @@ returns table (
   delivery_info text,
   payment_options text,
   why_choose_us text,
+  currency_code text,
   slug text,
   whatsapp_number text,
   logo_url text,
@@ -340,6 +353,7 @@ begin
     merchants.delivery_info,
     merchants.payment_options,
     merchants.why_choose_us,
+    coalesce(merchants.currency_code, 'GHS') as currency_code,
     merchants.slug,
     merchants.whatsapp_number,
     merchants.logo_url,
@@ -419,6 +433,7 @@ grant select (
   delivery_info,
   payment_options,
   why_choose_us,
+  currency_code,
   slug,
   whatsapp_number,
   logo_url
@@ -544,6 +559,7 @@ begin
     product_name,
     product_sale_price,
     product_photo_url,
+    currency_code,
     quantity,
     customer_name,
     delivery_location,
@@ -557,6 +573,7 @@ begin
     selected_product.name,
     selected_product.sale_price,
     selected_product.photo_urls[1],
+    coalesce(selected_merchant.currency_code, 'GHS'),
     requested_quantity,
     trim(requested_customer_name),
     trim(requested_delivery_location),

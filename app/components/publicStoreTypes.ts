@@ -8,6 +8,7 @@ export type PublicMerchant = Pick<
   | "delivery_info"
   | "payment_options"
   | "why_choose_us"
+  | "currency_code"
   | "slug"
   | "whatsapp_number"
   | "logo_url"

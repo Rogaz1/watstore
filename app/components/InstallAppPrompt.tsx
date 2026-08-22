@@ -2,6 +2,7 @@
 
 import { Download } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useI18n } from "../i18n/LanguageProvider";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -28,6 +29,7 @@ function isIosSafari() {
 }
 
 export function InstallAppPrompt() {
+  const { t } = useI18n();
   const [installPrompt, setInstallPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [showIosInstructions, setShowIosInstructions] = useState(false);
@@ -72,7 +74,7 @@ export function InstallAppPrompt() {
     return (
       <div className="mt-4 rounded-2xl border border-[#E7E4DF] bg-[#FAF9F7] p-4 text-center">
         <p className="text-xs font-medium leading-5 text-[#78716C]">
-          Add to your home screen for quick access.
+          {t("install.prompt")}
         </p>
         <button
           className="mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-[#1C1917] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition active:scale-[0.99]"
@@ -80,7 +82,7 @@ export function InstallAppPrompt() {
           onClick={handleInstall}
         >
           <Download className="h-4 w-4 shrink-0" aria-hidden="true" />
-          Install App
+          {t("install.button")}
         </button>
       </div>
     );
@@ -89,8 +91,7 @@ export function InstallAppPrompt() {
   if (showIosInstructions) {
     return (
       <p className="mt-4 rounded-2xl border border-[#E7E4DF] bg-[#FAF9F7] px-4 py-3 text-center text-xs font-medium leading-5 text-[#78716C]">
-        Install the app on your Home Screen for quick access. Tap the Share
-        icon, then select &quot;Add to Home Screen&quot;.
+        {t("install.ios")}
       </p>
     );
   }

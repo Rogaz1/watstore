@@ -16,6 +16,8 @@ alter table public.merchants
   add column if not exists payment_options text,
   add column if not exists why_choose_us text,
   add column if not exists currency_code text default 'GHS',
+  add column if not exists preferred_locale text,
+  add column if not exists country_code text,
   add column if not exists whatsapp_number text,
   add column if not exists logo_url text,
   add column if not exists subscription_expired_from text;
@@ -56,6 +58,22 @@ begin
     alter table public.merchants
       add constraint merchants_currency_code_check
       check (currency_code in ('GHS', 'NGN', 'XOF', 'XAF', 'USD', 'GBP', 'EUR'));
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'merchants_preferred_locale_check'
+  ) then
+    alter table public.merchants
+      add constraint merchants_preferred_locale_check
+      check (preferred_locale is null or preferred_locale in ('en', 'fr'));
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'merchants_country_code_check'
+  ) then
+    alter table public.merchants
+      add constraint merchants_country_code_check
+      check (country_code is null or country_code ~ '^[A-Z]{2}$');
   end if;
 end $$;
 
@@ -257,6 +275,8 @@ returns table (
   payment_options text,
   why_choose_us text,
   currency_code text,
+  preferred_locale text,
+  country_code text,
   slug text,
   whatsapp_number text,
   logo_url text,
@@ -279,6 +299,8 @@ as $$
     payment_options,
     why_choose_us,
     coalesce(currency_code, 'GHS') as currency_code,
+    preferred_locale,
+    country_code,
     slug,
     whatsapp_number,
     logo_url,
@@ -322,6 +344,7 @@ returns table (
   payment_options text,
   why_choose_us text,
   currency_code text,
+  country_code text,
   slug text,
   whatsapp_number text,
   logo_url text,
@@ -354,6 +377,7 @@ begin
     merchants.payment_options,
     merchants.why_choose_us,
     coalesce(merchants.currency_code, 'GHS') as currency_code,
+    merchants.country_code,
     merchants.slug,
     merchants.whatsapp_number,
     merchants.logo_url,
@@ -434,6 +458,7 @@ grant select (
   payment_options,
   why_choose_us,
   currency_code,
+  country_code,
   slug,
   whatsapp_number,
   logo_url

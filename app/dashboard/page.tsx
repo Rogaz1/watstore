@@ -30,7 +30,6 @@ import {
   MessageCircle,
   Package,
   Pencil,
-  Phone,
   Plus,
   CreditCard,
   Settings,
@@ -46,8 +45,16 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { ExpiredAccessScreen } from "../components/ExpiredAccessScreen";
+import { InternationalPhoneInput } from "../components/InternationalPhoneInput";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { compressImageForUpload } from "../components/imageCompression";
 import { getMerchantForUser } from "../components/merchantProfile";
+import {
+  deriveCountryFromPhone,
+  fallbackCountry,
+  normalizePhoneNumber,
+  PhoneCountryCode,
+} from "../components/phone";
 import { ThemeToggle } from "../components/ThemeToggle";
 import {
   formatPrice,
@@ -65,7 +72,10 @@ import {
   getSubscriptionAccess,
   refreshMerchantSubscription,
 } from "../components/subscription";
+import { getUserFacingError } from "../components/userFacingErrors";
 import { useRequireUser } from "../components/useRequireUser";
+import { useI18n } from "../i18n/LanguageProvider";
+import type { Locale } from "../i18n/messages";
 
 const LOGO_BUCKET = "merchant-logos";
 const PLATFORM_HELP_NUMBER = "233592514232";
@@ -74,82 +84,150 @@ const MAX_DELIVERY_INFO_CHARS = 200;
 const MAX_PAYMENT_OPTIONS_CHARS = 150;
 const MAX_WHY_CHOOSE_US_CHARS = 300;
 
-const sellingTips = [
-  {
-    title: "Photos",
-    items: [
-      "Use at least 3 real photos of your actual product - buyers trust real photos more than a single studio shot",
-      "Include a close-up, a full view, and if possible, the product in use",
-      "Good lighting matters more than a fancy camera - natural daylight works well",
-    ],
-  },
-  {
-    title: "Your Short Description",
-    items: [
-      "This is the first thing buyers read - make it about the benefit, not just what the product is",
-      "Keep it to one or two sentences",
-    ],
-  },
-  {
-    title: "Key Benefits",
-    items: [
-      "List specific, concrete benefits, not vague claims",
-      "3-4 short bullet points work better than one long paragraph",
-    ],
-  },
-  {
-    title: "Full Description",
-    items: [
-      "Break it into short paragraphs, not one big block of text",
-      "Answer the obvious questions: what it's made of, how to use it, who it's for",
-    ],
-  },
-  {
-    title: "Delivery Info",
-    items: [
-      "Be specific and honest about delivery areas and timing - this is one of the biggest things that makes buyers hesitate to order",
-      "Keep it short - one clear line works better than a long explanation",
-    ],
-  },
-  {
-    title: "Payment Options",
-    items: [
-      'Keep it short and specific - list the actual methods you accept, e.g. "MTN MoMo, Cash on Delivery"',
-      "Don't leave this blank if you accept more than just cash - buyers often hesitate simply because they don't know how they'll pay before they message you",
-    ],
-  },
-  {
-    title: "Why Choose Us",
-    items: [
-      "This is your chance to say, in your own words, why a buyer should trust you specifically - keep it honest and specific to your business",
-      'Good examples: "5 years selling quality Kente fabric," "Same-day response on WhatsApp," "Family-run business in Accra"',
-      "Avoid vague claims that could apply to anyone - specific details are more convincing than generic praise",
-    ],
-  },
-  {
-    title: "Frequently Asked Questions",
-    items: [
-      "Add answers to the questions you get asked most often on WhatsApp - this saves you time and helps hesitant buyers order without needing to ask first",
-    ],
-  },
-  {
-    title: "Building Trust",
-    items: [
-      "Be honest in your descriptions - buyers who feel misled won't come back, even if you get the one sale",
-      "Respond quickly to WhatsApp messages - buyers often compare a few sellers and go with whoever answers first",
-    ],
-  },
-];
+const sellingTips: Record<Locale, Array<{ title: string; items: string[] }>> = {
+  en: [
+    {
+      title: "Photos",
+      items: [
+        "Use at least 3 real photos of your actual product - buyers trust real photos more than a single studio shot",
+        "Include a close-up, a full view, and if possible, the product in use",
+        "Good lighting matters more than a fancy camera - natural daylight works well",
+      ],
+    },
+    {
+      title: "Your Short Description",
+      items: [
+        "This is the first thing buyers read - make it about the benefit, not just what the product is",
+        "Keep it to one or two sentences",
+      ],
+    },
+    {
+      title: "Key Benefits",
+      items: [
+        "List specific, concrete benefits, not vague claims",
+        "3-4 short bullet points work better than one long paragraph",
+      ],
+    },
+    {
+      title: "Full Description",
+      items: [
+        "Break it into short paragraphs, not one big block of text",
+        "Answer the obvious questions: what it's made of, how to use it, who it's for",
+      ],
+    },
+    {
+      title: "Delivery Info",
+      items: [
+        "Be specific and honest about delivery areas and timing - this is one of the biggest things that makes buyers hesitate to order",
+        "Keep it short - one clear line works better than a long explanation",
+      ],
+    },
+    {
+      title: "Payment Options",
+      items: [
+        'Keep it short and specific - list the actual methods you accept, e.g. "MTN MoMo, Cash on Delivery"',
+        "Don't leave this blank if you accept more than just cash - buyers often hesitate simply because they don't know how they'll pay before they message you",
+      ],
+    },
+    {
+      title: "Why Choose Us",
+      items: [
+        "This is your chance to say, in your own words, why a buyer should trust you specifically - keep it honest and specific to your business",
+        'Good examples: "5 years selling quality Kente fabric," "Same-day response on WhatsApp," "Family-run business in Accra"',
+        "Avoid vague claims that could apply to anyone - specific details are more convincing than generic praise",
+      ],
+    },
+    {
+      title: "Frequently Asked Questions",
+      items: [
+        "Add answers to the questions you get asked most often on WhatsApp - this saves you time and helps hesitant buyers order without needing to ask first",
+      ],
+    },
+    {
+      title: "Building Trust",
+      items: [
+        "Be honest in your descriptions - buyers who feel misled won't come back, even if you get the one sale",
+        "Respond quickly to WhatsApp messages - buyers often compare a few sellers and go with whoever answers first",
+      ],
+    },
+  ],
+  fr: [
+    {
+      title: "Photos",
+      items: [
+        "Utilisez au moins 3 vraies photos de votre produit - les acheteurs font davantage confiance aux photos réelles",
+        "Ajoutez un gros plan, une vue complète et, si possible, le produit en situation",
+        "Une bonne lumière compte plus qu'un appareil coûteux - la lumière naturelle fonctionne très bien",
+      ],
+    },
+    {
+      title: "Votre courte description",
+      items: [
+        "C'est la première chose que les acheteurs lisent - parlez du bénéfice, pas seulement du produit",
+        "Gardez une ou deux phrases",
+      ],
+    },
+    {
+      title: "Avantages clés",
+      items: [
+        "Listez des avantages précis et concrets, pas des affirmations vagues",
+        "3 à 4 points courts fonctionnent mieux qu'un long paragraphe",
+      ],
+    },
+    {
+      title: "Description complète",
+      items: [
+        "Séparez le texte en courts paragraphes, pas en un gros bloc",
+        "Répondez aux questions évidentes : matière, utilisation, public concerné",
+      ],
+    },
+    {
+      title: "Livraison",
+      items: [
+        "Soyez précis et honnête sur les zones et délais de livraison",
+        "Gardez cela court - une ligne claire vaut mieux qu'une longue explication",
+      ],
+    },
+    {
+      title: "Options de paiement",
+      items: [
+        'Soyez court et précis - indiquez les méthodes acceptées, par exemple "MTN MoMo, paiement à la livraison"',
+        "Ne laissez pas ce champ vide si vous acceptez plusieurs moyens de paiement",
+      ],
+    },
+    {
+      title: "Pourquoi nous choisir",
+      items: [
+        "Expliquez avec vos propres mots pourquoi l'acheteur devrait vous faire confiance",
+        'Bons exemples : "5 ans de vente de tissus Kente", "Réponse WhatsApp le jour même", "Entreprise familiale à Accra"',
+        "Évitez les phrases vagues - les détails précis sont plus convaincants",
+      ],
+    },
+    {
+      title: "Questions fréquentes",
+      items: [
+        "Ajoutez les réponses aux questions qu'on vous pose souvent sur WhatsApp",
+      ],
+    },
+    {
+      title: "Construire la confiance",
+      items: [
+        "Soyez honnête dans vos descriptions - un client déçu ne revient pas",
+        "Répondez vite sur WhatsApp - les acheteurs choisissent souvent le vendeur qui répond en premier",
+      ],
+    },
+  ],
+};
 
-const includedFeatures = [
-  "Branded online store",
-  "Conversion-optimized product pages",
-  "Easy product & order management",
-  "Organized WhatsApp orders",
-  "A shareable store link",
-  "Secure cloud hosting",
-  "Free updates and new features",
-  "Dedicated customer support",
+const includedFeatureKeys = [
+  "settings.featureStore",
+  "settings.featureProductPages",
+  "settings.featureManagement",
+  "settings.featureWhatsappOrders",
+  "settings.featureStoreLink",
+  "settings.featureHosting",
+  "settings.featureUpdates",
+  "settings.featureSupport",
 ];
 
 type DashboardTab = "home" | "products" | "orders" | "settings";
@@ -172,12 +250,18 @@ const orderStatuses: OrderStatus[] = [
   "fulfilled",
   "cancelled",
 ];
-const orderFilters: { label: string; value: OrderFilter }[] = [
-  { label: "All", value: "all" },
-  { label: "Pending", value: "pending" },
-  { label: "Paid", value: "paid" },
-  { label: "Fulfilled", value: "fulfilled" },
-  { label: "Cancelled", value: "cancelled" },
+const orderStatusLabelKeys: Record<OrderStatus, string> = {
+  pending: "orders.statusPending",
+  paid: "orders.statusPaid",
+  fulfilled: "orders.statusFulfilled",
+  cancelled: "orders.statusCancelled",
+};
+const orderFilters: { labelKey: string; value: OrderFilter }[] = [
+  { labelKey: "orders.filterAll", value: "all" },
+  { labelKey: "orders.statusPending", value: "pending" },
+  { labelKey: "orders.statusPaid", value: "paid" },
+  { labelKey: "orders.statusFulfilled", value: "fulfilled" },
+  { labelKey: "orders.statusCancelled", value: "cancelled" },
 ];
 
 function isDashboardTab(value: string | null): value is DashboardTab {
@@ -247,7 +331,7 @@ function statusChevronClasses(status: OrderStatus) {
   return "text-[#B91C1C]";
 }
 
-function formatRelativeOrderDate(value: string) {
+function formatRelativeOrderDate(value: string, locale: Locale = "en") {
   const created = new Date(value);
   const now = new Date();
   const createdDay = new Date(
@@ -261,40 +345,42 @@ function formatRelativeOrderDate(value: string) {
   );
 
   if (diffDays <= 0) {
-    return "Today";
+    return locale === "fr" ? "Aujourd'hui" : "Today";
   }
 
   if (diffDays === 1) {
-    return "Yesterday";
+    return locale === "fr" ? "Hier" : "Yesterday";
   }
 
-  return `${diffDays}d ago`;
+  return locale === "fr" ? `il y a ${diffDays} j` : `${diffDays}d ago`;
 }
 
-function getPlanName(merchant: Merchant | null) {
+function getPlanName(merchant: Merchant | null, locale: Locale) {
   if (!merchant) {
-    return "Trial Plan";
+    return locale === "fr" ? "Essai" : "Trial Plan";
   }
 
   if (merchant.subscription_status === "trial") {
-    return "Pro Trial Plan";
+    return locale === "fr" ? "Essai Pro" : "Pro Trial Plan";
   }
 
   if (merchant.subscription_status === "active") {
-    return merchant.billing_cycle_months === 12
-      ? "Yearly Plan"
-      : "Monthly Plan";
+    if (merchant.billing_cycle_months === 12) {
+      return locale === "fr" ? "Formule annuelle" : "Annual Plan";
+    }
+
+    return locale === "fr" ? "Formule mensuelle" : "Monthly Plan";
   }
 
-  return "Expired Plan";
+  return locale === "fr" ? "Abonnement expiré" : "Expired Plan";
 }
 
-function formatDateLabel(value: string | Date | null | undefined) {
+function formatDateLabel(value: string | Date | null | undefined, locale: Locale) {
   if (!value) {
-    return "Not recorded";
+    return null;
   }
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -305,13 +391,24 @@ function buildPlanWhatsAppUrl(
   merchant: Merchant,
   planName: "Monthly" | "Annual",
   intent: "upgrade" | "renew",
+  locale: Locale,
 ) {
+  const localizedPlan = locale === "fr"
+    ? planName === "Annual"
+      ? "Annuel"
+      : "Mensuel"
+    : planName;
+  const firstLine =
+    locale === "fr"
+      ? `Bonjour, je voudrais ${intent === "renew" ? "renouveler" : "passer à"} l'offre ${localizedPlan}.`
+      : `Hello, I'd like to ${intent === "renew" ? "renew" : "upgrade to"} the ${planName} plan.`;
+
   return buildWhatsAppUrl(
     PLATFORM_HELP_NUMBER,
     [
-      `Hello, I'd like to ${intent === "renew" ? "renew" : "upgrade to"} the ${planName} plan.`,
-      `Business Name: ${merchant.business_name ?? ""}`,
-      `Store: ${merchant.slug ?? ""}`,
+      firstLine,
+      `${locale === "fr" ? "Nom de l'entreprise" : "Business Name"}: ${merchant.business_name ?? ""}`,
+      `${locale === "fr" ? "Boutique" : "Store"}: ${merchant.slug ?? ""}`,
     ].join("\n"),
   );
 }
@@ -331,7 +428,7 @@ function getSubscriptionPlanCta({
     return {
       disabled: true,
       intent: "upgrade" as const,
-      label: "Annual Plan Active",
+      labelKey: "settings.annualActive",
     };
   }
 
@@ -339,7 +436,7 @@ function getSubscriptionPlanCta({
     return {
       disabled: false,
       intent: "upgrade" as const,
-      label: "Upgrade - Message Us",
+      labelKey: "settings.upgrade",
     };
   }
 
@@ -351,14 +448,14 @@ function getSubscriptionPlanCta({
     return {
       disabled: true,
       intent: "renew" as const,
-      label: "You Are All Set",
+      labelKey: "settings.allSet",
     };
   }
 
   return {
     disabled: false,
     intent: "renew" as const,
-    label: "Renew Early - Message Us",
+    labelKey: "settings.renewEarly",
   };
 }
 
@@ -493,11 +590,14 @@ function HomeRecentOrderCard({
   order,
   onDetails,
   currencyCode,
+  locale,
 }: {
   order: OrderWithProduct;
   onDetails: () => void;
   currencyCode?: string | null;
+  locale: Locale;
 }) {
+  const { t } = useI18n();
   const productSnapshot = getOrderProductSnapshot(order);
   const thumbnail = productSnapshot.photoUrl;
   const orderCurrencyCode = order.currency_code ?? currencyCode;
@@ -519,7 +619,7 @@ function HomeRecentOrderCard({
         <div className="flex shrink-0 items-center justify-end gap-2">
           <span className="hidden shrink-0 items-center gap-1 text-[11px] font-medium text-[#888888] min-[360px]:inline-flex">
             <Calendar aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
-            {formatRelativeOrderDate(order.created_at)}
+            {formatRelativeOrderDate(order.created_at, locale)}
           </span>
           <span
             className={`shrink-0 rounded-full border-[1.5px] px-3.5 py-1.5 text-[10px] font-semibold capitalize leading-none ${homeStatusClasses(
@@ -541,7 +641,7 @@ function HomeRecentOrderCard({
             />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-[9px] font-semibold text-[#888888]">
-              No photo
+              {t("common.noPhoto")}
             </span>
           )}
         </div>
@@ -551,7 +651,8 @@ function HomeRecentOrderCard({
           </p>
           <p className="mt-0.5 block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium text-[#888888]">
             Qty {order.quantity} &middot;{" "}
-            {formatPrice(order.total, orderCurrencyCode) || "Price on request"}
+            {formatPrice(order.total, orderCurrencyCode, locale) ||
+              t("product.priceOnRequest")}
           </p>
         </div>
       </div>
@@ -568,7 +669,7 @@ function HomeRecentOrderCard({
           type="button"
           onClick={onDetails}
         >
-          Details
+          {t("common.details")}
         </button>
       </div>
     </article>
@@ -579,11 +680,14 @@ function OrderSummaryCard({
   order,
   onStatusChange,
   currencyCode,
+  locale,
 }: {
   order: OrderWithProduct;
   onStatusChange: (order: Order, status: OrderStatus) => void;
   currencyCode?: string | null;
+  locale: Locale;
 }) {
+  const { t } = useI18n();
   const productSnapshot = getOrderProductSnapshot(order);
   const thumbnail = productSnapshot.photoUrl;
   const orderCurrencyCode = order.currency_code ?? currencyCode;
@@ -605,10 +709,10 @@ function OrderSummaryCard({
         <div className="flex shrink-0 items-center justify-end gap-2">
           <span className="hidden shrink-0 items-center gap-1 text-[11px] font-medium text-[#888888] min-[360px]:inline-flex">
             <Calendar aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
-            {formatRelativeOrderDate(order.created_at)}
+            {formatRelativeOrderDate(order.created_at, locale)}
           </span>
           <label className="relative inline-flex h-6 shrink-0 items-center">
-            <span className="sr-only">Change order status</span>
+            <span className="sr-only">{t("dashboard.changeStatus")}</span>
             <select
               className={`h-6 max-w-[96px] cursor-pointer appearance-none truncate rounded-full border-[1.5px] py-0 pl-3.5 pr-7 text-[10px] font-semibold capitalize leading-none outline-none ${homeStatusClasses(
                 order.status,
@@ -620,7 +724,7 @@ function OrderSummaryCard({
             >
               {orderStatuses.map((status) => (
                 <option key={status} value={status}>
-                  {status}
+                  {t(orderStatusLabelKeys[status])}
                 </option>
               ))}
             </select>
@@ -645,7 +749,7 @@ function OrderSummaryCard({
             />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-[9px] font-semibold text-[#888888]">
-              No photo
+              {t("common.noPhoto")}
             </span>
           )}
         </div>
@@ -655,7 +759,8 @@ function OrderSummaryCard({
           </p>
           <p className="mt-0.5 block w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium text-[#888888]">
             Qty {order.quantity} &middot;{" "}
-            {formatPrice(order.total, orderCurrencyCode) || "Price on request"}
+            {formatPrice(order.total, orderCurrencyCode, locale) ||
+              t("product.priceOnRequest")}
           </p>
         </div>
       </div>
@@ -673,6 +778,7 @@ function OrderSummaryCard({
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isCheckingAuth } = useRequireUser();
+  const { locale, setMerchantLocale, t } = useI18n();
   const userId = user?.id;
   const activeTab = useSyncExternalStore(
     subscribeToDashboardTab,
@@ -697,6 +803,8 @@ export default function DashboardPage() {
   const [settingsPaymentOptions, setSettingsPaymentOptions] = useState("");
   const [settingsWhyChooseUs, setSettingsWhyChooseUs] = useState("");
   const [settingsCurrencyCode, setSettingsCurrencyCode] = useState("GHS");
+  const [settingsCountryCode, setSettingsCountryCode] =
+    useState<PhoneCountryCode>(fallbackCountry);
   const [settingsSlug, setSettingsSlug] = useState("");
   const [settingsWhatsappNumber, setSettingsWhatsappNumber] = useState("");
   const [settingsLogoFile, setSettingsLogoFile] = useState<File | null>(null);
@@ -714,6 +822,10 @@ export default function DashboardPage() {
   const [passwordMessage, setPasswordMessage] = useState("");
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const merchantCurrencyCode = merchant?.currency_code ?? "GHS";
+  const settingsWhatsapp = useMemo(
+    () => normalizePhoneNumber(settingsWhatsappNumber, settingsCountryCode),
+    [settingsCountryCode, settingsWhatsappNumber],
+  );
 
   useEffect(() => {
     if (!isSellingTipsOpen) {
@@ -768,12 +880,19 @@ export default function DashboardPage() {
       }
 
       setMerchant(refreshedMerchant);
+      setMerchantLocale(refreshedMerchant.preferred_locale ?? null);
       setSettingsBusinessName(refreshedMerchant.business_name ?? "");
       setSettingsTagline(refreshedMerchant.tagline ?? "");
       setSettingsDeliveryInfo(refreshedMerchant.delivery_info ?? "");
       setSettingsPaymentOptions(refreshedMerchant.payment_options ?? "");
       setSettingsWhyChooseUs(refreshedMerchant.why_choose_us ?? "");
       setSettingsCurrencyCode(normalizeCurrencyCode(refreshedMerchant.currency_code));
+      setSettingsCountryCode(
+        deriveCountryFromPhone(
+          refreshedMerchant.whatsapp_number,
+          refreshedMerchant.country_code,
+        ),
+      );
       setSettingsSlug(refreshedMerchant.slug ?? "");
       setSettingsWhatsappNumber(refreshedMerchant.whatsapp_number ?? "");
       setSettingsLogoPreviewUrl(refreshedMerchant.logo_url ?? "");
@@ -813,7 +932,7 @@ export default function DashboardPage() {
       }
 
       if (productError) {
-        setMessage(productError.message);
+        setMessage(getUserFacingError(productError, "product.load", t));
         setProducts([]);
       } else {
         setProducts((productData ?? []) as Product[]);
@@ -834,7 +953,7 @@ export default function DashboardPage() {
       }
 
       if (orderError) {
-        setOrderMessage(orderError.message);
+        setOrderMessage(getUserFacingError(orderError, "order.load", t));
         setOrders([]);
         setIsLoadingOrders(false);
         return;
@@ -866,7 +985,7 @@ export default function DashboardPage() {
       }
 
       if (orderProductsError) {
-        setOrderMessage(orderProductsError.message);
+        setOrderMessage(getUserFacingError(orderProductsError, "order.load", t));
         setOrders(loadedOrders);
         setIsLoadingOrders(false);
         return;
@@ -895,7 +1014,7 @@ export default function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  }, [router, userId]);
+  }, [router, setMerchantLocale, t, userId]);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -933,7 +1052,9 @@ export default function DashboardPage() {
       return;
     }
 
-    const confirmed = window.confirm(`Delete "${product.name}"?`);
+    const confirmed = window.confirm(
+      t("dashboard.deleteProductConfirm", { name: product.name }),
+    );
 
     if (!confirmed) {
       return;
@@ -946,12 +1067,12 @@ export default function DashboardPage() {
       .eq("merchant_id", merchant.id);
 
     if (error) {
-      setMessage(error.message);
+      setMessage(getUserFacingError(error, "product.delete", t));
       return;
     }
 
     setProducts((current) => current.filter((item) => item.id !== product.id));
-    setMessage("Product deleted.");
+    setMessage(t("dashboard.productDeleted"));
   }
 
   async function handleOrderStatusChange(order: Order, status: OrderStatus) {
@@ -968,7 +1089,7 @@ export default function DashboardPage() {
       .eq("merchant_id", merchant.id);
 
     if (error) {
-      setOrderMessage(error.message);
+      setOrderMessage(getUserFacingError(error, "order.update", t));
       return;
     }
 
@@ -1001,9 +1122,7 @@ export default function DashboardPage() {
     } catch (error) {
       setSettingsLogoFile(null);
       setSettingsLogoPreviewUrl(merchant?.logo_url ?? "");
-      setSettingsMessage(
-        error instanceof Error ? error.message : "Unable to compress logo.",
-      );
+      setSettingsMessage(getUserFacingError(error, "image.compress", t));
     } finally {
       setIsCompressingSettingsLogo(false);
     }
@@ -1032,7 +1151,7 @@ export default function DashboardPage() {
     setIsCheckingSlug(false);
 
     if (error) {
-      setSettingsMessage(error.message);
+      setSettingsMessage(getUserFacingError(error, "settings.slug", t));
       setIsSlugAvailable(false);
       return false;
     }
@@ -1041,7 +1160,7 @@ export default function DashboardPage() {
     setIsSlugAvailable(available);
 
     if (!available) {
-      setSettingsMessage("That Store URL is already taken. Try another slug.");
+      setSettingsMessage(t("setup.slugTaken"));
     }
 
     return available;
@@ -1078,13 +1197,15 @@ export default function DashboardPage() {
     }
 
     const normalizedSlug = normalizeSlug(settingsSlug);
-    const digitsOnlyWhatsapp = settingsWhatsappNumber.replace(/\D/g, "");
 
     if (
       !settingsBusinessName.trim() ||
       !normalizedSlug ||
-      !digitsOnlyWhatsapp
+      !settingsWhatsapp
     ) {
+      if (!settingsWhatsapp) {
+      setSettingsMessage(t("setup.invalidPhone"));
+      }
       return;
     }
 
@@ -1104,8 +1225,10 @@ export default function DashboardPage() {
         business_name: settingsBusinessName.trim(),
         tagline: settingsTagline.trim().slice(0, MAX_TAGLINE_CHARS) || null,
         currency_code: normalizeCurrencyCode(settingsCurrencyCode),
+        preferred_locale: locale,
+        country_code: settingsCountryCode,
         slug: normalizedSlug,
-        whatsapp_number: digitsOnlyWhatsapp,
+        whatsapp_number: settingsWhatsapp.e164,
         logo_url: logoUrl,
       };
       const { error } = await supabase
@@ -1122,15 +1245,14 @@ export default function DashboardPage() {
       );
       setSettingsSlug(normalizedSlug);
       setSettingsCurrencyCode(payload.currency_code);
-      setSettingsWhatsappNumber(digitsOnlyWhatsapp);
+      setSettingsCountryCode(payload.country_code);
+      setSettingsWhatsappNumber(payload.whatsapp_number);
       setSettingsLogoFile(null);
       setSettingsLogoPreviewUrl(logoUrl ?? "");
       setIsSlugAvailable(null);
-      setSettingsMessage("Store settings saved.");
+      setSettingsMessage(t("settings.saved"));
     } catch (error) {
-      setSettingsMessage(
-        error instanceof Error ? error.message : "Unable to save settings.",
-      );
+      setSettingsMessage(getUserFacingError(error, "settings.save", t));
     } finally {
       setIsSavingSettings(false);
     }
@@ -1163,7 +1285,9 @@ export default function DashboardPage() {
       .eq("id", merchant.id);
 
     if (error) {
-      setDeliveryInfoMessage(error.message);
+      setDeliveryInfoMessage(
+        getUserFacingError(error, "settings.customerInfo", t),
+      );
       setIsSavingDeliveryInfo(false);
       return;
     }
@@ -1181,7 +1305,7 @@ export default function DashboardPage() {
     setSettingsDeliveryInfo(deliveryInfo ?? "");
     setSettingsPaymentOptions(paymentOptions ?? "");
     setSettingsWhyChooseUs(whyChooseUs ?? "");
-    setDeliveryInfoMessage("Customer info saved.");
+    setDeliveryInfoMessage(t("settings.customerInfoSaved"));
     setIsSavingDeliveryInfo(false);
   }
 
@@ -1190,12 +1314,12 @@ export default function DashboardPage() {
     setPasswordMessage("");
 
     if (newPassword.length < 6) {
-      setPasswordMessage("Password must be at least 6 characters.");
+      setPasswordMessage(t("settings.passwordTooShort"));
       return;
     }
 
     if (newPassword !== confirmNewPassword) {
-      setPasswordMessage("Passwords do not match.");
+      setPasswordMessage(t("settings.passwordMismatch"));
       return;
     }
 
@@ -1203,14 +1327,14 @@ export default function DashboardPage() {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
 
     if (error) {
-      setPasswordMessage(error.message);
+      setPasswordMessage(getUserFacingError(error, "settings.password", t));
       setIsUpdatingPassword(false);
       return;
     }
 
     setNewPassword("");
     setConfirmNewPassword("");
-    setPasswordMessage("Password updated.");
+    setPasswordMessage(t("settings.passwordUpdated"));
     setIsUpdatingPassword(false);
   }
 
@@ -1240,19 +1364,18 @@ export default function DashboardPage() {
     );
   }, [orders]);
   const recentOrders = orders.slice(0, 3);
-  const settingsDigitsOnlyWhatsapp = settingsWhatsappNumber.replace(/\D/g, "");
   const settingsWhatsappStartsWithZero =
-    settingsDigitsOnlyWhatsapp.startsWith("0");
+    settingsWhatsappNumber.trim().startsWith("0");
   const helpUrl = buildWhatsAppUrl(
     PLATFORM_HELP_NUMBER,
-    "Hi, I need help with my account.",
+    t("support.helpMessage"),
   );
 
   if (isCheckingAuth) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-6 text-[#1A1A18]">
         <p className="text-sm font-medium text-[#888888]">
-          Checking session...
+          {t("dashboard.checkingSession")}
         </p>
       </main>
     );
@@ -1272,18 +1395,20 @@ export default function DashboardPage() {
   }
 
   const subscriptionAccess = merchant ? getSubscriptionAccess(merchant) : null;
-  const planName = getPlanName(merchant);
+  const planName = getPlanName(merchant, locale);
   const daysRemaining = subscriptionAccess?.daysRemaining;
   const showProminentSubscription = merchant?.subscription_status === "trial";
   const expiryLabel = subscriptionAccess?.expiryDate
-    ? formatDateLabel(subscriptionAccess.expiryDate)
-    : "Not recorded";
+    ? formatDateLabel(subscriptionAccess.expiryDate, locale) ?? t("common.notRecorded")
+    : t("common.notRecorded");
   const activePlanCycle =
     merchant?.subscription_status === "active"
       ? merchant.billing_cycle_months
       : null;
   const activeHomePlanName =
-    activePlanCycle === 12 ? "Annual Plan" : "Monthly Plan";
+    activePlanCycle === 12
+      ? t("settings.annualPlan")
+      : t("settings.monthlyPlan");
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#F7F5F2] pb-28 text-[#1A1A18]">
@@ -1329,18 +1454,22 @@ export default function DashboardPage() {
                       aria-hidden="true"
                       className="h-5 w-5 shrink-0 text-[#888888]"
                     />
-                    <span className="min-w-0 flex-1 truncate">Log out</span>
+                    <span className="min-w-0 flex-1 truncate">
+                      {t("settings.logout")}
+                    </span>
                   </button>
                   <div className="mx-5 h-px bg-[#EDECEA]" />
                   {merchant ? (
                     <a
                       className="flex h-[60px] w-full min-w-0 items-center gap-4 px-5 text-[13px] font-bold text-[#25D366] transition hover:bg-[#F7F5F2]"
-                      href={buildUpgradeUrl(merchant)}
+                      href={buildUpgradeUrl(merchant, locale)}
                       target="_blank"
                       rel="noreferrer"
                     >
                       <Zap aria-hidden="true" className="h-5 w-5 shrink-0" />
-                      <span className="min-w-0 flex-1 truncate">Upgrade</span>
+                      <span className="min-w-0 flex-1 truncate">
+                        {t("dashboard.upgrade")}
+                      </span>
                     </a>
                   ) : null}
                   <div className="mx-5 h-px bg-[#EDECEA]" />
@@ -1357,7 +1486,7 @@ export default function DashboardPage() {
                       className="h-5 w-5 shrink-0 text-[#888888]"
                     />
                     <span className="min-w-0 flex-1 truncate">
-                      Selling Tips
+                      {t("dashboard.sellingTips")}
                     </span>
                   </button>
                   <div className="mx-5 h-px bg-[#EDECEA]" />
@@ -1371,7 +1500,9 @@ export default function DashboardPage() {
                       aria-hidden="true"
                       className="h-5 w-5 shrink-0 text-[#888888]"
                     />
-                    <span className="min-w-0 flex-1 truncate">Get Help</span>
+                    <span className="min-w-0 flex-1 truncate">
+                      {t("dashboard.getHelp")}
+                    </span>
                   </a>
                 </div>
               ) : null}
@@ -1382,8 +1513,8 @@ export default function DashboardPage() {
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7F5F2] text-[#1A1A18] transition hover:bg-[#EDECEA]"
                 type="button"
                 onClick={handleCopyStoreLink}
-                aria-label="Copy store link"
-                title={storeLinkCopied ? "Copied" : "Copy store link"}
+                aria-label={t("dashboard.copyLink")}
+                title={storeLinkCopied ? t("common.linkCopied") : t("dashboard.copyLink")}
               >
                 <CopyIcon />
               </button>
@@ -1393,7 +1524,7 @@ export default function DashboardPage() {
                   href={storeUrl}
                   target="_blank"
                   rel="noreferrer"
-                  aria-label="View store"
+                  aria-label={t("dashboard.viewStore")}
                 >
                   <ExternalLinkIcon />
                 </a>
@@ -1405,8 +1536,7 @@ export default function DashboardPage() {
 
       {storeLinkCopied ? (
         <div className="fixed left-4 right-4 top-20 z-40 mx-auto max-w-sm rounded-2xl border border-[#EDECEA] bg-white px-4 py-3 text-center text-[12px] font-semibold leading-5 text-[#1A1A18] shadow-[0_12px_30px_rgba(0,0,0,0.12)]">
-          Store link copied. Share it with customers so they can visit your
-          storefront.
+          {t("dashboard.linkCopied")}
         </div>
       ) : null}
 
@@ -1420,10 +1550,10 @@ export default function DashboardPage() {
                 </span>
                 <div className="min-w-0">
                   <h2 className="truncate text-[18px] font-bold">
-                    Selling Tips
+                    {t("dashboard.sellingTips")}
                   </h2>
                   <p className="mt-0.5 truncate text-xs font-medium text-[#888888]">
-                    Ways to improve your product pages
+                    {t("dashboard.sellingTipsSubtitle")}
                   </p>
                 </div>
               </div>
@@ -1440,7 +1570,7 @@ export default function DashboardPage() {
           <div className="min-h-0 flex-1 overflow-y-scroll px-5 py-5 [-webkit-overflow-scrolling:touch]">
             <div className="mx-auto w-full max-w-2xl pb-8">
               <div className="grid gap-3">
-                {sellingTips.map((section) => (
+                {sellingTips[locale].map((section) => (
                   <article
                     className="rounded-2xl border border-[#EDECEA] bg-white p-4"
                     key={section.title}
@@ -1470,10 +1600,10 @@ export default function DashboardPage() {
           <section className="grid gap-6">
             <div>
               <h1 className="text-[26px] font-bold leading-none sm:text-[30px]">
-                Your Store Today
+                {t("dashboard.today")}
               </h1>
               <p className="mt-2 text-sm font-medium text-[#888888]">
-                Everything you need at a glance.
+                {t("dashboard.todaySub")}
               </p>
             </div>
 
@@ -1486,16 +1616,16 @@ export default function DashboardPage() {
                     {planName}
                   </p>
                   <p className="mt-1 text-[13px] font-medium leading-5 text-[#B45309]">
-                    Expires in {daysRemaining ?? 0} days
+                    {t("dashboard.expiresIn", { days: daysRemaining ?? 0 })}
                   </p>
                 </div>
                 <a
                   className="flex h-10 shrink-0 items-center justify-center rounded-xl bg-[#25D366] px-5 py-3.5 text-[13px] font-semibold text-white transition hover:opacity-90"
-                  href={buildUpgradeUrl(merchant)}
+                  href={buildUpgradeUrl(merchant, locale)}
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Upgrade
+                  {t("dashboard.upgrade")}
                 </a>
               </div>
             ) : merchant.subscription_status === "active" ? (
@@ -1503,49 +1633,49 @@ export default function DashboardPage() {
                 <p className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-medium text-[#888888]">
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
                   <span className="min-w-0 flex-1 truncate">
-                    {activeHomePlanName} · Active
+                    {activeHomePlanName} · {t("dashboard.active")}
                   </span>
                 </p>
                 <span className="shrink-0 text-[11px] font-medium text-[#999999]">
-                  Renews {expiryLabel}
+                  {t("dashboard.renews", { date: expiryLabel })}
                 </span>
               </div>
             ) : (
               <div className="rounded-2xl border border-[#EDECEA] bg-white p-4">
                 <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#888888]">
-                  Subscription
+                  {t("dashboard.subscription")}
                 </p>
                 <p className="mt-1 text-[13px] font-bold">{planName}</p>
               </div>
             )}
 
             <div className="grid grid-cols-3 gap-3">
-              <StatCard label="Orders" value={orderStats.todayOrders} />
+              <StatCard label={t("dashboard.orders")} value={orderStats.todayOrders} />
               <StatCard
-                label="Pending"
+                label={t("dashboard.pending")}
                 value={orderStats.pendingOrders}
                 highlight
               />
-              <StatCard label="Chats" value={todayChatClicks} />
+              <StatCard label={t("dashboard.chats")} value={todayChatClicks} />
             </div>
 
             <section>
               <div className="mb-3 flex min-w-0 items-center justify-between gap-4">
                 <h2 className="min-w-0 flex-1 truncate text-[15px] font-bold">
-                  Recent Orders
+                  {t("dashboard.recentOrders")}
                 </h2>
                 <button
                   className="inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-[#25D366]"
                   type="button"
                   onClick={() => handleTabChange("orders")}
                 >
-                  View All
+                  {t("dashboard.viewAll")}
                   <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
                 </button>
               </div>
               {isLoadingOrders ? (
                 <p className="rounded-2xl border border-[#EDECEA] bg-white p-4 py-8 text-center text-sm font-medium text-[#888888]">
-                  Loading Orders...
+                  {t("dashboard.loadingOrders")}
                 </p>
               ) : recentOrders.length ? (
                 <div className="grid gap-3">
@@ -1554,13 +1684,14 @@ export default function DashboardPage() {
                       key={order.id}
                       order={order}
                       currencyCode={merchantCurrencyCode}
+                      locale={locale}
                       onDetails={() => handleTabChange("orders")}
                     />
                   ))}
                 </div>
               ) : (
                 <p className="rounded-2xl border border-[#EDECEA] bg-white p-4 py-8 text-center text-sm font-medium text-[#888888]">
-                  No orders yet - share your store link to get your first one
+                  {t("dashboard.noRecentOrders")}
                 </p>
               )}
             </section>
@@ -1569,7 +1700,7 @@ export default function DashboardPage() {
               className="flex h-12 w-full items-center justify-center rounded-full bg-[#1A1A18] px-4 py-[15px] text-[14px] font-bold text-white transition hover:bg-[#2E2E2C] active:scale-[0.99]"
               href="/dashboard/products/new"
             >
-              + Add Product
+              + {t("dashboard.addProduct")}
             </Link>
           </section>
         ) : null}
@@ -1578,22 +1709,23 @@ export default function DashboardPage() {
           <section className="-mx-4 -my-6 flex min-h-[calc(100vh-9rem)] flex-col gap-4 bg-[#F7F5F2] px-4 py-6 sm:-mx-6 sm:px-6">
             <div className="flex min-w-0 items-center justify-between gap-3">
               <p className="min-w-0 flex-1 truncate text-xs font-medium text-[#999999]">
-                {products.length}{" "}
-                {products.length === 1 ? "product" : "products"}
+                {products.length === 1
+                  ? t("dashboard.productCountOne")
+                  : t("dashboard.productCount", { count: products.length })}
               </p>
               <Link
                 className="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-[#1A1A18] px-4 text-xs font-bold text-white transition hover:bg-[#2E2E2C] active:scale-[0.99]"
                 href="/dashboard/products/new"
               >
                 <PlusIcon />
-                Add Product
+                {t("dashboard.addProduct")}
               </Link>
             </div>
 
             {message ? (
               <p
                 className={`mb-3 rounded-xl border px-4 py-3.5 text-sm ${
-                  message === "Product deleted."
+                  message === t("dashboard.productDeleted")
                     ? "border-[#25D366]/20 bg-[#EAF7EF] text-[#0F6B34]"
                     : "border-[#EDECEA] bg-[#F4F3F0] text-[#B91C1C]"
                 }`}
@@ -1604,21 +1736,23 @@ export default function DashboardPage() {
 
             {isLoadingProducts ? (
               <p className="py-10 text-sm font-medium text-[#888888]">
-                Loading Products...
+                {t("dashboard.loadingProducts")}
               </p>
             ) : null}
 
             {!isLoadingProducts && !products.length && !message ? (
               <div className="py-12 text-center">
-                <h3 className="text-[18px] font-bold">No products yet</h3>
+                <h3 className="text-[18px] font-bold">
+                  {t("dashboard.noProducts")}
+                </h3>
                 <p className="mx-auto mt-2 max-w-md text-[#888888]">
-                  Add your first product when you are ready.
+                  {t("dashboard.addFirstProduct")}
                 </p>
                 <Link
                   className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[#1A1A18] px-4 py-[15px] text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99]"
                   href="/dashboard/products/new"
                 >
-                  Add Product
+                  {t("dashboard.addProduct")}
                 </Link>
               </div>
             ) : null}
@@ -1651,7 +1785,7 @@ export default function DashboardPage() {
                           />
                         ) : (
                           <span className="flex h-full w-full items-center justify-center text-xs font-medium text-[#888888]">
-                            No photo
+                            {t("common.noPhoto")}
                           </span>
                         )}
                       </Link>
@@ -1665,14 +1799,15 @@ export default function DashboardPage() {
                         </h3>
                         <div className="mt-1 flex min-w-0 items-baseline gap-2 overflow-hidden">
                           <span className="shrink-0 text-[13px] font-bold text-[#1A1A18]">
-                            {formatPrice(product.sale_price, merchantCurrencyCode) ||
-                              "Price on request"}
+                            {formatPrice(product.sale_price, merchantCurrencyCode, locale) ||
+                              t("product.priceOnRequest")}
                           </span>
                           {product.sale_price !== null && product.original_price ? (
                             <span className="min-w-0 truncate text-xs text-[#BDB9B2] line-through">
                               {formatPrice(
                                 product.original_price,
                                 merchantCurrencyCode,
+                                locale,
                               )}
                             </span>
                           ) : null}
@@ -1684,20 +1819,20 @@ export default function DashboardPage() {
                               : "bg-[#FEF2F2] text-[#B91C1C]"
                           }`}
                         >
-                          {product.in_stock ? "In stock" : "Out of stock"}
+                          {product.in_stock ? t("product.inStock") : t("product.outOfStock")}
                         </p>
                       </Link>
 
                       <div className="flex w-6 shrink-0 flex-col items-center gap-1.5 pt-1">
                         <Link
-                          aria-label={`Edit ${product.name}`}
+                          aria-label={t("dashboard.editProduct", { name: product.name })}
                           className="flex h-6 w-6 items-center justify-center rounded-lg text-[#BBBBBB] transition hover:bg-[#F7F5F2] hover:text-[#1A1A18]"
                           href={`/dashboard/products/${product.id}`}
                         >
                           <PencilIcon />
                         </Link>
                         <button
-                          aria-label={`Delete ${product.name}`}
+                          aria-label={t("dashboard.deleteProduct", { name: product.name })}
                           className="flex h-6 w-6 items-center justify-center rounded-lg text-[#BBBBBB] transition hover:bg-[#F7F5F2] hover:text-[#EF4444]"
                           type="button"
                           onClick={() => handleDelete(product)}
@@ -1706,7 +1841,7 @@ export default function DashboardPage() {
                         </button>
                         {liveProductUrl ? (
                           <a
-                            aria-label={`View ${product.name} live`}
+                            aria-label={t("dashboard.viewLiveProduct", { name: product.name })}
                             className="flex h-6 w-6 items-center justify-center rounded-lg text-[#BBBBBB] transition hover:bg-[#F7F5F2] hover:text-[#1A1A18]"
                             href={liveProductUrl}
                             target="_blank"
@@ -1739,7 +1874,7 @@ export default function DashboardPage() {
                     type="button"
                     onClick={() => setOrderFilter(filter.value)}
                   >
-                    {filter.label}
+                    {t(filter.labelKey)}
                   </button>
                 ))}
               </div>
@@ -1753,22 +1888,29 @@ export default function DashboardPage() {
 
             {isLoadingOrders ? (
               <p className="py-10 text-sm font-medium text-[#888888]">
-                Loading Orders...
+                {t("dashboard.loadingOrders")}
               </p>
             ) : null}
 
             {!isLoadingOrders && !orders.length && !orderMessage ? (
               <div className="py-12 text-center">
-                <h3 className="text-[18px] font-bold">No orders yet</h3>
+                <h3 className="text-[18px] font-bold">
+                  {t("dashboard.noOrders")}
+                </h3>
                 <p className="mx-auto mt-2 max-w-md text-[#888888]">
-                  Share your store link to start selling.
+                  {t("dashboard.shareStore")}
                 </p>
               </div>
             ) : null}
 
             {!isLoadingOrders && orders.length && !filteredOrders.length ? (
               <p className="py-10 text-center text-sm font-medium text-[#888888]">
-                No {orderFilter} orders right now.
+                {t("dashboard.noFilteredOrders", {
+                  status:
+                    orderFilter === "all"
+                      ? t("orders.filterAll").toLowerCase()
+                      : t(orderStatusLabelKeys[orderFilter]).toLowerCase(),
+                })}
               </p>
             ) : null}
 
@@ -1779,6 +1921,7 @@ export default function DashboardPage() {
                     key={order.id}
                     order={order}
                     currencyCode={merchantCurrencyCode}
+                    locale={locale}
                     onStatusChange={handleOrderStatusChange}
                   />
                 ))}
@@ -1790,8 +1933,41 @@ export default function DashboardPage() {
         {activeTab === "settings" ? (
           <section className="grid gap-4 bg-[#F7F5F2]">
             <section className="grid gap-3">
-              <h2 className="text-[18px] font-bold">Appearance</h2>
+              <h2 className="text-[18px] font-bold">{t("settings.appearance")}</h2>
               <ThemeToggle />
+              <div className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
+                <p className="mb-2 text-[11px] font-bold uppercase text-[#AAAAAA]">
+                  {t("language.label")}
+                </p>
+                <LanguageSwitcher
+                  compact
+                  onChange={async (nextLocale) => {
+                    setMerchantLocale(nextLocale);
+                    if (!merchant) {
+                      return;
+                    }
+
+                    const { error } = await supabase
+                      .from("merchants")
+                      .update({ preferred_locale: nextLocale })
+                      .eq("id", merchant.id);
+
+                    if (error) {
+                      setSettingsMessage(getUserFacingError(error, "settings.save", t));
+                      return;
+                    }
+
+                    setMerchant((current) =>
+                      current
+                        ? {
+                            ...current,
+                            preferred_locale: nextLocale as Locale,
+                          }
+                        : current,
+                    );
+                  }}
+                />
+              </div>
             </section>
 
             <form
@@ -1799,12 +1975,12 @@ export default function DashboardPage() {
               onSubmit={handleSettingsSubmit}
             >
               <SettingsSectionTitle icon={<Store className="h-5 w-5" />}>
-                Store Details
+                {t("settings.storeDetails")}
               </SettingsSectionTitle>
               <div className="mt-5 grid gap-4">
                 <label className="block">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
-                    Business Name
+                    {t("settings.businessName")}
                   </span>
                   <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
@@ -1823,7 +1999,7 @@ export default function DashboardPage() {
 
                 <label className="block">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
-                    Tagline (optional)
+                    {t("settings.tagline")}
                   </span>
                   <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
@@ -1844,7 +2020,7 @@ export default function DashboardPage() {
 
                 <label className="block">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
-                    Currency
+                    {t("common.currency")}
                   </span>
                   <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
@@ -1870,7 +2046,7 @@ export default function DashboardPage() {
 
                 <label className="block min-w-0 max-w-full">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
-                    Store URL
+                    {t("settings.storeUrl")}
                   </span>
                   <div className="flex h-12 max-w-full overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
@@ -1892,43 +2068,38 @@ export default function DashboardPage() {
                   </div>
                   {isCheckingSlug ? (
                     <p className="mt-2 text-sm text-[#888888]">
-                      Checking URL...
+                      {t("settings.checkingUrl")}
                     </p>
                   ) : null}
                   {isSlugAvailable ? (
                     <p className="mt-2 text-sm font-medium text-[#25D366]">
-                      /store/{normalizeSlug(settingsSlug)} is available.
+                      {t("settings.urlAvailable", {
+                        slug: normalizeSlug(settingsSlug),
+                      })}
                     </p>
                   ) : null}
                 </label>
 
                 <label className="block">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
-                    WhatsApp Number
+                    {t("settings.whatsapp")}
                   </span>
-                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
-                    <SettingsFieldIcon>
-                      <Phone className="h-4 w-4" />
-                    </SettingsFieldIcon>
-                    <input
-                      className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1A1A18] outline-none placeholder:text-[#888888]"
-                      inputMode="tel"
-                      value={settingsWhatsappNumber}
-                      onChange={(event) =>
-                        setSettingsWhatsappNumber(event.target.value)
-                      }
-                      required
-                    />
-                  </div>
-                  {settingsDigitsOnlyWhatsapp ? (
+                  <InternationalPhoneInput
+                    defaultCountry={settingsCountryCode}
+                    locale={locale}
+                    required
+                    value={settingsWhatsappNumber}
+                    onChange={setSettingsWhatsappNumber}
+                    onCountryChange={setSettingsCountryCode}
+                  />
+                  {settingsWhatsapp ? (
                     <p className="mt-2 text-sm text-[#888888]">
-                      Saved as {settingsDigitsOnlyWhatsapp}
+                      {t("settings.savedAs", { number: settingsWhatsapp.e164 })}
                     </p>
                   ) : null}
                   {settingsWhatsappStartsWithZero ? (
                     <p className="mt-2 rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-4 py-3.5 text-sm text-[#B91C1C]">
-                      This starts with 0. Use a country code instead of a local
-                      leading zero.
+                      {t("settings.leadingZero")}
                     </p>
                   ) : null}
                 </label>
@@ -1936,7 +2107,7 @@ export default function DashboardPage() {
                 <section>
                   <label className="block">
                     <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
-                      Store Logo
+                      {t("settings.logo")}
                     </span>
                     <span className="flex min-h-14 min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-[#E5E5E5] bg-[#F4F3F0] px-3 py-3">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#EDECEA] bg-white text-[#888888]">
@@ -1945,11 +2116,11 @@ export default function DashboardPage() {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-bold text-[#1A1A18]">
                           {settingsLogoPreviewUrl
-                            ? "Change Logo"
-                            : "Upload Logo"}
+                            ? t("settings.changeLogo")
+                            : t("settings.uploadLogo")}
                         </span>
                         <span className="block text-xs font-medium text-[#888888]">
-                          PNG, JPG accepted
+                          {t("settings.logoTypes")}
                         </span>
                       </span>
                     </span>
@@ -1975,13 +2146,13 @@ export default function DashboardPage() {
                           setSettingsLogoPreviewUrl("");
                         }}
                       >
-                        Remove logo
+                        {t("settings.removeLogo")}
                       </button>
                     </div>
                   ) : null}
                   {isCompressingSettingsLogo ? (
                     <p className="mt-3 text-sm font-medium text-[#888888]">
-                      Compressing logo...
+                      {t("settings.compressingLogo")}
                     </p>
                   ) : null}
                 </section>
@@ -2002,14 +2173,14 @@ export default function DashboardPage() {
                   isCheckingSlug ||
                   !settingsBusinessName.trim() ||
                   !normalizeSlug(settingsSlug) ||
-                  !settingsDigitsOnlyWhatsapp
+                  !settingsWhatsapp
                 }
               >
                 {isSavingSettings
-                  ? "Saving..."
+                  ? t("common.saving")
                   : isCompressingSettingsLogo
-                    ? "Compressing..."
-                    : "Save Settings"}
+                    ? t("settings.compressing")
+                    : t("settings.saveSettings")}
               </button>
             </form>
 
@@ -2017,19 +2188,21 @@ export default function DashboardPage() {
               className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
               onSubmit={handleDeliveryInfoSubmit}
             >
-              <h2 className="text-[18px] font-bold">Customer Info</h2>
+              <h2 className="text-[18px] font-bold">
+                {t("settings.customerInfo")}
+              </h2>
               <p className="mt-1 text-xs font-medium text-[#888888]">
-                Optional details for your customers
+                {t("settings.optionalDetails")}
               </p>
               <div className="mt-4 grid gap-4">
                 <label className="block">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
-                    Delivery Info
+                    {t("settings.deliveryInfo")}
                   </span>
                   <textarea
                     className="min-h-24 w-full resize-none rounded-xl border border-[#EDECEA] bg-[#F4F3F0] px-3 py-3 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:border-[#1A1A18] focus:ring-2 focus:ring-[#1A1A18]/10"
                     maxLength={MAX_DELIVERY_INFO_CHARS}
-                    placeholder="e.g. Same-day delivery in Accra, 2-3 days nationwide."
+                    placeholder={t("settings.deliveryPlaceholder")}
                     value={settingsDeliveryInfo}
                     onChange={(event) =>
                       setSettingsDeliveryInfo(
@@ -2039,7 +2212,7 @@ export default function DashboardPage() {
                   />
                   <div className="mt-2 flex min-w-0 items-start justify-between gap-4">
                     <p className="min-w-0 flex-1 text-xs font-medium leading-5 text-[#888888]">
-                      To help customers understand your delivery terms.
+                      {t("settings.deliveryInfoHelp")}
                     </p>
                     <p className="shrink-0 text-xs font-bold text-[#888888]">
                       {settingsDeliveryInfo.length}/{MAX_DELIVERY_INFO_CHARS}
@@ -2049,7 +2222,7 @@ export default function DashboardPage() {
 
                 <label className="block">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
-                    Payment Options (optional)
+                    {t("settings.paymentOptions")}
                   </span>
                   <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
@@ -2058,7 +2231,7 @@ export default function DashboardPage() {
                     <input
                       className="h-full min-w-0 flex-1 bg-transparent pr-3 text-sm font-medium text-[#1A1A18] outline-none placeholder:text-[#888888]"
                       maxLength={MAX_PAYMENT_OPTIONS_CHARS}
-                      placeholder="e.g. MTN MoMo, Cash on Delivery, Bank Transfer"
+                      placeholder={t("settings.paymentPlaceholder")}
                       value={settingsPaymentOptions}
                       onChange={(event) =>
                         setSettingsPaymentOptions(
@@ -2074,7 +2247,7 @@ export default function DashboardPage() {
 
                 <label className="block">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
-                    Why Choose Us (optional)
+                    {t("settings.whyChooseUs")}
                   </span>
                   <div className="flex min-h-24 min-w-0 overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon className="self-start pt-4">
@@ -2083,7 +2256,7 @@ export default function DashboardPage() {
                     <textarea
                       className="min-h-24 min-w-0 flex-1 resize-none bg-transparent py-3 pr-3 text-sm font-medium leading-6 text-[#1A1A18] outline-none placeholder:text-[#888888]"
                       maxLength={MAX_WHY_CHOOSE_US_CHARS}
-                      placeholder="e.g. 100% original products, fast response on WhatsApp, trusted by our community"
+                      placeholder={t("settings.whyChoosePlaceholder")}
                       value={settingsWhyChooseUs}
                       onChange={(event) =>
                         setSettingsWhyChooseUs(
@@ -2107,7 +2280,7 @@ export default function DashboardPage() {
                 type="submit"
                 disabled={isSavingDeliveryInfo}
               >
-                {isSavingDeliveryInfo ? "Saving..." : "Save Info"}
+                {isSavingDeliveryInfo ? t("common.saving") : t("settings.saveInfo")}
               </button>
             </form>
 
@@ -2116,12 +2289,12 @@ export default function DashboardPage() {
               onSubmit={handlePasswordSubmit}
             >
               <SettingsSectionTitle icon={<Lock className="h-5 w-5" />}>
-                Security
+                {t("settings.security")}
               </SettingsSectionTitle>
               <div className="mt-5 grid gap-4">
                 <label className="block">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
-                    New Password
+                    {t("settings.newPassword")}
                   </span>
                   <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
@@ -2139,7 +2312,7 @@ export default function DashboardPage() {
                 </label>
                 <label className="block">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
-                    Confirm Password
+                    {t("settings.confirmPassword")}
                   </span>
                   <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
@@ -2168,22 +2341,24 @@ export default function DashboardPage() {
                 type="submit"
                 disabled={isUpdatingPassword}
               >
-                {isUpdatingPassword ? "Updating..." : "Update Password"}
+                {isUpdatingPassword ? t("settings.updating") : t("settings.updatePassword")}
               </button>
             </form>
 
             <section className="grid gap-4 rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
-              <h2 className="text-lg font-bold">Subscription Plan</h2>
+              <h2 className="text-lg font-bold">{t("settings.subscription")}</h2>
               <div className="rounded-2xl border border-[#EDECEA] bg-[#F7F5F2] p-4">
-                <h3 className="text-[13px] font-bold">Everything You Need</h3>
+                <h3 className="text-[13px] font-bold">
+                  {t("settings.everything")}
+                </h3>
                 <ul className="mt-3 grid gap-2">
-                  {includedFeatures.map((feature) => (
+                  {includedFeatureKeys.map((featureKey) => (
                     <li
                       className="flex min-w-0 items-center gap-2 text-[12px] font-medium text-[#666666]"
-                      key={feature}
+                      key={featureKey}
                     >
                       <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
-                      <span className="min-w-0 flex-1">{feature}</span>
+                      <span className="min-w-0 flex-1">{t(featureKey)}</span>
                     </li>
                   ))}
                 </ul>
@@ -2193,13 +2368,11 @@ export default function DashboardPage() {
                   name: "Monthly" as const,
                   cycle: 1 as const,
                   price: "₵39",
-                  suffix: "/month",
                 },
                 {
                   name: "Annual" as const,
                   cycle: 12 as const,
                   price: "₵299",
-                  suffix: "/year",
                 },
               ].map((plan) => {
                 const isActivePlan = activePlanCycle === plan.cycle;
@@ -2220,7 +2393,7 @@ export default function DashboardPage() {
                   >
                     {plan.cycle === 12 ? (
                       <span className="absolute right-3 top-0 -translate-y-1/2 rounded-sm bg-[#25D366] px-2 py-1 text-[9px] font-bold text-white">
-                        Best Value - Save ₵169
+                        {t("settings.bestValue")}
                       </span>
                     ) : null}
                     {isActivePlan ? (
@@ -2228,22 +2401,30 @@ export default function DashboardPage() {
                         <p className="flex min-w-0 flex-1 items-center gap-2 text-[11px] font-medium text-[#888888]">
                           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#25D366]" />
                           <span className="min-w-0 flex-1 truncate">
-                            {plan.name} Plan
+                            {plan.name === "Annual"
+                              ? t("settings.annualPlan")
+                              : t("settings.monthlyPlan")}
                           </span>
                         </p>
                         <span className="shrink-0 text-xs font-medium text-[#999999]">
-                          Renews {expiryLabel}
+                          {t("dashboard.renews", { date: expiryLabel })}
                         </span>
                       </div>
                     ) : (
                       <>
-                        <h3 className="text-[15px] font-bold">{plan.name}</h3>
+                        <h3 className="text-[15px] font-bold">
+                          {plan.name === "Annual"
+                            ? t("settings.annual")
+                            : t("settings.monthly")}
+                        </h3>
                         <p className="mt-1 flex min-w-0 items-end gap-1">
                           <span className="text-[24px] font-bold leading-none">
                             {plan.price}
                           </span>
                           <span className="pb-0.5 text-xs font-medium text-[#888888]">
-                            {plan.suffix}
+                            {plan.cycle === 12
+                              ? t("settings.yearSuffix")
+                              : t("settings.monthSuffix")}
                           </span>
                         </p>
                       </>
@@ -2254,7 +2435,9 @@ export default function DashboardPage() {
                         type="button"
                         disabled
                       >
-                        <span className="min-w-0 truncate">{cta.label}</span>
+                        <span className="min-w-0 truncate">
+                          {t(cta.labelKey)}
+                        </span>
                       </button>
                     ) : merchant ? (
                       <a
@@ -2263,12 +2446,15 @@ export default function DashboardPage() {
                           merchant,
                           plan.name,
                           cta.intent,
+                          locale,
                         )}
                         target="_blank"
                         rel="noreferrer"
                       >
                         <MessageCircle className="h-4 w-4 shrink-0" />
-                        <span className="min-w-0 truncate">{cta.label}</span>
+                        <span className="min-w-0 truncate">
+                          {t(cta.labelKey)}
+                        </span>
                       </a>
                     ) : null}
                   </article>
@@ -2280,9 +2466,13 @@ export default function DashboardPage() {
                     <Zap className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold">Free Trial Active</p>
+                    <p className="text-sm font-bold">
+                      {t("settings.activeTrial")}
+                    </p>
                     <p className="mt-0.5 text-xs font-medium text-[#888888]">
-                      {daysRemaining ?? 0} days remaining on your trial period.
+                      {t("settings.daysTrialRemaining", {
+                        days: daysRemaining ?? 0,
+                      })}
                     </p>
                   </div>
                 </div>
@@ -2296,10 +2486,10 @@ export default function DashboardPage() {
                 onClick={handleSignOut}
               >
                 <LogOut aria-hidden="true" className="h-4 w-4 shrink-0" />
-                <span>Log out</span>
+                <span>{t("settings.logout")}</span>
               </button>
               <p className="mt-5 text-xs font-medium text-[#888888]">
-                Having trouble with your settings?
+                {t("settings.helpQuestion")}
               </p>
               <a
                 className="mt-2 inline-flex min-w-0 items-center justify-center gap-1.5 text-sm font-bold text-[#25D366] underline-offset-4 hover:underline"
@@ -2309,7 +2499,7 @@ export default function DashboardPage() {
               >
                 <MessageCircle className="h-4 w-4 shrink-0" />
                 <span className="min-w-0 truncate">
-                  Need help? Message us on WhatsApp
+                  {t("settings.help")}
                 </span>
               </a>
             </section>
@@ -2349,12 +2539,12 @@ export default function DashboardPage() {
                     ) : null}
                     <span>
                       {tab === "home"
-                        ? "Home"
+                        ? t("dashboard.home")
                         : tab === "products"
-                          ? "Products"
+                          ? t("dashboard.products")
                           : tab === "orders"
-                            ? "Orders"
-                            : "Settings"}
+                            ? t("dashboard.orders")
+                            : t("dashboard.settings")}
                     </span>
                   </button>
                 );

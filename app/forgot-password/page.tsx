@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { FloxtoWordmark } from "../components/FloxtoBrand";
 import { buildAbsoluteUrl } from "../components/siteUrl";
+import { getUserFacingError } from "../components/userFacingErrors";
+import { useI18n } from "../i18n/LanguageProvider";
 
 function ArrowLeftIcon() {
   return (
@@ -43,11 +46,13 @@ function EnvelopeIcon() {
 }
 
 function AuthBrandHeader() {
+  const { t } = useI18n();
+
   return (
     <div className="text-center">
       <FloxtoWordmark />
       <p className="mx-auto mt-1.5 max-w-full text-xs font-medium leading-5 text-[var(--c-text-2)]">
-        Simple. Fast. Professional.
+        {t("app.tagline")}
       </p>
     </div>
   );
@@ -58,6 +63,7 @@ function isValidEmail(value: string) {
 }
 
 export default function ForgotPasswordPage() {
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -79,7 +85,7 @@ export default function ForgotPasswordPage() {
     });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(getUserFacingError(error, "auth.resetRequest", t));
       setIsLoading(false);
       return;
     }
@@ -90,13 +96,16 @@ export default function ForgotPasswordPage() {
 
   return (
     <main className="min-h-screen bg-[var(--c-bg)] px-6 py-8 text-[var(--c-text)]">
-      <Link
-        className="inline-flex max-w-full items-center gap-2 text-sm font-medium text-[var(--c-text)] underline-offset-4 hover:underline"
-        href="/login"
-      >
-        <ArrowLeftIcon />
-        Back to login
-      </Link>
+      <div className="flex items-center justify-between gap-4">
+        <Link
+          className="inline-flex max-w-full items-center gap-2 text-sm font-medium text-[var(--c-text)] underline-offset-4 hover:underline"
+          href="/login"
+        >
+          <ArrowLeftIcon />
+          {t("auth.backToLogin")}
+        </Link>
+        <LanguageSwitcher compact />
+      </div>
 
       <section
         className="mx-auto mt-14 w-full"
@@ -108,26 +117,25 @@ export default function ForgotPasswordPage() {
           {isSent ? (
             <div className="py-3 text-center">
               <h2 className="text-[22px] font-bold leading-tight">
-                Check your email
+                {t("auth.checkEmail")}
               </h2>
               <p className="mt-2 text-sm font-medium text-[#888888]">
-                Check your email for a reset link.
+                {t("auth.checkEmailBody")}
               </p>
             </div>
           ) : (
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="text-center">
                 <h2 className="text-[22px] font-bold leading-tight">
-                  Reset Your Password
+                  {t("auth.resetTitle")}
                 </h2>
                 <p className="mx-auto mt-2 text-sm font-medium leading-5 text-[#888888]">
-                  Enter your email and we will send you a link to get back into
-                  your account.
+                  {t("auth.resetSubtitle")}
                 </p>
               </div>
               <label className="block">
                 <span className="mb-2 block text-xs font-semibold">
-                  Email Address
+                  {t("auth.email")}
                 </span>
                 <div className="flex h-12 items-center gap-3 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10">
                   <EnvelopeIcon />
@@ -159,7 +167,7 @@ export default function ForgotPasswordPage() {
                 type="submit"
                 disabled={!canSubmit}
               >
-                {isLoading ? "Sending..." : "Send reset link"}
+                {isLoading ? t("common.saving") : t("auth.sendReset")}
               </button>
             </form>
           )}

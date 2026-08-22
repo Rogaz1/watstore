@@ -18,6 +18,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
 import { useForceLightTheme } from "@/app/components/useForceLightTheme";
+import { LanguageSwitcher } from "@/app/components/LanguageSwitcher";
 import {
   isMissingFaqsColumn,
   PRODUCT_SELECT_BASE,
@@ -31,6 +32,8 @@ import {
   PublicMerchant,
   PublicProduct,
 } from "@/app/components/publicStoreTypes";
+import { getUserFacingError } from "@/app/components/userFacingErrors";
+import { useI18n } from "@/app/i18n/LanguageProvider";
 
 type ProductDetailClientProps = {
   slug: string;
@@ -119,6 +122,7 @@ function OrderSheet({
   product: PublicProduct;
   onClose: () => void;
 }) {
+  const { locale, t } = useI18n();
   const [quantity, setQuantity] = useState(1);
   const [customerName, setCustomerName] = useState("");
   const [deliveryLocation, setDeliveryLocation] = useState("");
@@ -148,20 +152,22 @@ function OrderSheet({
     });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(getUserFacingError(error, "order.create", t));
       setIsSubmitting(false);
       return;
     }
 
     const order = data as CreateOrderResponse;
     const whatsappMessage = [
-      "Hello, I'd like to order:",
-      `Product: ${product.name}`,
-      `Quantity: ${quantity}`,
-      ...(total !== null ? [`Total: ${formatPrice(total, currencyCode)}`] : []),
-      `Name: ${customerName.trim()}`,
-      `Delivery Location: ${deliveryLocation.trim()}`,
-      `Order #${order.order_number}`,
+      locale === "fr" ? "Bonjour, je voudrais commander :" : "Hello, I'd like to order:",
+      `${t("order.product")}: ${product.name}`,
+      `${t("order.quantity")}: ${quantity}`,
+      ...(total !== null
+        ? [`${t("order.total")}: ${formatPrice(total, currencyCode, locale)}`]
+        : []),
+      `${t("order.customer")}: ${customerName.trim()}`,
+      `${t("order.deliveryLocation")}: ${deliveryLocation.trim()}`,
+      `${t("order.number")} #${order.order_number}`,
     ].join("\n");
 
     window.location.assign(
@@ -188,12 +194,13 @@ function OrderSheet({
                 {product.name}
               </h2>
               <p className="mt-1 text-[13px] font-medium leading-none text-[#25D366]">
-                {formatPrice(product.sale_price, currencyCode) || "Price on request"}
+            {formatPrice(product.sale_price, currencyCode, locale) ||
+              t("product.priceOnRequest")}
               </p>
             </div>
           </div>
           <button
-            aria-label="Close order form"
+            aria-label={t("common.close")}
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-base leading-none text-[#888888] transition hover:bg-[#F4F4F5] hover:text-[#111111]"
             type="button"
             onClick={onClose}
@@ -203,7 +210,9 @@ function OrderSheet({
         </div>
 
         <div className="mb-4 flex min-w-0 items-center justify-between gap-4">
-          <span className="min-w-0 flex-1 truncate text-xs font-bold">Quantity</span>
+          <span className="min-w-0 flex-1 truncate text-xs font-bold">
+            {t("order.quantity")}
+          </span>
           <div className="flex shrink-0 items-center gap-3">
             <button
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#E5E5E5] bg-white text-base font-semibold text-[#888888] disabled:opacity-40"
@@ -226,16 +235,18 @@ function OrderSheet({
 
         <div className="mb-5 flex min-w-0 items-center justify-between gap-3 rounded-2xl bg-[#F8F8F8] px-4 py-3">
           <span className="min-w-0 flex-1 truncate text-xs font-medium text-[#888888]">
-            Total Payable
+            {t("order.totalPayable")}
           </span>
           <span className="shrink-0 text-base font-bold">
-            {formatPrice(total, currencyCode) || "Price on request"}
+            {formatPrice(total, currencyCode, locale) || t("product.priceOnRequest")}
           </span>
         </div>
 
         <div className="grid gap-4">
           <label className="block">
-            <span className="mb-2 block text-xs font-semibold">Your Full Name</span>
+            <span className="mb-2 block text-xs font-semibold">
+              {t("order.fullName")}
+            </span>
             <div className="flex h-11 min-w-0 items-center gap-2 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10">
               <User aria-hidden="true" className="h-4 w-4 shrink-0" />
               <input
@@ -249,7 +260,7 @@ function OrderSheet({
           </label>
           <label className="block">
             <span className="mb-2 block text-xs font-semibold">
-              Delivery Location
+              {t("order.deliveryLocation")}
             </span>
             <div className="flex h-11 min-w-0 items-center gap-2 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10">
               <MapPin aria-hidden="true" className="h-4 w-4 shrink-0" />
@@ -265,7 +276,7 @@ function OrderSheet({
         </div>
 
         <p className="mt-4 text-center text-[10px] font-medium leading-4 text-[#999999]">
-          You will confirm your order on WhatsApp. No payment required now
+          {t("order.confirmWhatsapp")}
         </p>
 
         {message ? (
@@ -279,7 +290,7 @@ function OrderSheet({
           type="submit"
           disabled={isSubmitting || !canSubmit}
         >
-          {isSubmitting ? "Creating order..." : "Continue to WhatsApp ->"}
+          {isSubmitting ? t("order.creating") : t("order.continueWhatsapp")}
         </button>
       </form>
     </div>
@@ -376,6 +387,7 @@ export function ProductDetailClient({
   initialMessage = "",
 }: ProductDetailClientProps) {
   useForceLightTheme();
+  const { locale, t } = useI18n();
 
   const [merchant, setMerchant] = useState<PublicMerchant | null>(initialMerchant);
   const [product, setProduct] = useState<PublicProduct | null>(initialProduct);
@@ -403,7 +415,7 @@ export function ProductDetailClient({
       merchant.delivery_info
         ? {
             id: "delivery" as const,
-            title: "Delivery Information",
+            title: t("product.deliveryInfo"),
             body: merchant.delivery_info,
             icon: "delivery" as const,
           }
@@ -411,7 +423,7 @@ export function ProductDetailClient({
       merchant.payment_options
         ? {
             id: "payment" as const,
-            title: "Payment Options",
+            title: t("product.paymentOptions"),
             body: merchant.payment_options,
             icon: "payment" as const,
           }
@@ -419,13 +431,13 @@ export function ProductDetailClient({
       merchant.why_choose_us
         ? {
             id: "why" as const,
-            title: "Why Choose Us",
+            title: t("product.whyChooseUs"),
             body: merchant.why_choose_us,
             icon: "why" as const,
           }
         : null,
     ].filter(Boolean) as InfoSheetContent[];
-  }, [merchant]);
+  }, [merchant, t]);
   const discountPercent =
     typeof product?.sale_price === "number" &&
     product.original_price &&
@@ -476,7 +488,7 @@ export function ProductDetailClient({
       }
 
       if (merchantError || !merchantData) {
-        setMessage("Store not found.");
+        setMessage(t("store.notFound"));
         setIsLoading(false);
         return;
       }
@@ -517,7 +529,7 @@ export function ProductDetailClient({
       }
 
       if (productError || !productData) {
-        setMessage("Product not found.");
+        setMessage(t("product.notFound"));
         setIsLoading(false);
         return;
       }
@@ -531,7 +543,7 @@ export function ProductDetailClient({
     return () => {
       isMounted = false;
     };
-  }, [initialMerchant, initialMessage, initialProduct, productId, slug]);
+  }, [initialMerchant, initialMessage, initialProduct, productId, slug, t]);
 
   function handleTouchStart(event: TouchEvent<HTMLDivElement>) {
     touchStartX.current = event.touches[0].clientX;
@@ -563,8 +575,8 @@ export function ProductDetailClient({
     }
 
     const shareText = `${product.name} - ${
-      formatPrice(product.sale_price, merchant?.currency_code) ||
-      "Price on request"
+      formatPrice(product.sale_price, merchant?.currency_code, locale) ||
+      t("product.priceOnRequest")
     }`;
     const shareUrl = window.location.href;
 
@@ -579,7 +591,7 @@ export function ProductDetailClient({
       }
 
       await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
-      setShareMessage("Link copied!");
+      setShareMessage(t("common.linkCopied"));
       window.setTimeout(() => setShareMessage(""), 2000);
     } catch (error) {
       if ((error as Error).name === "AbortError") {
@@ -587,7 +599,7 @@ export function ProductDetailClient({
       }
 
       await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
-      setShareMessage("Link copied!");
+      setShareMessage(t("common.linkCopied"));
       window.setTimeout(() => setShareMessage(""), 2000);
     }
   }
@@ -595,7 +607,9 @@ export function ProductDetailClient({
   function handleQuestionClick() {
     const chatUrl = buildWhatsAppUrl(
       merchant?.whatsapp_number,
-      `Hi, I have a question about ${product?.name}`,
+      locale === "fr"
+        ? `Bonjour, j'ai une question au sujet de ${product?.name}`
+        : `Hi, I have a question about ${product?.name}`,
     );
 
     if (product?.id) {
@@ -616,7 +630,7 @@ export function ProductDetailClient({
   if (isLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-5 text-[#111111]">
-        <p className="text-sm font-medium text-[#888888]">Loading product...</p>
+        <p className="text-sm font-medium text-[#888888]">{t("product.loading")}</p>
       </main>
     );
   }
@@ -628,7 +642,7 @@ export function ProductDetailClient({
 
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-5 text-center text-[#111111]">
-        <p className="text-base font-medium">{message || "Product not found."}</p>
+        <p className="text-base font-medium">{message || t("product.notFound")}</p>
       </main>
     );
   }
@@ -657,13 +671,13 @@ export function ProductDetailClient({
               ))
             ) : (
               <div className="flex h-full w-full shrink-0 items-center justify-center bg-[#F4F4F5] text-sm font-medium text-[#888888]">
-                No media
+                {t("common.noMedia")}
               </div>
             )}
           </div>
 
           <button
-            aria-label="Share product"
+            aria-label={t("product.share")}
             className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-[#E5E5E5] bg-white/95 text-[#111111] shadow-sm"
             type="button"
             onClick={handleShare}
@@ -675,7 +689,7 @@ export function ProductDetailClient({
             <div className="absolute bottom-9 left-0 right-0 z-20 flex justify-center gap-1.5">
               {media.map((item, index) => (
                 <button
-                  aria-label={`Show media ${index + 1}`}
+                  aria-label={t("product.showMedia", { index: index + 1 })}
                   className="h-1.5 rounded-full shadow-sm transition-all"
                   key={item.id}
                   style={{
@@ -700,6 +714,9 @@ export function ProductDetailClient({
         ) : null}
 
         <div className="relative min-w-0">
+          <div className="mb-3 flex justify-end">
+            <LanguageSwitcher compact />
+          </div>
           <h1
             ref={nameRef}
             className={`min-w-0 break-words text-[18px] font-semibold leading-[25px] [overflow-wrap:anywhere] ${
@@ -714,7 +731,11 @@ export function ProductDetailClient({
                 isNameExpanded ? "mt-1" : "absolute bottom-0 right-0"
               }`}
               type="button"
-              aria-label={isNameExpanded ? "Collapse product name" : "Expand product name"}
+              aria-label={
+                isNameExpanded
+                  ? t("product.collapseName")
+                  : t("product.expandName")
+              }
               onClick={() => setIsNameExpanded((current) => !current)}
             >
               {isNameExpanded ? (
@@ -728,17 +749,17 @@ export function ProductDetailClient({
 
         <div className="mt-3 flex min-w-0 flex-wrap items-center gap-3 overflow-hidden">
           <span className="shrink-0 text-[20px] font-semibold leading-none">
-            {formatPrice(product.sale_price, merchant.currency_code) ||
-              "Price on request"}
+            {formatPrice(product.sale_price, merchant.currency_code, locale) ||
+              t("product.priceOnRequest")}
           </span>
           {product.sale_price !== null && product.original_price ? (
             <span className="min-w-0 truncate text-[14px] font-bold text-[#BDB9B2] line-through">
-              {formatPrice(product.original_price, merchant.currency_code)}
+              {formatPrice(product.original_price, merchant.currency_code, locale)}
             </span>
           ) : null}
           {discountPercent ? (
             <span className="rounded-full bg-[#FEF2F2] px-2 py-0.5 text-[10px] font-bold uppercase text-[#B91C1C]">
-              {discountPercent}% off
+              {t("product.discountOff", { percent: discountPercent })}
             </span>
           ) : null}
         </div>
@@ -777,13 +798,13 @@ export function ProductDetailClient({
           type="button"
           onClick={handleQuestionClick}
         >
-          Have a Question? Chat Us on WhatsApp
+          {t("product.chatQuestion")}
         </button>
 
         {product.long_description ? (
           <section className="mt-9 border-t border-[#E5E5E5] pt-7">
             <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#888888]">
-              About this product
+              {t("product.about")}
             </p>
             <div className="whitespace-pre-line break-words text-sm font-normal leading-7 text-[#111111] [overflow-wrap:anywhere]">
               {product.long_description}
@@ -794,7 +815,7 @@ export function ProductDetailClient({
         {faqs.length ? (
           <section className="mt-9 border-t border-[#E5E5E5] pt-7">
             <p className="mb-4 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#AAAAAA]">
-              Frequently asked questions
+              {t("product.faq")}
             </p>
             <div className={openFaqIndex === null ? "grid gap-3" : "grid"}>
               {faqs.map((faq, index) => (
@@ -856,7 +877,7 @@ export function ProductDetailClient({
             disabled={!product.in_stock}
             onClick={() => setIsOrderOpen(true)}
           >
-            {product.in_stock ? "Order on WhatsApp" : "Currently unavailable"}
+            {product.in_stock ? t("product.orderWhatsapp") : t("product.unavailable")}
           </button>
         </div>
       </div>

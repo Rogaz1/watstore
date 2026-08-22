@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { LanguageProvider } from "./i18n/LanguageProvider";
 import { ServiceWorkerRegistration } from "./components/ServiceWorkerRegistration";
 import { getCanonicalSiteOrigin } from "./components/siteUrl";
 import "./globals.css";
@@ -85,7 +86,7 @@ export default function RootLayout({
           `}
         </Script>
         <ServiceWorkerRegistration />
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
         <Analytics />
         <SpeedInsights />
       </body>

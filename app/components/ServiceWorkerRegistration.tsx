@@ -8,8 +8,8 @@ export function ServiceWorkerRegistration() {
       return;
     }
 
-    navigator.serviceWorker.register("/sw.js").catch((error) => {
-      console.error("Unable to register service worker.", error);
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      console.error("Unable to register service worker.");
     });
   }, []);
 

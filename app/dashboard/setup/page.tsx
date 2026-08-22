@@ -6,13 +6,21 @@ import {
   ChevronLeft,
   Image as ImageIcon,
   Link as LinkIcon,
-  MessageSquare,
   Store,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { InternationalPhoneInput } from "@/app/components/InternationalPhoneInput";
+import { LanguageSwitcher } from "@/app/components/LanguageSwitcher";
 import { compressImageForUpload } from "@/app/components/imageCompression";
 import { getMerchantForUser } from "@/app/components/merchantProfile";
+import {
+  fallbackCountry,
+  normalizePhoneNumber,
+  PhoneCountryCode,
+} from "@/app/components/phone";
+import { getUserFacingError } from "@/app/components/userFacingErrors";
 import { useRequireUser } from "@/app/components/useRequireUser";
+import { useI18n } from "@/app/i18n/LanguageProvider";
 
 const LOGO_BUCKET = "merchant-logos";
 
@@ -31,11 +39,14 @@ function cleanFileName(name: string) {
 export default function StoreSetupPage() {
   const router = useRouter();
   const { user, isCheckingAuth } = useRequireUser();
+  const { locale, t } = useI18n();
   const userId = user?.id;
   const [businessName, setBusinessName] = useState("");
   const [slug, setSlug] = useState("");
   const [hasEditedSlug, setHasEditedSlug] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [countryCode, setCountryCode] =
+    useState<PhoneCountryCode>(fallbackCountry);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState("");
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
@@ -45,11 +56,11 @@ export default function StoreSetupPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  const digitsOnlyWhatsapp = useMemo(
-    () => whatsappNumber.replace(/\D/g, ""),
-    [whatsappNumber],
+  const normalizedWhatsapp = useMemo(
+    () => normalizePhoneNumber(whatsappNumber, countryCode),
+    [countryCode, whatsappNumber],
   );
-  const whatsappStartsWithZero = digitsOnlyWhatsapp.startsWith("0");
+  const whatsappStartsWithZero = whatsappNumber.trim().startsWith("0");
   const normalizedSlug = normalizeSlug(slug);
   const storePrefix =
     typeof window === "undefined"
@@ -72,7 +83,7 @@ export default function StoreSetupPage() {
       }
 
       if (error) {
-        setMessage(error.message);
+        setMessage(getUserFacingError(error, "setup.check", t));
         setIsCheckingProfile(false);
         return;
       }
@@ -90,7 +101,7 @@ export default function StoreSetupPage() {
     return () => {
       isMounted = false;
     };
-  }, [router, userId]);
+  }, [router, t, userId]);
 
   async function checkSlugAvailability() {
     if (!normalizedSlug) {
@@ -108,7 +119,7 @@ export default function StoreSetupPage() {
     setIsCheckingSlug(false);
 
     if (error) {
-      setMessage(error.message);
+      setMessage(getUserFacingError(error, "setup.slug", t));
       setIsSlugAvailable(false);
       return false;
     }
@@ -117,7 +128,7 @@ export default function StoreSetupPage() {
     setIsSlugAvailable(available);
 
     if (!available) {
-      setMessage("That Store URL is already taken. Try another slug.");
+      setMessage(t("setup.slugTaken"));
     }
 
     return available;
@@ -143,9 +154,7 @@ export default function StoreSetupPage() {
     } catch (error) {
       setLogoFile(null);
       setLogoPreviewUrl("");
-      setMessage(
-        error instanceof Error ? error.message : "Unable to compress logo.",
-      );
+      setMessage(getUserFacingError(error, "image.compress", t));
     } finally {
       setIsCompressingLogo(false);
     }
@@ -177,7 +186,12 @@ export default function StoreSetupPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!user || !businessName.trim() || !normalizedSlug || !digitsOnlyWhatsapp) {
+    if (!user || !businessName.trim() || !normalizedSlug) {
+      return;
+    }
+
+    if (!normalizedWhatsapp) {
+      setMessage(t("setup.invalidPhone"));
       return;
     }
 
@@ -198,8 +212,10 @@ export default function StoreSetupPage() {
         business_name: businessName.trim(),
         tagline: null,
         slug: normalizedSlug,
-        whatsapp_number: digitsOnlyWhatsapp,
+        whatsapp_number: normalizedWhatsapp.e164,
         logo_url: logoUrl,
+        preferred_locale: locale,
+        country_code: countryCode,
       });
 
       if (error) {
@@ -208,9 +224,7 @@ export default function StoreSetupPage() {
 
       router.replace("/dashboard");
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Unable to create your store.",
-      );
+      setMessage(getUserFacingError(error, "setup.create", t));
       setIsSaving(false);
     }
   }
@@ -218,7 +232,9 @@ export default function StoreSetupPage() {
   if (isCheckingAuth || isCheckingProfile) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-6 text-[#111111]">
-        <p className="text-sm font-medium text-[#888888]">Checking setup...</p>
+        <p className="text-sm font-medium text-[#888888]">
+          {t("setup.checking")}
+        </p>
       </main>
     );
   }
@@ -233,21 +249,23 @@ export default function StoreSetupPage() {
         <div className="mb-6 px-1 sm:mb-8">
           <p className="inline-flex items-center gap-1 text-sm font-medium">
             <ChevronLeft aria-hidden="true" className="h-4 w-4" />
-            Store Setup
+            {t("setup.header")}
           </p>
+          <div className="mt-4">
+            <LanguageSwitcher compact />
+          </div>
           <h1 className="mt-6 text-[24px] font-bold leading-tight">
-            Let&apos;s build your shop
+            {t("setup.title")}
           </h1>
           <p className="mt-2 max-w-[22rem] text-sm font-medium leading-6 text-[#888888]">
-            Just a few more details to get your storefront online and ready for
-            orders.
+            {t("setup.subtitle")}
           </p>
         </div>
 
         <div className="grid min-w-0 max-w-full grid-cols-[minmax(0,1fr)] gap-5 overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white p-4 shadow-sm sm:p-6">
           <label className="block min-w-0 max-w-full">
             <span className="mb-2 block text-xs font-semibold leading-none">
-              Business Name
+              {t("setup.businessName")}
             </span>
             <span
               className="flex h-12 max-w-full items-center gap-2 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10"
@@ -256,7 +274,7 @@ export default function StoreSetupPage() {
               <Store aria-hidden="true" className="h-4 w-4 shrink-0" />
               <input
                 className="h-full min-w-0 flex-1 bg-transparent text-sm font-medium text-[#111111] outline-none placeholder:text-[#888888]"
-                placeholder="e.g. Accra Fashion Hub"
+                placeholder={t("setup.businessPlaceholder")}
                 value={businessName}
                 onChange={(event) => {
                   const nextBusinessName = event.target.value;
@@ -274,7 +292,7 @@ export default function StoreSetupPage() {
 
           <label className="block min-w-0 max-w-full">
             <span className="mb-2 block text-xs font-semibold leading-none">
-              Store URL
+              {t("setup.storeUrl")}
             </span>
             <div
               className="flex h-12 max-w-full overflow-hidden rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10"
@@ -286,7 +304,7 @@ export default function StoreSetupPage() {
               </span>
               <input
                 className="h-full min-w-0 flex-1 basis-0 bg-transparent px-3 text-sm font-medium text-[#111111] outline-none placeholder:text-[#888888]"
-                placeholder="your-store-name"
+                placeholder={t("setup.slugPlaceholder")}
                 value={slug}
                 onBlur={checkSlugAvailability}
                 onChange={(event) => {
@@ -299,55 +317,43 @@ export default function StoreSetupPage() {
             </div>
             {isCheckingSlug ? (
               <p className="mt-2 text-xs font-medium text-[#888888]">
-                Checking URL...
+                {t("setup.checkingUrl")}
               </p>
             ) : null}
             {isSlugAvailable ? (
               <p className="mt-2 text-xs font-semibold text-[#25D366]">
-                /store/{normalizedSlug} is available.
+                {t("setup.urlAvailable", { slug: normalizedSlug })}
               </p>
             ) : null}
             <p className="mt-2 text-xs font-medium leading-5 text-[#888888]">
-              This is your unique store link for customers.
+              {t("setup.storeUrlHelp")}
             </p>
           </label>
 
           <label className="block min-w-0 max-w-full">
             <span className="mb-2 block text-xs font-semibold leading-none">
-              WhatsApp Number
+              {t("setup.whatsapp")}
             </span>
-            <div
-              className="flex h-12 max-w-full overflow-hidden rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10"
-              style={{ boxSizing: "border-box", width: "100%" }}
-            >
-              <span className="flex h-full shrink-0 items-center gap-2 border-r border-[#E5E5E5] bg-[#E5E5E5]/35 px-3 text-sm font-bold text-[#111111]">
-                <MessageSquare
-                  aria-hidden="true"
-                  className="h-3.5 w-3.5 shrink-0 text-[#25D366]"
-                />
-                +233
-              </span>
-              <input
-                className="h-full min-w-0 flex-1 basis-0 bg-transparent px-3 text-sm font-medium text-[#111111] outline-none placeholder:text-[#888888]"
-                inputMode="tel"
-                placeholder="501234567"
-                value={whatsappNumber}
-                onChange={(event) => setWhatsappNumber(event.target.value)}
-                required
-              />
-            </div>
+            <InternationalPhoneInput
+              defaultCountry={countryCode}
+              locale={locale}
+              placeholder={t("setup.phonePlaceholder")}
+              required
+              value={whatsappNumber}
+              onChange={setWhatsappNumber}
+              onCountryChange={setCountryCode}
+            />
             <p className="mt-2 text-xs font-medium leading-5 text-[#888888]">
-              Customers will contact you here to complete orders.
+              {t("setup.whatsappHelp")}
             </p>
-            {digitsOnlyWhatsapp ? (
+            {normalizedWhatsapp ? (
               <p className="mt-2 text-xs font-medium text-[#888888]">
-                Saved as {digitsOnlyWhatsapp}
+                {t("settings.savedAs", { number: normalizedWhatsapp.e164 })}
               </p>
             ) : null}
             {whatsappStartsWithZero ? (
               <p className="mt-2 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 py-3.5 text-sm text-[#B91C1C]">
-                This starts with 0. Use a country code, like 1, 44, or 234,
-                instead of a local leading zero.
+                {t("settings.leadingZero")}
               </p>
             ) : null}
           </label>
@@ -355,7 +361,10 @@ export default function StoreSetupPage() {
           <section className="min-w-0 max-w-full">
             <label className="block min-w-0 max-w-full">
             <span className="mb-2 block text-xs font-semibold leading-none">
-                Store Logo <span className="text-[#888888]">(Optional)</span>
+                {t("setup.logo")}{" "}
+                <span className="text-[#888888]">
+                  ({t("setup.logoOptional")})
+                </span>
               </span>
               <span
                 className="flex min-h-36 max-w-full cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#E5E5E5] bg-[#F4F4F5] px-4 py-7 text-center transition hover:border-[#111111]"
@@ -364,9 +373,11 @@ export default function StoreSetupPage() {
                 <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E5E5E5] bg-white text-[#888888]">
                   <ImageIcon aria-hidden="true" className="h-5 w-5" />
                 </span>
-                <span className="mt-4 text-sm font-bold">Tap to upload logo</span>
+                <span className="mt-4 text-sm font-bold">
+                  {t("setup.tapLogo")}
+                </span>
                 <span className="mt-1 text-xs font-semibold text-[#888888]">
-                  PNG, JPG accepted
+                  {t("setup.logoTypes")}
                 </span>
               </span>
               <input
@@ -382,7 +393,7 @@ export default function StoreSetupPage() {
                 <img
                   className="h-20 w-20 shrink-0 rounded-xl border border-[#E5E5E5] object-cover"
                   src={logoPreviewUrl}
-                  alt="Store logo preview"
+                  alt={t("setup.logoPreview")}
                 />
                 <button
                   className="min-w-0 flex-1 truncate text-left text-sm font-medium text-[#EF4444] hover:opacity-70"
@@ -392,13 +403,13 @@ export default function StoreSetupPage() {
                     setLogoPreviewUrl("");
                   }}
                 >
-                  Remove logo
+                  {t("setup.removeLogo")}
                 </button>
               </div>
             ) : null}
             {isCompressingLogo ? (
               <p className="mt-3 text-xs font-medium text-[#888888]">
-                Compressing logo...
+                {t("setup.compressingLogo")}
               </p>
             ) : null}
           </section>
@@ -418,17 +429,17 @@ export default function StoreSetupPage() {
               isCheckingSlug ||
               !businessName.trim() ||
               !normalizedSlug ||
-              !digitsOnlyWhatsapp
+              !normalizedWhatsapp
             }
           >
             {isSaving
-              ? "Creating..."
+              ? t("setup.creating")
               : isCompressingLogo
-                ? "Compressing..."
-                : "Create my store"}
+                ? t("settings.compressing")
+                : t("setup.create")}
           </button>
           <p className="text-center text-xs font-semibold text-[#888888]">
-            You can change these details later
+            {t("setup.later")}
           </p>
         </div>
       </form>

@@ -27,7 +27,9 @@ import {
   getSubscriptionAccess,
   refreshMerchantSubscription,
 } from "./subscription";
+import { getUserFacingError } from "./userFacingErrors";
 import { useRequireUser } from "./useRequireUser";
+import { useI18n } from "../i18n/LanguageProvider";
 
 const PRODUCT_MEDIA_BUCKET = "product-media";
 const MAX_BENEFITS = 5;
@@ -64,6 +66,7 @@ function makeMediaItem(file: File): MediaItem {
 export function ProductForm({ productId }: ProductFormProps) {
   const router = useRouter();
   const { user, isCheckingAuth } = useRequireUser();
+  const { setMerchantLocale, t } = useI18n();
   const userId = user?.id;
   const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [name, setName] = useState("");
@@ -125,6 +128,7 @@ export function ProductForm({ productId }: ProductFormProps) {
       }
 
       setMerchant(refreshedMerchant);
+      setMerchantLocale(refreshedMerchant.preferred_locale ?? null);
 
       if (!productId) {
         setIsLoading(false);
@@ -159,7 +163,7 @@ export function ProductForm({ productId }: ProductFormProps) {
       }
 
       if (productError || !product) {
-        setMessage("This product was not found for your merchant account.");
+        setMessage(t("productForm.notFound"));
         setIsLoading(false);
         return;
       }
@@ -212,7 +216,7 @@ export function ProductForm({ productId }: ProductFormProps) {
     return () => {
       isMounted = false;
     };
-  }, [productId, router, userId]);
+  }, [productId, router, setMerchantLocale, t, userId]);
 
   async function handleImageFiles(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
@@ -230,7 +234,7 @@ export function ProductForm({ productId }: ProductFormProps) {
       const acceptedFiles = files.slice(0, availableSlots);
 
       if (!acceptedFiles.length) {
-        setMessage(`You can upload up to ${MAX_IMAGES} images per product.`);
+        setMessage(t("productForm.maxImages", { count: MAX_IMAGES }));
         return;
       }
 
@@ -243,12 +247,10 @@ export function ProductForm({ productId }: ProductFormProps) {
       ]);
 
       if (files.length > acceptedFiles.length) {
-        setMessage(`Only ${MAX_IMAGES} images are allowed per product.`);
+        setMessage(t("productForm.onlyImages", { count: MAX_IMAGES }));
       }
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Unable to compress image.",
-      );
+      setMessage(getUserFacingError(error, "image.compress", t));
     } finally {
       setIsCompressingImages(false);
     }
@@ -379,9 +381,8 @@ export function ProductForm({ productId }: ProductFormProps) {
 
       if (isMissingFaqsColumn(error)) {
         if (payload.faqs.length) {
-          throw new Error(
-            "FAQs are not enabled in the database yet. Run the products.faqs SQL migration, then save again.",
-          );
+          setMessage(t("productForm.faqsMissing"));
+          return;
         }
 
         const fallback = await saveProduct(basePayload);
@@ -394,9 +395,7 @@ export function ProductForm({ productId }: ProductFormProps) {
 
       router.push("/dashboard?tab=products");
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Unable to save product.",
-      );
+      setMessage(getUserFacingError(error, "product.save", t));
     } finally {
       setIsSaving(false);
     }
@@ -405,7 +404,9 @@ export function ProductForm({ productId }: ProductFormProps) {
   if (isCheckingAuth || isLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#FFFFFF] px-6 text-[#111111]">
-        <p className="text-sm font-medium text-[#888888]">Loading product...</p>
+        <p className="text-sm font-medium text-[#888888]">
+          {t("product.loading")}
+        </p>
       </main>
     );
   }
@@ -430,12 +431,12 @@ export function ProductForm({ productId }: ProductFormProps) {
           <Link
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#111111] transition hover:bg-[#F8F8F8]"
             href="/dashboard?tab=products"
-            aria-label="Back to dashboard"
+          aria-label={t("productForm.back")}
           >
             <ChevronLeft aria-hidden="true" className="h-5 w-5" strokeWidth={1.5} />
           </Link>
           <h1 className="min-w-0 flex-1 truncate text-[15px] font-bold">
-            {isEditing ? "Edit product" : "Add product"}
+            {isEditing ? t("productForm.editTitle") : t("productForm.addTitle")}
           </h1>
         </div>
       </header>
@@ -446,14 +447,14 @@ export function ProductForm({ productId }: ProductFormProps) {
       >
         <section className="min-w-0 overflow-hidden">
           <h2 className="mb-3 text-[13px] font-semibold">
-            Product Images
+            {t("productForm.images")}
           </h2>
           <div className="-mx-1 flex max-w-full min-w-0 gap-3 overflow-x-auto px-1 pb-2">
             {images.length < MAX_IMAGES ? (
               <label className="flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[#BBBBBB] bg-white text-center transition hover:border-[#111111]">
                 <Plus aria-hidden="true" className="h-5 w-5 text-[#25D366]" strokeWidth={1.8} />
                 <span className="mt-2 text-[10px] font-semibold uppercase text-[#888888]">
-                  Add photo
+                  {t("productForm.addPhoto")}
                 </span>
                 <input
                   className="sr-only"
@@ -482,18 +483,18 @@ export function ProductForm({ productId }: ProductFormProps) {
                 <img
                   className="h-full w-full object-cover"
                   src={image.previewUrl}
-                  alt={name || "Product photo"}
+                alt={name || t("productForm.photo")}
                 />
                 {index === 0 ? (
                   <span className="absolute left-2 top-2 rounded-full bg-[#25D366] px-2 py-0.5 text-[9px] font-bold text-white">
-                    Main
+                    {t("productForm.main")}
                   </span>
                 ) : null}
                 <span className="absolute bottom-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/95 text-[#888888] shadow-sm">
                   <GripVertical aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={1.5} />
                 </span>
                 <button
-                  aria-label="Remove photo"
+                  aria-label={t("productForm.removePhoto")}
                   className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/95 text-[#111111] shadow-sm transition hover:text-[#EF4444]"
                   type="button"
                   onClick={() =>
@@ -510,21 +511,26 @@ export function ProductForm({ productId }: ProductFormProps) {
           <p className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-[#888888]">
             <GripVertical aria-hidden="true" className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
             <span className="min-w-0 flex-1">
-              Drag items to reorder. First item is your cover. {images.length}/{MAX_IMAGES} images.
+              {t("productForm.dragImages", {
+                current: images.length,
+                max: MAX_IMAGES,
+              })}
             </span>
           </p>
           {isCompressingImages ? (
             <p className="mt-2 text-xs font-semibold text-[#888888]">
-              Compressing image...
+              {t("productForm.compressing")}
             </p>
           ) : null}
         </section>
 
         <label className="block">
-          <span className="mb-2 block text-[13px] font-semibold">Product name</span>
+          <span className="mb-2 block text-[13px] font-semibold">
+            {t("productForm.name")}
+          </span>
           <input
             className="h-12 w-full rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
-            placeholder="e.g. Ankara Print Wrap Dress"
+            placeholder={t("productForm.namePlaceholder")}
             value={name}
             onChange={(event) => setName(event.target.value)}
             required
@@ -534,7 +540,7 @@ export function ProductForm({ productId }: ProductFormProps) {
         <div className="grid grid-cols-2 gap-3">
           <label className="block min-w-0">
             <span className="mb-2 block text-[13px] font-semibold">
-              Sale price
+              {t("productForm.salePrice")}
             </span>
             <input
               className="h-12 w-full rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
@@ -548,7 +554,7 @@ export function ProductForm({ productId }: ProductFormProps) {
           </label>
           <label className="block min-w-0">
             <span className="mb-2 block text-[13px] font-semibold">
-              Original price <span className="text-[#888888]">(optional)</span>
+              {t("productForm.originalPrice")} <span className="text-[#888888]">({t("productForm.optional")})</span>
             </span>
             <input
               className="h-12 w-full rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
@@ -564,12 +570,12 @@ export function ProductForm({ productId }: ProductFormProps) {
 
         <label className="block">
           <span className="mb-2 block text-[13px] font-semibold">
-            Short description
+            {t("productForm.shortDescription")}
           </span>
           <textarea
             className="h-[96px] w-full resize-none overflow-y-auto rounded-2xl border-0 bg-[#F4F4F5] px-4 py-3.5 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
             maxLength={MAX_SHORT_DESCRIPTION_CHARS}
-            placeholder="One or two sentences for the product callout box."
+            placeholder={t("productForm.shortPlaceholder")}
             value={shortDescription}
             onChange={(event) => setShortDescription(event.target.value)}
           />
@@ -579,7 +585,9 @@ export function ProductForm({ productId }: ProductFormProps) {
         </label>
 
         <section className="min-w-0 overflow-hidden">
-          <h2 className="mb-2 text-[13px] font-semibold">Key Benefits or Highlights</h2>
+          <h2 className="mb-2 text-[13px] font-semibold">
+            {t("productForm.benefits")}
+          </h2>
           <div className="grid gap-2">
             {keyBenefits.map((benefit, index) => (
               <div
@@ -589,7 +597,7 @@ export function ProductForm({ productId }: ProductFormProps) {
                 <Check aria-hidden="true" className="h-4 w-4 shrink-0 text-[#BBBBBB]" strokeWidth={1.5} />
                 <span className="min-w-0 flex-1 truncate">{benefit}</span>
                 <button
-                  aria-label="Remove benefit"
+                  aria-label={t("productForm.removeBenefit")}
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#BBBBBB] transition hover:text-[#EF4444]"
                   type="button"
                   onClick={() =>
@@ -605,7 +613,7 @@ export function ProductForm({ productId }: ProductFormProps) {
             <div className="flex min-w-0 gap-2">
               <input
                 className="h-11 min-w-0 flex-1 rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
-                placeholder="Add a benefit and press Enter"
+                placeholder={t("productForm.benefitPlaceholder")}
                 maxLength={MAX_BENEFIT_CHARS}
                 value={benefitInput}
                 onChange={(event) => setBenefitInput(event.target.value)}
@@ -618,29 +626,33 @@ export function ProductForm({ productId }: ProductFormProps) {
                 disabled={keyBenefits.length >= MAX_BENEFITS || !benefitInput.trim()}
                 onClick={addBenefit}
               >
-                Add
+                {t("common.add")}
               </button>
             </div>
             <p className="text-xs font-medium text-[#888888]">
-              {keyBenefits.length}/{MAX_BENEFITS} highlights added. {MAX_BENEFIT_CHARS} characters max each.
+              {t("productForm.benefitCount", {
+                current: keyBenefits.length,
+                max: MAX_BENEFITS,
+                chars: MAX_BENEFIT_CHARS,
+              })}
             </p>
           </div>
         </section>
 
         <label className="block">
           <span className="mb-2 block text-[13px] font-semibold">
-            Long description
+            {t("productForm.longDescription")}
           </span>
           <textarea
             className="min-h-36 w-full resize-none rounded-2xl border-0 bg-[#F4F4F5] px-4 py-3.5 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
-            placeholder="Full product description. Separate paragraphs with a blank line."
+            placeholder={t("productForm.longPlaceholder")}
             value={longDescription}
             onChange={(event) => setLongDescription(event.target.value)}
           />
         </label>
 
         <section className="min-w-0 overflow-hidden">
-          <h2 className="mb-2 text-[13px] font-semibold">FAQs</h2>
+          <h2 className="mb-2 text-[13px] font-semibold">{t("productForm.faqs")}</h2>
           <div className="grid gap-2">
             {faqs.map((faq, index) => (
               <details
@@ -654,7 +666,7 @@ export function ProductForm({ productId }: ProductFormProps) {
                   </span>
                 </summary>
                 <button
-                  aria-label="Remove FAQ"
+                  aria-label={t("productForm.removeFaq")}
                   className="absolute right-3 top-2.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#BBBBBB] transition hover:text-[#EF4444]"
                   type="button"
                   onClick={() =>
@@ -684,7 +696,7 @@ export function ProductForm({ productId }: ProductFormProps) {
             <div className="grid gap-2">
               <input
                 className="h-11 min-w-0 rounded-2xl border-0 bg-[#F4F4F5] px-4 text-sm font-medium outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
-                placeholder="Question"
+                placeholder={t("productForm.question")}
                 maxLength={MAX_FAQ_QUESTION_CHARS}
                 value={faqQuestion}
                 onChange={(event) => setFaqQuestion(event.target.value)}
@@ -694,7 +706,7 @@ export function ProductForm({ productId }: ProductFormProps) {
               <div className="grid min-w-0 gap-2 sm:grid-cols-[1fr_auto]">
                 <textarea
                   className="min-h-20 min-w-0 resize-none rounded-2xl border-0 bg-[#F4F4F5] px-4 py-3 text-sm font-medium leading-6 outline-none transition placeholder:text-[#888888] focus:ring-2 focus:ring-[#111111]/10"
-                  placeholder="Answer"
+                  placeholder={t("productForm.answer")}
                   maxLength={MAX_FAQ_ANSWER_CHARS}
                   value={faqAnswer}
                   onChange={(event) => setFaqAnswer(event.target.value)}
@@ -710,21 +722,28 @@ export function ProductForm({ productId }: ProductFormProps) {
                   }
                   onClick={addFaq}
                 >
-                  Add
+                  {t("common.add")}
                 </button>
               </div>
             </div>
             <p className="text-xs font-medium text-[#888888]">
-              {faqs.length}/{MAX_FAQS} FAQs added. Questions {MAX_FAQ_QUESTION_CHARS} chars, answers {MAX_FAQ_ANSWER_CHARS} chars.
+              {t("productForm.faqCount", {
+                current: faqs.length,
+                max: MAX_FAQS,
+                question: MAX_FAQ_QUESTION_CHARS,
+                answer: MAX_FAQ_ANSWER_CHARS,
+              })}
             </p>
           </div>
         </section>
 
         <label className="flex w-full min-w-0 items-center justify-between gap-4 rounded-2xl bg-white px-4 py-3.5">
           <span className="min-w-0 flex-1">
-            <span className="block text-[13px] font-semibold">In stock</span>
+            <span className="block text-[13px] font-semibold">
+              {t("product.inStock")}
+            </span>
             <span className="block text-xs font-medium text-[#888888]">
-              Turn off to show &quot;Out of stock&quot;
+              {t("productForm.stockHelp")}
             </span>
           </span>
           <button
@@ -750,8 +769,7 @@ export function ProductForm({ productId }: ProductFormProps) {
             strokeWidth={1.8}
           />
           <span className="min-w-0 flex-1">
-            Tip: Products with at least 3 high-quality photos and lists of
-            clear benefits or highlights tend to sell 45% faster.
+            {t("productForm.tip")}
           </span>
         </p>
 
@@ -766,7 +784,7 @@ export function ProductForm({ productId }: ProductFormProps) {
             className="flex items-center justify-center rounded-2xl border border-[#E5E5E5] px-5 py-[15px] text-sm font-semibold transition hover:bg-[#F8F8F8]"
             href="/dashboard?tab=products"
           >
-            Cancel
+            {t("common.cancel")}
           </Link>
           <button
             className="rounded-2xl bg-[#111111] px-5 py-[15px] text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
@@ -777,7 +795,7 @@ export function ProductForm({ productId }: ProductFormProps) {
               ? "Saving..."
               : isCompressingImages
                 ? "Compressing..."
-                : "Save product"}
+                : t("productForm.save")}
           </button>
         </div>
       </form>

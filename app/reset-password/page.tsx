@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { FloxtoWordmark } from "../components/FloxtoBrand";
+import { getUserFacingError } from "../components/userFacingErrors";
+import { useI18n } from "../i18n/LanguageProvider";
 
 type ResetState = "checking" | "valid" | "invalid" | "success";
 
@@ -27,17 +30,20 @@ function LockIcon() {
 }
 
 function AuthBrandHeader() {
+  const { t } = useI18n();
+
   return (
     <div className="text-center">
       <FloxtoWordmark />
       <p className="mx-auto mt-1.5 max-w-full text-xs font-medium leading-5 text-[var(--c-text-2)]">
-        Simple. Fast. Professional.
+        {t("app.tagline")}
       </p>
     </div>
   );
 }
 
 export default function ResetPasswordPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -71,7 +77,7 @@ export default function ResetPasswordPage() {
 
       if (hashError) {
         if (isMounted) {
-          setMessage(hashError);
+          setMessage(getUserFacingError(hashError, "auth.resetLink", t));
           setResetState("invalid");
         }
         return;
@@ -94,7 +100,7 @@ export default function ResetPasswordPage() {
       }
 
       if (error) {
-        setMessage(error.message);
+        setMessage(getUserFacingError(error, "auth.resetLink", t));
         setResetState("invalid");
         return;
       }
@@ -109,7 +115,7 @@ export default function ResetPasswordPage() {
       isMounted = false;
       subscription.subscription.unsubscribe();
     };
-  }, []);
+  }, [t]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -124,7 +130,7 @@ export default function ResetPasswordPage() {
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(getUserFacingError(error, "auth.updatePassword", t));
       setIsLoading(false);
       return;
     }
@@ -142,14 +148,14 @@ export default function ResetPasswordPage() {
         <div className="mt-9 rounded-2xl border border-[var(--c-border-strong)] bg-[var(--c-surface)] p-6 shadow-sm">
           {resetState === "checking" ? (
             <p className="py-4 text-center text-sm font-medium text-[#888888]">
-              Checking reset link...
+              {t("common.loading")}
             </p>
           ) : null}
 
           {resetState === "invalid" ? (
             <div className="py-3 text-center">
               <h2 className="text-[22px] font-bold leading-tight">
-                This password reset link is invalid or has expired
+                {t("auth.invalidReset")}
               </h2>
               {message ? (
                 <p className="mt-2 text-sm font-medium text-[#B91C1C]">
@@ -160,22 +166,24 @@ export default function ResetPasswordPage() {
                 className="mt-6 flex w-full items-center justify-center rounded-xl bg-[#111111] px-4 py-[15px] text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99]"
                 href="/forgot-password"
               >
-                Request a new link
+                {t("auth.sendReset")}
               </Link>
             </div>
           ) : null}
 
           {resetState === "success" ? (
             <div className="py-3 text-center">
-              <h2 className="text-[22px] font-bold leading-tight">Password updated</h2>
+              <h2 className="text-[22px] font-bold leading-tight">
+                {t("auth.passwordUpdated")}
+              </h2>
               <p className="mt-2 text-sm font-medium text-[#888888]">
-                Your password has been reset. Redirecting you to login...
+                {t("auth.passwordUpdatedBody")}
               </p>
               <Link
                 className="mt-6 flex w-full items-center justify-center rounded-xl bg-[#111111] px-4 py-[15px] text-sm font-semibold text-white transition hover:bg-[#222222] active:scale-[0.99]"
                 href="/login"
               >
-                Continue to login
+                {t("auth.backToLogin")}
               </Link>
             </div>
           ) : null}
@@ -184,15 +192,15 @@ export default function ResetPasswordPage() {
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="text-center">
                 <h2 className="text-[22px] font-bold leading-tight">
-                  Reset your password
+                  {t("auth.resetTitle")}
                 </h2>
                 <p className="mt-2 text-sm font-medium leading-5 text-[#888888]">
-                  Choose a new password for your account.
+                  {t("auth.chooseNewPassword")}
                 </p>
               </div>
               <label className="block">
                 <span className="mb-2 block text-xs font-semibold">
-                  New Password
+                  {t("auth.newPassword")}
                 </span>
                 <div className="flex h-12 items-center gap-3 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10">
                   <LockIcon />
@@ -201,7 +209,7 @@ export default function ResetPasswordPage() {
                     type="password"
                     autoComplete="new-password"
                     minLength={6}
-                    placeholder="Enter new password"
+                    placeholder={t("auth.newPasswordPlaceholder")}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     required
@@ -211,7 +219,7 @@ export default function ResetPasswordPage() {
 
               <label className="block">
                 <span className="mb-2 block text-xs font-semibold">
-                  Confirm New Password
+                  {t("auth.confirmNewPassword")}
                 </span>
                 <div className="flex h-12 items-center gap-3 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10">
                   <LockIcon />
@@ -220,7 +228,7 @@ export default function ResetPasswordPage() {
                     type="password"
                     autoComplete="new-password"
                     minLength={6}
-                    placeholder="Confirm new password"
+                    placeholder={t("auth.confirmNewPasswordPlaceholder")}
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}
                     required
@@ -243,10 +251,13 @@ export default function ResetPasswordPage() {
                 type="submit"
                 disabled={!canSubmit}
               >
-                {isLoading ? "Resetting..." : "Reset Password"}
+                {isLoading ? t("common.saving") : t("auth.resetPasswordButton")}
               </button>
             </form>
           ) : null}
+        </div>
+        <div className="mt-5 flex justify-center">
+          <LanguageSwitcher compact />
         </div>
       </section>
     </main>

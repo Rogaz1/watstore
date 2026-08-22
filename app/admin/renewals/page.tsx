@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getUserFacingError } from "@/app/components/userFacingErrors";
+import { useI18n } from "@/app/i18n/LanguageProvider";
 
 type ActiveMerchant = {
   id: string;
@@ -17,6 +19,7 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
 export default function RenewalsPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [merchants, setMerchants] = useState<ActiveMerchant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -50,7 +53,7 @@ export default function RenewalsPage() {
       }
 
       if (error) {
-        setMessage(error.message);
+        setMessage(getUserFacingError(error, "admin.renewals", t));
         setMerchants([]);
       } else {
         setMerchants((data ?? []) as ActiveMerchant[]);
@@ -64,7 +67,7 @@ export default function RenewalsPage() {
     return () => {
       isMounted = false;
     };
-  }, [router]);
+  }, [router, t]);
 
   return (
       <main className="min-h-screen bg-white px-7 py-10 text-[#111111]">

@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { Merchant, SubscriptionExpiredFrom } from "./productTypes";
 import { buildWhatsAppUrl } from "./publicStoreTypes";
+import type { Locale } from "../i18n/messages";
 
 const TRIAL_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -109,13 +110,20 @@ export async function refreshMerchantSubscription<T extends SubscribableMerchant
   };
 }
 
-export function buildUpgradeUrl(merchant: Pick<Merchant, "business_name" | "slug">) {
+export function buildUpgradeUrl(
+  merchant: Pick<Merchant, "business_name" | "slug">,
+  locale: Locale = "en",
+) {
   return buildWhatsAppUrl(
     PLATFORM_WHATSAPP_NUMBER,
     [
-      "Hello, I would like to upgrade my account.",
-      `Business Name: ${merchant.business_name ?? ""}`,
-      `Store: ${merchant.slug ?? ""}`,
+      locale === "fr"
+        ? "Bonjour, je voudrais mettre mon compte à niveau."
+        : "Hello, I would like to upgrade my account.",
+      `${locale === "fr" ? "Nom de l'entreprise" : "Business Name"}: ${
+        merchant.business_name ?? ""
+      }`,
+      `${locale === "fr" ? "Boutique" : "Store"}: ${merchant.slug ?? ""}`,
     ].join("\n"),
   );
 }

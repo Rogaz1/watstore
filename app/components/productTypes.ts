@@ -7,6 +7,8 @@ export type Merchant = {
   payment_options?: string | null;
   why_choose_us?: string | null;
   currency_code?: CurrencyCode | null;
+  preferred_locale?: "en" | "fr" | null;
+  country_code?: string | null;
   slug?: string | null;
   whatsapp_number?: string | null;
   logo_url?: string | null;
@@ -94,13 +96,15 @@ export function normalizeCurrencyCode(
 export function formatPrice(
   value: number | null | undefined,
   currencyCode?: string | null,
+  locale = "en",
 ) {
-  return formatCurrency(value, currencyCode);
+  return formatCurrency(value, currencyCode, locale);
 }
 
 export function formatCurrency(
   value: number | null | undefined,
   currencyCode?: string | null,
+  locale = "en",
 ) {
   if (typeof value !== "number") {
     return "";
@@ -108,7 +112,7 @@ export function formatCurrency(
 
   const normalizedCurrency = normalizeCurrencyCode(currencyCode);
   const symbol = currencySymbols[normalizedCurrency];
-  const amount = new Intl.NumberFormat("en-US", {
+  const amount = new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);

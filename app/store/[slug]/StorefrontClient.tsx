@@ -7,8 +7,11 @@ import { useEffect, useState } from "react";
 import { Store } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
+import { LanguageSwitcher } from "@/app/components/LanguageSwitcher";
 import { formatPrice } from "@/app/components/productTypes";
 import { useForceLightTheme } from "@/app/components/useForceLightTheme";
+import { getUserFacingError } from "@/app/components/userFacingErrors";
+import { useI18n } from "@/app/i18n/LanguageProvider";
 import type {
   PublicMerchant,
   PublicProduct,
@@ -22,10 +25,18 @@ function ProductCard({
   product,
   slug,
   currencyCode,
+  locale,
+  priceOnRequestLabel,
+  outOfStockLabel,
+  noPhotoLabel,
 }: {
   product: PublicProduct;
   slug: string;
   currencyCode?: string | null;
+  locale: "en" | "fr";
+  priceOnRequestLabel: string;
+  outOfStockLabel: string;
+  noPhotoLabel: string;
 }) {
   const thumbnail = product.photo_urls?.[0];
   const card = (
@@ -41,12 +52,12 @@ function ProductCard({
           />
         ) : (
           <span className="flex h-full w-full items-center justify-center text-xs font-medium text-[#888888]">
-            No photo
+            {noPhotoLabel}
           </span>
         )}
         {!product.in_stock ? (
           <span className="absolute bottom-2 left-2 rounded-full bg-white/95 px-2 py-0.5 text-[12px] font-semibold text-[#888888] shadow-sm">
-            Out of stock
+            {outOfStockLabel}
           </span>
         ) : null}
       </div>
@@ -65,11 +76,12 @@ function ProductCard({
         {product.in_stock ? (
           <div className="mt-2 flex min-w-0 items-baseline gap-2">
             <span className="shrink-0 text-[13px] font-bold">
-              {formatPrice(product.sale_price, currencyCode) || "Price on request"}
+              {formatPrice(product.sale_price, currencyCode, locale) ||
+                priceOnRequestLabel}
             </span>
             {product.sale_price !== null && product.original_price ? (
               <span className="min-w-0 truncate text-[12px] font-medium text-[#CCCCCC] line-through">
-                {formatPrice(product.original_price, currencyCode)}
+                {formatPrice(product.original_price, currencyCode, locale)}
               </span>
             ) : null}
           </div>
@@ -89,6 +101,7 @@ function ProductCard({
 
 export function StorefrontClient({ slug }: StorefrontClientProps) {
   useForceLightTheme();
+  const { locale, t } = useI18n();
 
   const [merchant, setMerchant] = useState<PublicMerchant | null>(null);
   const [products, setProducts] = useState<PublicProduct[]>([]);
@@ -113,7 +126,7 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
       if (merchantError || !merchantData) {
         setMerchant(null);
         setProducts([]);
-        setMessage("Store not found.");
+        setMessage(t("store.notFound"));
         setIsLoading(false);
         return;
       }
@@ -141,7 +154,7 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
       }
 
       if (productError) {
-        setMessage(productError.message);
+        setMessage(getUserFacingError(productError, "store.load", t));
         setProducts([]);
       } else {
         setProducts((productData ?? []) as PublicProduct[]);
@@ -155,12 +168,12 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
     return () => {
       isMounted = false;
     };
-  }, [slug]);
+  }, [slug, t]);
 
   if (isLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-5 text-[#111111]">
-        <p className="text-sm font-medium text-[#888888]">Loading store...</p>
+        <p className="text-sm font-medium text-[#888888]">{t("store.loading")}</p>
       </main>
     );
   }
@@ -168,7 +181,7 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
   if (!merchant) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-5 text-center text-[#111111]">
-        <p className="text-base font-medium">{message || "Store not found."}</p>
+        <p className="text-base font-medium">{message || t("store.notFound")}</p>
       </main>
     );
   }
@@ -180,6 +193,9 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
   return (
     <main className="min-h-screen bg-[#F4F4F5] pb-8 text-[#111111]">
       <header className="bg-white px-5 pb-7 pt-16 sm:px-7">
+        <div className="mx-auto mb-4 flex w-full max-w-5xl justify-end">
+          <LanguageSwitcher compact />
+        </div>
         <div className="mx-auto flex w-full max-w-5xl flex-col items-center text-center">
           <div className="h-[52px] w-[52px] shrink-0 overflow-hidden rounded-2xl bg-[#111111] text-white">
             {merchant.logo_url ? (
@@ -215,7 +231,7 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
 
         {!products.length && !message ? (
           <p className="py-16 text-center text-base font-medium text-[#888888]">
-            No products available yet - check back soon!
+            {t("product.noProducts")}
           </p>
         ) : null}
 
@@ -227,6 +243,10 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
                 product={product}
                 slug={slug}
                 currencyCode={merchant.currency_code}
+                locale={locale}
+                priceOnRequestLabel={t("product.priceOnRequest")}
+                outOfStockLabel={t("product.outOfStock")}
+                noPhotoLabel={t("common.noPhoto")}
               />
             ))}
           </div>

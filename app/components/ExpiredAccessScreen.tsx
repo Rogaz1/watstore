@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { Merchant, SubscriptionExpiredFrom } from "./productTypes";
 import { buildUpgradeUrl } from "./subscription";
+import { useI18n } from "../i18n/LanguageProvider";
 
 function StoreIcon() {
   return (
@@ -34,16 +35,15 @@ export function ExpiredAccessScreen({
   expiredFrom: SubscriptionExpiredFrom | null;
 }) {
   const router = useRouter();
+  const { locale, t } = useI18n();
   const isTrialExpired = expiredFrom === "trial";
   const title = isTrialExpired
-    ? "Your 30-day free trial has ended"
-    : "Your store is temporarily offline";
+    ? t("expired.trialTitle")
+    : t("expired.subscriptionTitle");
   const description = isTrialExpired
-    ? "Thank you for trying the platform! Subscribe today to keep your storefront online, continue receiving WhatsApp orders, and access your merchant dashboard."
-    : "Your subscription has expired, so your storefront is currently hidden from customers. Renew your subscription to put your store back online and continue receiving WhatsApp orders.";
-  const buttonLabel = isTrialExpired
-    ? "Subscribe via WhatsApp"
-    : "Reactivate via WhatsApp";
+    ? t("expired.trialBody")
+    : t("expired.subscriptionBody");
+  const buttonLabel = isTrialExpired ? t("expired.subscribe") : t("expired.reactivate");
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -64,7 +64,7 @@ export function ExpiredAccessScreen({
         </p>
         <a
           className="mt-7 flex h-12 w-full items-center justify-center rounded-xl bg-[#25D366] px-4 text-[14px] font-bold text-white transition active:scale-[0.99]"
-          href={buildUpgradeUrl(merchant)}
+          href={buildUpgradeUrl(merchant, locale)}
           target="_blank"
           rel="noreferrer"
         >
@@ -75,7 +75,7 @@ export function ExpiredAccessScreen({
           type="button"
           onClick={handleLogout}
         >
-          Log out? Return to Login
+          {t("expired.returnLogin")}
         </button>
       </section>
     </main>
@@ -83,10 +83,12 @@ export function ExpiredAccessScreen({
 }
 
 export function StoreUnavailableScreen() {
+  const { t } = useI18n();
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-white px-8 py-12 text-center text-[#111111]">
       <p className="max-w-[18rem] text-[18px] font-bold leading-6 tracking-normal">
-        This store is temporarily unavailable
+        {t("expired.storeUnavailable")}
       </p>
     </main>
   );

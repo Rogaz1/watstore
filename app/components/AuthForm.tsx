@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { InstallAppPrompt } from "./InstallAppPrompt";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import { FloxtoWordmark } from "./FloxtoBrand";
 import { getPostAuthDestination } from "./merchantProfile";
 import { buildAbsoluteUrl } from "./siteUrl";
+import { getUserFacingError } from "./userFacingErrors";
+import { useI18n } from "../i18n/LanguageProvider";
 
 type AuthMode = "login" | "signup";
 
@@ -52,17 +55,20 @@ function LockIcon() {
 }
 
 function LoginBrandHeader() {
+  const { t } = useI18n();
+
   return (
     <div className="text-center">
       <FloxtoWordmark />
       <p className="mx-auto mt-1.5 max-w-full text-xs font-medium leading-5 text-[var(--c-text-2)]">
-        Simple. Fast. Professional.
+        {t("app.tagline")}
       </p>
     </div>
   );
 }
 
 export function AuthForm({ mode }: AuthFormProps) {
+  const { t } = useI18n();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -91,7 +97,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     if (error) {
       setIsLoading(false);
-      setMessage(error.message);
+      setMessage(getUserFacingError(error, isSignup ? "auth.signup" : "auth.login", t));
       return;
     }
 
@@ -110,11 +116,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       router.replace(destination);
     } catch (profileError) {
-      setMessage(
-        profileError instanceof Error
-          ? profileError.message
-          : "Unable to check your store setup.",
-      );
+      setMessage(getUserFacingError(profileError, "auth.profile", t));
       setIsLoading(false);
     }
   }
@@ -132,10 +134,10 @@ export function AuthForm({ mode }: AuthFormProps) {
           {isSignup ? (
             <div className="mb-5 text-center">
               <h1 className="text-[22px] font-bold leading-tight">
-                Create an account
+                {t("auth.createAccount")}
               </h1>
               <p className="mt-2 text-sm font-medium leading-5 text-[#888888]">
-                Enter your details to set up your store
+                {t("auth.signupSubtitle")}
               </p>
             </div>
           ) : null}
@@ -143,7 +145,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           <form className="space-y-5" onSubmit={handleSubmit}>
             <label className="block">
               <span className="mb-2 block text-xs font-semibold">
-                Email Address
+                {t("auth.email")}
               </span>
               <div className="flex h-12 items-center gap-3 rounded-xl border border-[#E5E5E5] bg-[#F4F4F5] px-4 text-[#888888] transition focus-within:border-[#111111] focus-within:ring-2 focus-within:ring-[#111111]/10">
                 {isSignup ? <EnvelopeIcon /> : null}
@@ -161,13 +163,13 @@ export function AuthForm({ mode }: AuthFormProps) {
 
             <label className="block">
               <span className="mb-2 flex min-w-0 items-center justify-between gap-3 text-xs font-semibold">
-                <span className="min-w-0 flex-1 truncate">Password</span>
+                <span className="min-w-0 flex-1 truncate">{t("auth.password")}</span>
                 {!isSignup ? (
                   <Link
                     className="shrink-0 text-xs font-semibold text-[#25D366] underline-offset-4 hover:underline"
                     href="/forgot-password"
                   >
-                    Forgot password?
+                    {t("auth.forgotPassword")}
                   </Link>
                 ) : null}
               </span>
@@ -180,8 +182,8 @@ export function AuthForm({ mode }: AuthFormProps) {
                   minLength={6}
                   placeholder={
                     isSignup
-                      ? "Create a strong password"
-                      : "Enter your password"
+                      ? t("auth.createPasswordPlaceholder")
+                      : t("auth.passwordPlaceholder")
                   }
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
@@ -202,25 +204,28 @@ export function AuthForm({ mode }: AuthFormProps) {
               disabled={isLoading}
             >
               {isLoading
-                ? "Please wait..."
+                ? t("auth.wait")
                 : isSignup
-                  ? "Create account"
-                  : "Log in"}
+                  ? t("auth.createAccountButton")
+                  : t("auth.login")}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-[#888888]">
-            {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+            {isSignup ? t("auth.hasAccount") : t("auth.noAccount")}{" "}
             <Link
               className="font-semibold text-[#25D366] underline-offset-4 hover:underline"
               href={isSignup ? "/login" : "/signup"}
             >
-              {isSignup ? "Log in" : "Sign up"}
+              {isSignup ? t("auth.login") : t("auth.signup")}
             </Link>
           </p>
         </div>
 
         <InstallAppPrompt />
+        <div className="mt-5 flex justify-center">
+          <LanguageSwitcher compact />
+        </div>
       </section>
     </main>
   );

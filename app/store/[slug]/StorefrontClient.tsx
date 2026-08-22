@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import { Store } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
-import { LanguageSwitcher } from "@/app/components/LanguageSwitcher";
 import { formatPrice } from "@/app/components/productTypes";
 import { useForceLightTheme } from "@/app/components/useForceLightTheme";
 import { getUserFacingError } from "@/app/components/userFacingErrors";
@@ -193,9 +192,6 @@ export function StorefrontClient({ slug }: StorefrontClientProps) {
   return (
     <main className="min-h-screen bg-[#F4F4F5] pb-8 text-[#111111]">
       <header className="bg-white px-5 pb-7 pt-16 sm:px-7">
-        <div className="mx-auto mb-4 flex w-full max-w-5xl justify-end">
-          <LanguageSwitcher compact />
-        </div>
         <div className="mx-auto flex w-full max-w-5xl flex-col items-center text-center">
           <div className="h-[52px] w-[52px] shrink-0 overflow-hidden rounded-2xl bg-[#111111] text-white">
             {merchant.logo_url ? (

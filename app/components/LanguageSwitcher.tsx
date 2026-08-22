@@ -19,14 +19,14 @@ export function LanguageSwitcher({ compact = false, onChange }: LanguageSwitcher
 
   return (
     <label
-      className={`inline-flex min-w-0 items-center gap-2 rounded-full border border-[#EDECEA] bg-white text-[#1A1A18] shadow-sm ${
+      className={`inline-flex max-w-full min-w-0 items-center gap-2 overflow-hidden rounded-full border border-[#EDECEA] bg-white text-[#1A1A18] shadow-sm ${
         compact ? "px-3 py-2 text-xs" : "px-4 py-2.5 text-sm"
       }`}
     >
       <Languages aria-hidden="true" className="h-4 w-4 shrink-0 text-[#888888]" />
       <span className="sr-only">{t("language.label")}</span>
       <select
-        className="min-w-0 bg-transparent font-semibold outline-none"
+        className="min-w-0 max-w-full flex-1 bg-transparent font-semibold outline-none"
         value={locale}
         onChange={(event) => handleChange(event.target.value as Locale)}
       >

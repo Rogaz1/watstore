@@ -372,7 +372,7 @@ function getPlanName(merchant: Merchant | null, locale: Locale) {
     return locale === "fr" ? "Formule mensuelle" : "Monthly Plan";
   }
 
-  return locale === "fr" ? "Abonnement expiré" : "Expired Plan";
+  return locale === "fr" ? "Plan expiré" : "Expired Plan";
 }
 
 function formatDateLabel(value: string | Date | null | undefined, locale: Locale) {
@@ -407,7 +407,7 @@ function buildPlanWhatsAppUrl(
     PLATFORM_HELP_NUMBER,
     [
       firstLine,
-      `${locale === "fr" ? "Nom de l'entreprise" : "Business Name"}: ${merchant.business_name ?? ""}`,
+      `${locale === "fr" ? "Nom de boutique" : "Business Name"}: ${merchant.business_name ?? ""}`,
       `${locale === "fr" ? "Boutique" : "Store"}: ${merchant.slug ?? ""}`,
     ].join("\n"),
   );
@@ -1931,11 +1931,11 @@ export default function DashboardPage() {
         ) : null}
 
         {activeTab === "settings" ? (
-          <section className="grid gap-4 bg-[#F7F5F2]">
-            <section className="grid gap-3">
+          <section className="grid w-full max-w-full min-w-0 gap-4 overflow-hidden bg-[#F7F5F2]">
+            <section className="grid w-full max-w-full min-w-0 gap-3 overflow-hidden">
               <h2 className="text-[18px] font-bold">{t("settings.appearance")}</h2>
               <ThemeToggle />
-              <div className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
+              <div className="w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
                 <p className="mb-2 text-[11px] font-bold uppercase text-[#AAAAAA]">
                   {t("language.label")}
                 </p>
@@ -1971,7 +1971,7 @@ export default function DashboardPage() {
             </section>
 
             <form
-              className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
+              className="w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
               onSubmit={handleSettingsSubmit}
             >
               <SettingsSectionTitle icon={<Store className="h-5 w-5" />}>
@@ -2185,7 +2185,7 @@ export default function DashboardPage() {
             </form>
 
             <form
-              className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
+              className="w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
               onSubmit={handleDeliveryInfoSubmit}
             >
               <h2 className="text-[18px] font-bold">
@@ -2285,7 +2285,7 @@ export default function DashboardPage() {
             </form>
 
             <form
-              className="rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
+              className="w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm"
               onSubmit={handlePasswordSubmit}
             >
               <SettingsSectionTitle icon={<Lock className="h-5 w-5" />}>
@@ -2345,7 +2345,7 @@ export default function DashboardPage() {
               </button>
             </form>
 
-            <section className="grid gap-4 rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
+            <section className="grid w-full max-w-full min-w-0 gap-4 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 shadow-sm">
               <h2 className="text-lg font-bold">{t("settings.subscription")}</h2>
               <div className="rounded-2xl border border-[#EDECEA] bg-[#F7F5F2] p-4">
                 <h3 className="text-[13px] font-bold">
@@ -2479,7 +2479,7 @@ export default function DashboardPage() {
               ) : null}
             </section>
 
-            <section className="rounded-2xl border border-[#EDECEA] bg-white p-4 text-center shadow-sm">
+            <section className="w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 text-center shadow-sm">
               <button
                 className="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[#EF4444] bg-white text-sm font-semibold text-[#EF4444] transition hover:opacity-70"
                 type="button"

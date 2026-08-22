@@ -18,7 +18,6 @@ import {
 import { supabase } from "@/lib/supabase";
 import { StoreUnavailableScreen } from "@/app/components/ExpiredAccessScreen";
 import { useForceLightTheme } from "@/app/components/useForceLightTheme";
-import { LanguageSwitcher } from "@/app/components/LanguageSwitcher";
 import {
   isMissingFaqsColumn,
   PRODUCT_SELECT_BASE,
@@ -714,9 +713,6 @@ export function ProductDetailClient({
         ) : null}
 
         <div className="relative min-w-0">
-          <div className="mb-3 flex justify-end">
-            <LanguageSwitcher compact />
-          </div>
           <h1
             ref={nameRef}
             className={`min-w-0 break-words text-[18px] font-semibold leading-[25px] [overflow-wrap:anywhere] ${

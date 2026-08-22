@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
+import { useI18n } from "../i18n/LanguageProvider";
 
 const THEME_STORAGE_KEY = "floxto-theme";
 type ThemePreference = "light" | "dark";
@@ -21,6 +22,7 @@ function applyTheme(theme: ThemePreference) {
 }
 
 export function ThemeToggle() {
+  const { t } = useI18n();
   const [theme, setTheme] = useState<ThemePreference>(() => getStoredTheme());
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export function ThemeToggle() {
   return (
     <button
       aria-pressed={isDark}
-      className="flex min-w-0 items-center justify-between gap-4 rounded-2xl border border-[#EDECEA] bg-white p-4 text-left shadow-sm transition active:scale-[0.99]"
+      className="flex w-full max-w-full min-w-0 items-center justify-between gap-4 overflow-hidden rounded-2xl border border-[#EDECEA] bg-white p-4 text-left shadow-sm transition active:scale-[0.99]"
       type="button"
       onClick={handleToggle}
     >
@@ -53,10 +55,10 @@ export function ThemeToggle() {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[13px] font-bold text-[#1A1A18]">
-            Dark Mode
+            {t("settings.darkMode")}
           </span>
           <span className="mt-1 block text-xs font-medium text-[#888888]">
-            Darker interface in low light.
+            {t("settings.darkModeHelp")}
           </span>
         </span>
       </span>

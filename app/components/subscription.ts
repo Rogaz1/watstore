@@ -120,7 +120,7 @@ export function buildUpgradeUrl(
       locale === "fr"
         ? "Bonjour, je voudrais mettre mon compte à niveau."
         : "Hello, I would like to upgrade my account.",
-      `${locale === "fr" ? "Nom de l'entreprise" : "Business Name"}: ${
+      `${locale === "fr" ? "Nom de boutique" : "Business Name"}: ${
         merchant.business_name ?? ""
       }`,
       `${locale === "fr" ? "Boutique" : "Store"}: ${merchant.slug ?? ""}`,

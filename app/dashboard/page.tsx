@@ -400,7 +400,9 @@ function buildPlanWhatsAppUrl(
     : planName;
   const firstLine =
     locale === "fr"
-      ? `Bonjour, je voudrais ${intent === "renew" ? "renouveler" : "passer à"} l'offre ${localizedPlan}.`
+      ? intent === "renew"
+        ? `Bonjour, je voudrais renouveler le plan ${localizedPlan}.`
+        : `Bonjour, je voudrais passer au plan ${localizedPlan}.`
       : `Hello, I'd like to ${intent === "renew" ? "renew" : "upgrade to"} the ${planName} plan.`;
 
   return buildWhatsAppUrl(
@@ -1977,12 +1979,12 @@ export default function DashboardPage() {
               <SettingsSectionTitle icon={<Store className="h-5 w-5" />}>
                 {t("settings.storeDetails")}
               </SettingsSectionTitle>
-              <div className="mt-5 grid gap-4">
-                <label className="block">
+              <div className="mt-5 grid w-full max-w-full min-w-0 gap-4 overflow-hidden">
+                <label className="block w-full max-w-full min-w-0 overflow-hidden">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
                     {t("settings.businessName")}
                   </span>
-                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
+                  <div className="flex h-12 w-full max-w-full min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
                       <Store className="h-4 w-4" />
                     </SettingsFieldIcon>
@@ -1997,11 +1999,11 @@ export default function DashboardPage() {
                   </div>
                 </label>
 
-                <label className="block">
+                <label className="block w-full max-w-full min-w-0 overflow-hidden">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
                     {t("settings.tagline")}
                   </span>
-                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
+                  <div className="flex h-12 w-full max-w-full min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
                       <Tag className="h-4 w-4" />
                     </SettingsFieldIcon>
@@ -2018,11 +2020,11 @@ export default function DashboardPage() {
                   </div>
                 </label>
 
-                <label className="block">
+                <label className="block w-full max-w-full min-w-0 overflow-hidden">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
                     {t("common.currency")}
                   </span>
-                  <div className="flex h-12 min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
+                  <div className="flex h-12 w-full max-w-full min-w-0 items-center overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] text-[#888888] transition focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
                       <CreditCard className="h-4 w-4" />
                     </SettingsFieldIcon>
@@ -2044,15 +2046,15 @@ export default function DashboardPage() {
                   </div>
                 </label>
 
-                <label className="block min-w-0 max-w-full">
+                <label className="block w-full max-w-full min-w-0 overflow-hidden">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
                     {t("settings.storeUrl")}
                   </span>
-                  <div className="flex h-12 max-w-full overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
+                  <div className="flex h-12 w-full max-w-full min-w-0 overflow-hidden rounded-xl border border-[#EDECEA] bg-[#F4F3F0] focus-within:border-[#1A1A18] focus-within:ring-2 focus-within:ring-[#1A1A18]/10">
                     <SettingsFieldIcon>
                       <Globe className="h-4 w-4" />
                     </SettingsFieldIcon>
-                    <span className="flex h-full shrink-0 items-center border-r border-[#EDECEA] pr-3 text-sm font-semibold text-[#888888]">
+                    <span className="flex h-full shrink-0 items-center border-r border-[#EDECEA] pr-2 text-sm font-semibold text-[#888888]">
                       /store/
                     </span>
                     <input
@@ -2080,7 +2082,7 @@ export default function DashboardPage() {
                   ) : null}
                 </label>
 
-                <label className="block">
+                <label className="block w-full max-w-full min-w-0 overflow-hidden">
                   <span className="mb-2 block text-[11px] font-bold uppercase text-[#AAAAAA]">
                     {t("settings.whatsapp")}
                   </span>

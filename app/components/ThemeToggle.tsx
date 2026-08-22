@@ -57,9 +57,6 @@ export function ThemeToggle() {
           <span className="block truncate text-[13px] font-bold text-[#1A1A18]">
             {t("settings.darkMode")}
           </span>
-          <span className="mt-1 block text-xs font-medium text-[#888888]">
-            {t("settings.darkModeHelp")}
-          </span>
         </span>
       </span>
       <span

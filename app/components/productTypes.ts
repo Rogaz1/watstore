@@ -68,8 +68,8 @@ export type PublicOrder = {
 export const supportedCurrencies = [
   { code: "GHS", label: "Ghana Cedi", symbol: "\u20B5" },
   { code: "NGN", label: "Nigerian Naira", symbol: "\u20A6" },
-  { code: "XOF", label: "West African CFA franc", symbol: "CFA" },
-  { code: "XAF", label: "Central African CFA franc", symbol: "FCFA" },
+  { code: "XOF", label: "West African CFA franc", symbol: "F CFA" },
+  { code: "XAF", label: "Central African CFA franc", symbol: "F CFA" },
   { code: "USD", label: "US Dollar", symbol: "$" },
   { code: "GBP", label: "British Pound", symbol: "\u00A3" },
   { code: "EUR", label: "Euro", symbol: "\u20AC" },
@@ -113,9 +113,14 @@ export function formatCurrency(
   const normalizedCurrency = normalizeCurrencyCode(currencyCode);
   const symbol = currencySymbols[normalizedCurrency];
   const amount = new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-US", {
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
     maximumFractionDigits: 2,
+    useGrouping: false,
   }).format(value);
+
+  if (normalizedCurrency === "XOF" || normalizedCurrency === "XAF") {
+    return `${amount} ${symbol}`;
+  }
 
   return symbol.length > 1 ? `${symbol} ${amount}` : `${symbol}${amount}`;
 }

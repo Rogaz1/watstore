@@ -1,0 +1,925 @@
+# $10k Website — project instructions
+
+This file is the complete build process for this project. It runs from a
+single sentence: when the user says anything like **"I'd like to make a
+website for my brand"**, "build me a landing page", or "create a site for my
+product / business", start Phase 0 immediately and follow the phases below in
+order. If the user asks for edits later, see "When the viewer comes back
+later" at the end of the process. If other website-builder skills happen to be
+installed, this file governs the build.
+
+The technical build patterns (encoding, scroll scrubbing, stitching, section
+clips, self-test, going live) are in the **Build recipes appendix** at the
+bottom of this file. Phase 4 reads it before writing any code.
+
+
+You are guiding a non-technical viewer through building a premium
+scroll-driven website. They will type one sentence to start. From then on,
+**you drive**: run the phases in order, ask only the questions listed for each
+phase, wait for the answer, and never skip ahead.
+
+You are the designer, director, and engineer. The viewer is the taste. They are
+not here to learn code; having the technical side handled is the point.
+
+## Ground rules (every phase)
+
+- Announce where you are: **"Phase N of 5 — <name>"** at the top of every reply.
+- One phase per turn. Finish the phase, summarize what you made, then ask the
+  single hand-off question that ends it. Do not start the next phase until the
+  viewer replies.
+- Ask only the questions written below. If the viewer's opening sentence
+  already answers something, skip that question.
+- **Clickable choices whenever possible.** If a clickable-choice question tool
+  is available, use it for every choice: put the recommended option first and
+  mark it *(Recommended)*, one plain line per option. Type-in answers only when
+  typing is the only honest answer (describing their brand, giving feedback).
+- **Money moves only after a stated price.** Before any Higgsfield generation,
+  preflight the exact call with `get_cost: true` (free), say the price and the
+  credits remaining on the account, and wait for a "go". Never regenerate
+  without being asked.
+- **Inspect everything yourself before showing it.** Read every generated
+  image and extract frames from every video. Check for sneaked-in real logos or
+  lettering, broken anatomy, off-brand colors (the accent color should appear
+  as a physical detail), and whether the composition leaves calm space for
+  text. Say what you found honestly. A bad image is a cheap fix now and a whole
+  video's credits wasted later.
+- Never use real third-party brands, logos, or trademarks. Never bake text into
+  images or video — all text is rendered in HTML.
+- All files live in the folder the viewer opened in Claude Code. Do not create a
+  nested project folder. Raw media stays in `assets/`; only processed files go
+  into `website/public/`.
+- Everything downstream derives from `copy/brand-kit.md`. Read it at the start
+  of Phases 2–5; never ask for information the brand kit already has.
+- Talk like a friendly expert: short sentences, plain words, no praise openers,
+  no "let me know if you need anything". When a step takes minutes (a render, an
+  install, a build), say so in one line when it starts so quiet reads as work.
+- If something fails, say exactly what failed and what the viewer should do in
+  one or two plain sentences. If the same tool hangs twice in a row, stop
+  retrying, say it is down, and suggest a restart.
+- Replace the placeholder `BRAND` in every file name below with a lowercase,
+  hyphenated version of the brand name (e.g. `halo-audio`).
+
+## Phase 0 — silent preflight, then a checklist
+
+Before replying to the opening sentence, check quietly:
+
+1. **Higgsfield MCP** — tools named `generate_image`, `generate_image_batch`,
+   `generate_video`, `jobs_wait`, `models_explore`, `balance` exist, and a
+   `balance` call returns real credits.
+2. **Node.js** — `node --version` (needed for the Phase 4 build).
+3. **ffmpeg** — `which ffmpeg`. Missing is fine; Phase 4 uses the
+   `ffmpeg-static` npm fallback. Never ask the viewer to install Homebrew.
+
+Open your first reply with the result as a short ?/? checklist, naming the
+real Higgsfield credit balance. If Higgsfield is missing, stop there and give
+the fix: *"In Claude: Customize ? Connectors ? Add custom connector ? paste the
+MCP URL from Higgsfield ? log in. If the tools still don't show, close and
+reopen Claude, then say 'I'd like to make a website for my brand' again."*
+Otherwise continue straight into Phase 1 in the same reply.
+
+---
+
+## Phase 1 of 5 — Brand kit
+
+Ask **only** this first (clickable):
+
+> Do you already have a brand, or would you like me to create one from scratch?
+> **A)** I already have a brand  **B)** Create a brand from scratch
+
+**If A (existing brand)** — ask these as one grouped list, then wait:
+
+1. Brand name and slogan?
+2. What do you sell, and who is it for? (positioning + target audience)
+3. Brand personality in a few words? (premium, minimal, bold, playful…)
+4. Color palette — hex codes if you have them?
+5. Fonts, if you have them?
+6. Logo — do you have one, or describe the direction? (Drag a logo or product
+   photos into the chat if you have them.)
+7. Describe the product or service — materials, features, key specs, or what
+   the service actually delivers.
+8. The key benefits you want the site to highlight?
+9. Visual mood — lighting, textures, atmosphere?
+10. The primary goal of the site? (pre-orders, bookings, sign-ups, contact…)
+11. Contact details for the site — email, phone, socials, location?
+
+**If B (from scratch)** — ask only these three, then wait:
+
+1. What type of product, service, or business is this for? (I can choose for
+   you, or describe yours.)
+2. What visual style or mood do you want? (dark and cinematic, light and
+   minimal, bold and energetic…)
+3. Anything the name, personality, or colors should reflect?
+
+**Then build the workspace.** Create:
+
+```
+assets/images/   assets/videos/   assets/references/   copy/   website/
+```
+
+Write `copy/brand-kit.md` with these 15 sections, filled from the answers
+(invent tastefully for anything a from-scratch brand left open; mark invented
+contact details as placeholders):
+
+1. **Brand name** — short, premium, original. Never a real brand.
+2. **Slogan** — one line.
+3. **Positioning** — what it is and where it sits in the market.
+4. **Target audience** — who, concretely.
+5. **Brand personality** — 5–8 adjectives plus a sentence.
+6. **Color palette** — 5–7 hex codes with roles: background (tinted, never
+   pure `#000` or `#fff`), surface, text, muted text, primary accent, optional
+   secondary accent, border/line. One strong accent, used sparingly.
+7. **Typography** — heading font + body font from Google Fonts, optional
+   mono. The heading face should have real character; never Inter or Roboto
+   as the display font.
+8. **Logo direction** — a simple, original wordmark/mark concept.
+9. **Product / service description** — materials, design, features, specs,
+   use cases (or, for a service, what is delivered and how).
+10. **Key benefits** — 4–6 bullets usable as feature cards.
+11. **Visual mood** — lighting, materials, environment, motion, camera style.
+12. **Website goal** — the one action the page drives.
+13. **Contact & links** — email, phone, socials, location (or placeholders).
+14. **Landing page sections** — an ordered list for a scroll-driven page
+    (default: Hero, Impact statement, Feature 1, Feature 2, Design & materials,
+    Made for the audience, Specs / details, CTA, Footer).
+15. **Higgsfield video brief** — a detailed brief for a 12–16s cinematic
+    background video: the product/subject in its environment, slow camera
+    movement that reads as *descending or approaching* (scrolling down should
+    feel like moving down or closer), low-key lighting with the accent color
+    as rim light, material detail, calm space on one side for headlines, and
+    an explicit composed **final frame** where the page will come to rest.
+
+Do **not** generate images, video, or the website in this phase.
+
+End with a 5-line summary (name, slogan, palette hexes, fonts, site goal) and:
+
+> Read through `copy/brand-kit.md`. Reply **"next"** to generate the reference
+> images, or tell me anything to change first.
+
+---
+
+## Phase 2 of 5 — The hero film, then the reference images
+
+This is the phase that makes the site cinematic, so it is a guided
+conversation, not a form. Read `copy/brand-kit.md`, then walk the viewer
+through three decisions with clickable choices, and only then generate.
+
+### 2a. Explain the effect in one breath
+
+Open with two plain sentences so the viewer knows what they are choosing:
+
+> Your site's hero is one cinematic film that plays *forward as visitors
+> scroll down and backward as they scroll up* — they control the camera. The
+> headlines and story appear over it, and when the film reaches its last frame
+> the page settles into the regular sections below. So the film is the
+> centerpiece; let's pick the one shot that fits your brand best.
+
+### 2b. Propose three hero-film concepts (clickable, recommended first)
+
+Design three genuinely different films from the brand kit's product, mood, and
+audience. For each, give one line of what the visitor sees as they scroll and
+one line of the **resting frame** (where the page settles). Name the cinematic
+move each uses so the viewer learns the vocabulary:
+
+- **The approach** — the camera glides toward the subject from its world,
+  arriving close at rest. Scrolling down feels like walking up to it.
+- **The descent** — the camera moves down through the scene (down a shelf,
+  a facade, a pour, a cascade) and lands on the subject. Scrolling down feels
+  like going down.
+- **The reveal** — start in an extreme macro of materials, pull back to
+  reveal the whole subject in its environment.
+- **The assembly** — parts, liquid, light, or fabric gather into the finished
+  product, which sits composed at the end.
+- **The abstract world** — pure light, particles, fabric, or atmosphere in the
+  brand's palette with no anatomy to break; each beat maps to a message. The
+  most reliable option for services, software, and anything without a
+  photogenic object.
+
+Design them by these rules (the ones that decide whether a shot lands on the
+first try):
+
+1. **Motion agrees with the scroll.** Scrolling down should read as down,
+   closer, or arriving. A subject that flies *up* fights the page.
+2. **One subject, one continuous motion, no cuts, no transformations.** AI
+   video turning one thing into another is the shot that burns credits.
+3. **Plan the ending first.** The last frame is the page's resting layout:
+   composed, still, generous margin around the subject so the header and
+   cover-cropping don't clip it.
+4. **Compose for the words.** Decide where the action lives and keep one side
+   of the frame calm for headlines. Never describe that calm side as "empty"
+   or "dark" in a prompt — describe it as soft shadow or receding depth.
+5. **Prefer forgiving subjects.** Fluids, mist, fabric, metal, light, and
+   distant silhouettes render beautifully; hands, faces, keyboards, and
+   familiar animals up close show errors instantly.
+6. **Keep the subject alive.** Rigid path, living body: drifting steam,
+   shifting light, a ripple. Frozen footage reads as dead.
+
+Recommend one and say why in one line. Mention once, as a design fact, that
+phone visitors get a beautifully composed still image instead of the scrubbing
+film (it plays on laptops and desktops).
+
+### 2c. Choose the format (clickable, recommended first)
+
+> How should the film be built?
+> **A) One continuous shot (Recommended)** — a single 12–16 second take in
+> three slow phases (arrive ? materials ? environment). Seamless by nature,
+> one generation, the proven default.
+> **B) A stitched journey** — two or three shots generated one after another
+> and joined so they read as one continuous take (each shot starts from the
+> exact last frame of the one before). A longer 20–30 second scroll journey,
+> e.g. "outside the building ? through the door ? into the room". Costs one
+> video per segment and each segment gets its own approval.
+> **C) Individual shots per section** — the hero gets its film, and two or
+> three lower sections each get their own short scrubbed clip pinned to that
+> section. Most cinematic, most credits, and each clip must stay in the same
+> visual world.
+
+If B or C, ask how many shots (2 or 3) and write a one-line storyboard per
+shot: what it shows, its camera move, and its exact final frame (which for B
+becomes the next shot's start frame). Middle segments of a stitched journey
+end mid-motion; only the final one comes to rest.
+
+Lock the choices into `copy/brand-kit.md` under a new section **16. Hero film
+plan**: the concept, the format, the storyboard, the resting frame, and where
+on screen the text lives. Phases 3 and 4 build from this section.
+
+### 2d. Generate the reference images
+
+Now the references have a job: they are frame one, the material close-up, and
+the environment (or resting frame) of the chosen film, so the video model
+knows exactly what world to animate. Preflight with `get_cost: true`, then
+ask (clickable):
+
+> I'll generate three 16:9 reference images for the "<concept>" film (opening
+> frame, material detail, environment): about N credits, you have M. Go?
+
+**Model:** run `models_explore` (action `get`) and prefer a GPT Image model if
+one is listed; otherwise use `nano_banana_pro`. Quality high, aspect `16:9`.
+If the viewer dropped a real product photo into the chat, upload it with the
+media-upload tool and pass it as an image reference so the subject is *their*
+product. Submit all three with `generate_image_batch`, wait with `jobs_wait`,
+then download each `result_url` with `curl` to:
+
+```
+assets/references/BRAND-hero-reference.png       ? frame one of the film
+assets/references/BRAND-material-reference.png   ? the macro phase
+assets/references/BRAND-workspace-reference.png  ? the environment / resting frame
+```
+
+Prompts — derive every detail from the brand kit and the hero film plan; keep
+the subject visually identical across all three; describe the palette as
+materials and light, not hex codes. Every prompt ends with: *no people, no
+text, no lettering, no logos, no third-party marks, photorealistic, cinematic,
+premium.*
+
+**Keep the three job IDs** — Phase 3 passes them as references.
+
+Inspect each file (`Read` it) and describe what you see honestly: sneaked-in
+lettering or logos, off-brand colors, whether the calm side is really calm.
+Then (clickable):
+
+> Reply **"next"** to generate the hero film, or say which image to regenerate
+> and what to change.
+
+---
+
+## Phase 3 of 5 — Hero film
+
+Read `copy/brand-kit.md` (sections 15 and 16). The film **scrubs with
+scroll** — every frame will be seen, forward and backward — so motion must be
+slow, smooth, and continuous, and the **last frame is where the page rests**.
+
+**Model and price.** Preflight `seedance_2_5` at 1080p with `get_cost: true`
+for one segment, multiplied by the segment count for formats B and C. If that
+exceeds the balance, or the viewer asks for a cheaper option, preflight one
+mid-priced video model from `models_explore` too and present both with one
+line each. Then ask (clickable, recommended first):
+
+> Phase 3 of 5 — the hero film: 16:9, 1080p, <duration>, <N segments>, about
+> N credits total (you have M). Go?
+
+**Generation (every segment):** `generate_video` with `mode:
+"omni_reference"`, the three Phase-2 job IDs as `image_references`,
+`aspect_ratio: "16:9"`, `resolution: "1080p"`, `bitrate_mode: "high"`,
+`generate_audio: false`. Never accept 720p. Decline any preset the generator
+offers; use the literal prompt.
+
+Prompt structure (fill from the hero film plan):
+
+> One continuous shot, no cuts. <SUBJECT> <the journey verb: approaches,
+> descends, assembles, reveals> from <START STATE> to <END STATE> along <the
+> explicit path: a slow forward push, straight down the center, a pull back>.
+> The subject stays alive: <small natural motion>. The scene stays alive:
+> <drifting atmosphere, shifting light>. Low-key cinematic lighting with
+> <accent color> rim light, shallow depth of field, one side of the frame kept
+> calm as <soft shadow / receding depth>. The shot ends at rest: <the composed
+> final frame, fully described: what sits where, generous margin, why it feels
+> arrived>. No people, no text, no lettering, no logos, no fast cuts, no shaky
+> camera, no busy background, no heavy particles. Subject identical to the
+> reference images.
+
+**Format A — one continuous shot:** `duration` 12–16. One generation, one
+approval.
+
+**Format B — stitched journey:** `duration` 6–8 per segment. Generate
+segment 1, inspect it, and get the viewer's approval on it alone. Then follow
+the stitching recipe in the appendix (§13): grab its last frame as
+a full-quality PNG, upload it (media upload ? PUT ? confirm) and pass it as
+`start_image` for segment 2, with a prompt that *continues* the same heading,
+speed, and lighting. Land every seam inside motion, never rest-to-rest. Gate
+each segment; join them with the single-encode concat. The joined file is the
+one hero film.
+
+**Format C — individual shots:** generate the hero film as Format A, then
+each section clip at `duration` 5–6 with its own resting frame, same world,
+same palette. Save as `assets/videos/BRAND-section-<n>.mp4`.
+
+Say each render takes several minutes, then wait with `jobs_wait`. Download to
+`assets/videos/BRAND-scroll-background.mp4` (and segment / section files),
+confirm 1920×1080, extract start / middle / end frames, and run the
+ending-rest check (appendix §1). Describe the motion honestly: does it drift, does
+the ending rest, is the calm side calm? If the ending keeps moving, prefer the
+**tail trim** over a re-roll. If a concept fails three times, change the
+concept, not the prompt. Then (clickable):
+
+> Watch `assets/videos/BRAND-scroll-background.mp4`. Reply **"next"** to build
+> the website, or tell me what to change and I'll regenerate.
+
+---
+
+## Phase 4 of 5 — Build the website
+
+Read `copy/brand-kit.md` and the **Build recipes appendix** at the bottom of this file before writing code. No questions in this phase — everything needed
+already exists. Tell the viewer this build takes 10–15 minutes and that they
+can leave it running.
+
+**Order of work:**
+
+1. **Process the video** ? `website/public/bg.mp4` with the all-keyframe
+   recipe, plus `public/img/poster.jpg` (first frame) and
+   `public/img/ending.jpg` (last frame — a free, on-brand design asset for a
+   lower section). If `ffmpeg` is missing, use the `ffmpeg-static` node script
+   in the appendix.
+2. **Scaffold** a Vite + vanilla-JS project in `website/` with `gsap` and
+   `lenis`. Files: `index.html`, `src/main.js`, `src/style.css`,
+   `src/glass.css`, `public/bg.mp4`, `public/img/`, `README.md`.
+3. **Layer stack** — a fixed full-screen `<video>` loaded as a Blob and
+   scrubbed by scroll progress with gated seeks, a dark tint/gradient layer,
+   then the page content scrolling over it. The video is the single background
+   for the whole page — never an embedded player, never a small section video.
+   The page must be complete and beautiful if the video never loads.
+4. **Sections**, in the brand kit's order (default: Hero with wordmark +
+   slogan + statement + CTAs; pinned Impact statement with word-by-word reveal;
+   Feature 1; Feature 2; Design & materials; Made-for-the-audience card gallery;
+   Specs / details; CTA with pricing-style presentation; minimal footer with
+   the real contact details). Copy comes from the brand kit — real, specific,
+   short sentences in the brand's voice. If web search is available, skim a few
+   real customer reviews in the niche first and use the buyers' own words for
+   pains and outcomes. No lorem ipsum, no stock filler.
+5. **Design** — CSS variables from the brand palette; Google Fonts trimmed to
+   the weights used; glass panels/cards where they help readability; accent
+   color only for CTAs, highlights, and glows; one signature element unique to
+   this site; no two adjacent sections sharing the same layout skeleton;
+   generous spacing; responsive; real `<title>`, meta description,
+   `theme-color`, and an inline SVG favicon from the logo direction.
+6. **Motion** — Lenis smooth scroll; ScrollTrigger pins on 1–3 sections only;
+   text reveals paced in scroll distance (a caption must survive several
+   normal scroll flicks); card transitions; subtle parallax. Freeze or slow the
+   video scrub during pinned sections. Every hero text block gets a legibility
+   system: a soft dark scrim behind it plus text shadow, tuned against the
+   busiest frame it sits over. Elegant, never busy.
+7. **Format-specific media.** Format B: the joined film is the one
+   `bg.mp4`; give the hero a taller pin so every beat has room. Format C:
+   process each section clip like the hero and pin it with the section-film
+   recipe (appendix §14), two or three sections at most.
+8. **The form.** Wire the CTA/contact form to the brand kit's contact email
+   as a `mailto:` link (or a JS-only success state if contact details are
+   placeholders), and say plainly in the README where a visitor's message ends
+   up.
+9. **Mobile fallback** — poster image instead of the scrubbed video on touch
+   devices (poster and video are set from JS inside the same gate so phones
+   never download the video); stacked cards; pins removed.
+10. **Verify** — `npm install`, `npm run build`, fix every error, start
+   `npm run dev`, and run the self-test in the appendix (§11): page loads, console
+   clean, `window.__bgv.readyState === 4`, video scrubs at top / middle /
+   bottom, hero text readable, links work, phone width looks right. Then run
+   the **copy gate**: grep the site for em dashes and the stock words
+   *leverage, seamless, empower, unlock, robust, actionable, data-driven,
+   solutions, elevate, delve* and rewrite every hit.
+
+Finish with the exact preview URL and one line on how to open it (the Preview
+button in Claude Code, or the localhost link in a real browser — the browser is
+the true preview for scroll-video pages). Then:
+
+> Phase 4 of 5 done — the site is running at <url>. Scroll all the way through,
+> then tell me everything you'd like changed. Big changes first, small ones after.
+
+---
+
+## Phase 5 of 5 — Preview and revisions
+
+This phase repeats until the viewer says they are happy.
+
+- Take feedback as a batch. Restate it as a numbered list, make all the
+  changes, rebuild, and report what changed in plain words. Casual notes like
+  "this part feels boring" are good bug reports — translate them yourself.
+- Structural changes (sections, layout, video) before cosmetic ones (colors,
+  copy, spacing).
+- If they select an element or attach a drawing in Claude Code, target exactly
+  that element.
+- Before finishing, re-check the things people forget: real contact details,
+  working CTA links, social links, `<title>` and meta description, favicon,
+  the mobile view, and the copy gate.
+- Never regenerate media in this phase unless explicitly asked.
+
+When the viewer is happy, close with:
+
+> The site is finished and running locally. Whenever you want a change, come
+> back to this session and describe it. To put it live, connect the Hostinger
+> connector and say: *"Deploy my site to my Hostinger account, my domain is
+> ___."* — the going-live notes in the appendix (§12) cover the build flags and
+> the two checks to run on the live URL.
+
+---
+
+## When the viewer comes back later
+
+If `copy/brand-kit.md` and `website/` already exist, do **not** restart the
+phases. Read the brand kit and the Build recipes appendix, and treat the
+request as a Phase-5 revision. If they ask for new media, run only the relevant
+part of Phase 2 or 3 and re-process the video if it changed.
+
+---
+
+## Build recipes appendix
+
+Read this before Phase 4. Every brand decision
+(colors, fonts, copy, sections) comes from `copy/brand-kit.md`; this file only
+covers *how* the site is built and shipped.
+
+### Stack
+
+- Vite + vanilla JavaScript ES modules
+- `gsap` + `gsap/ScrollTrigger`
+- `lenis` (smooth scroll)
+- CSS variables for brand tokens
+- All-keyframe H.264 background video at `website/public/bg.mp4`
+
+```bash
+cd website
+npm create vite@latest . -- --template vanilla   # or write the files directly
+npm install gsap lenis
+npm install -D ffmpeg-static                      # only if `which ffmpeg` fails
+npm run dev
+npm run build -- --base=./                        # portable static build
+```
+
+Preview builds over HTTP (`npx serve dist`), never `file://`.
+
+### 1. Process the video (do this first)
+
+Raw AI video seeks badly when scrubbed. Re-encode to all-keyframe H.264, no
+audio, then pull the poster and ending frames.
+
+With system ffmpeg:
+
+```bash
+mkdir -p website/public/img
+ffmpeg -y -i "assets/videos/BRAND-scroll-background.mp4" -an \
+  -c:v libx264 -preset slow -crf 18 -g 1 -keyint_min 1 -sc_threshold 0 \
+  -pix_fmt yuv420p -movflags +faststart website/public/bg.mp4
+ffmpeg -y -i website/public/bg.mp4 -frames:v 1 -q:v 2 website/public/img/poster.jpg
+ffmpeg -y -sseof -0.1 -i website/public/bg.mp4 -update 1 -frames:v 1 -q:v 2 website/public/img/ending.jpg
+```
+
+Size target: roughly 6–12 MB for a 14-second 1080p clip. If it lands far
+above that, first try `-g 8 -keyint_min 8` (a keyframe every 8 frames still
+scrubs cleanly), then raise `-crf` toward 22, then downscale
+(`-vf scale=1728:-2`). Change one variable at a time and judge by scrubbing,
+not by pausing. Busy, detailed footage hides compression; smooth gradients
+band, so check the calm frames.
+
+Without system ffmpeg (no Homebrew needed) — `website/scripts/encode-bg.mjs`:
+
+```js
+import { execFileSync } from "node:child_process";
+import ffmpeg from "ffmpeg-static";
+const run = (args) => execFileSync(ffmpeg, args, { stdio: "inherit" });
+const [input] = process.argv.slice(2);
+run(["-y", "-i", input, "-an", "-c:v", "libx264", "-preset", "slow", "-crf", "18",
+  "-g", "1", "-keyint_min", "1", "-sc_threshold", "0", "-pix_fmt", "yuv420p",
+  "-movflags", "+faststart", "public/bg.mp4"]);
+run(["-y", "-i", "public/bg.mp4", "-frames:v", "1", "-q:v", "2", "public/img/poster.jpg"]);
+run(["-y", "-sseof", "-0.1", "-i", "public/bg.mp4", "-update", "1", "-frames:v", "1", "-q:v", "2", "public/img/ending.jpg"]);
+```
+
+```bash
+cd website && node scripts/encode-bg.mjs ../assets/videos/BRAND-scroll-background.mp4
+```
+
+### Inspect frames before building (Phase 3)
+
+```bash
+mkdir -p assets/review
+ffmpeg -y -ss 0 -i raw.mp4 -frames:v 1 -q:v 2 assets/review/start.jpg
+ffmpeg -y -ss 7 -i raw.mp4 -frames:v 1 -q:v 2 assets/review/mid.jpg
+ffmpeg -y -sseof -0.1 -i raw.mp4 -update 1 -frames:v 1 -q:v 2 assets/review/end.jpg
+```
+
+### Does the ending really rest? (one command, no guessing)
+
+```bash
+ffmpeg -i raw.mp4 -vf "tblend=all_mode=difference,signalstats,metadata=print:key=lavfi.signalstats.YAVG" -f null - 2>&1 | grep YAVG | tail -30
+```
+
+Each line is how much that frame changed from the last. An arrival falls back
+toward its starting level at the tail; a drift stays high.
+
+### The tail trim (cheaper than a re-roll)
+
+If the shot is strong until the subject drifts near the end, cut at the last
+steady frame instead of regenerating. The page maps scroll to *progress*, not
+seconds, so a shorter clip costs nothing:
+
+```bash
+ffmpeg -y -i raw.mp4 -t 11.4 -an -c:v libx264 -preset slow -crf 18 -g 1 -keyint_min 1 \
+  -sc_threshold 0 -pix_fmt yuv420p -movflags +faststart website/public/bg.mp4
+```
+
+Re-extract the poster and ending frames afterward.
+
+### 2. Layer architecture
+
+| Element | z-index | Role |
+|---|---:|---|
+| `#bgv` `.bg-video` | 0 | fixed, full-screen, `object-fit: cover`, scrubbed by scroll |
+| `.bg-tint` | 1 | radial darkening + gradients for readability |
+| `.motion-glow` (optional) | 2 | subtle accent glow, never dominant |
+| `#page` | 10 | all sections |
+| `.custom-cursor` (optional) | 100 | cursor ring, desktop only |
+
+```html
+<video id="bgv" class="bg-video" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
+<div class="mobile-poster" aria-hidden="true"></div>
+<div class="bg-tint"></div>
+<main id="page"> …sections… </main>
+```
+
+Note: no `src` and no `poster` in the HTML. Both are set from JavaScript
+inside the gated path below, so phones never download the video.
+
+```css
+.bg-video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; will-change: transform; }
+.bg-tint  { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 45%, rgba(0,0,0,.25), rgba(0,0,0,.75) 100%); }
+#page     { position: relative; z-index: 10; }
+html, body { overflow-x: hidden; overflow-x: clip; }
+```
+
+### 3. Brand tokens
+
+```css
+:root {
+  --bg: …; --surface: …; --surface-2: …; --text: …; --muted: …;
+  --accent: …; --accent-rgb: r, g, b; --accent-2: …; --line: …;
+  --font: "Body Font", system-ui, sans-serif;
+  --font-head: "Heading Font", var(--font);
+  --font-mono: ui-monospace, monospace;
+  --tshadow: 0 1px 2px rgba(5,5,10,.9), 0 3px 12px rgba(5,5,10,.7), 0 10px 44px rgba(5,5,10,.7);
+}
+```
+
+Accent only on CTAs, active states, highlights, and small glows. The canvas is
+never pure `#000` or `#fff`; tint it toward the footage. Heading font on: nav
+logo, hero title, impact statement, section headings, feature titles, spec
+values, CTA title and price, footer wordmark. Load only the font weights you
+use, with `preconnect`.
+
+### 4. Load the video as a Blob, scrub it with gated seeks (main.js core)
+
+Two rules from real deployments. **Blob:** many hosts (shared hosting
+included) lack HTTP Range support, so `currentTime` seeks clamp to zero on
+the live site while working perfectly on localhost. Fetching the whole file as
+a Blob and playing the object URL works everywhere. **Gated seeks:** never
+write `currentTime` while a seek is in flight; piled-up seeks are the
+difference between smooth and choppy in Chrome.
+
+```js
+import Lenis from "lenis";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+gsap.registerPlugin(ScrollTrigger);
+
+const lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+lenis.on("scroll", ScrollTrigger.update);
+gsap.ticker.add((t) => lenis.raf(t * 1000));
+gsap.ticker.lagSmoothing(0);
+
+const bgVideo = document.getElementById("bgv");
+const STATIC_HERO = matchMedia("(max-width: 768px), (hover: none), (prefers-reduced-motion: reduce)");
+
+// ---- gated seeks (deadlock-safe) ----
+let seekBusy = false, pendingTime = null, lastVideoT = -1;
+function requestSeek(t) {
+  if (!bgVideo.duration) return;
+  if (Math.abs(t - lastVideoT) < 0.008) return;     // write only on change
+  if (seekBusy) { pendingTime = t; return; }        // coalesce to newest
+  seekBusy = true; lastVideoT = t; bgVideo.currentTime = t;
+}
+bgVideo.addEventListener("seeked", () => {
+  seekBusy = false;
+  if (pendingTime !== null) { const t = pendingTime; pendingTime = null; requestSeek(t); }
+});
+bgVideo.addEventListener("error", () => {           // the deadlock escape + fallback
+  seekBusy = false; pendingTime = null;
+  document.body.classList.add("video-failed");     // CSS shows the poster layer
+});
+
+// ---- scroll ? video time (slows during the pinned gallery, see §6) ----
+let galleryST = null;
+function scrubVideo() {
+  if (!bgVideo.duration) return;
+  const k = 0.18;
+  let eff = window.scrollY, removed = 0;
+  if (galleryST) {
+    const gs = galleryST.start, ge = galleryST.end, gl = ge - gs;
+    removed = gl * (1 - k);
+    if (window.scrollY >= ge) eff = window.scrollY - removed;
+    else if (window.scrollY > gs) eff = gs + (window.scrollY - gs) * k;
+  }
+  const p = gsap.utils.clamp(0, 1, eff / Math.max(1, lenis.limit - removed));
+  requestSeek(p * (bgVideo.duration - 0.05));
+}
+
+// ---- load only on scrub-capable screens, as a Blob ----
+async function initVideo() {
+  document.querySelector(".mobile-poster").style.backgroundImage = "url('/img/poster.jpg')";
+  if (STATIC_HERO.matches) return;                  // phones / reduced motion: poster only
+  try {
+    const res = await fetch("/bg.mp4");
+    bgVideo.src = URL.createObjectURL(await res.blob());
+    bgVideo.load();
+    bgVideo.addEventListener("loadedmetadata", () => { scrubVideo(); document.body.classList.add("video-ready"); }, { once: true });
+    lenis.on("scroll", scrubVideo);
+  } catch { document.body.classList.add("video-failed"); }
+}
+initVideo();
+
+if (import.meta.env.DEV) { window.__lenis = lenis; window.__ST = ScrollTrigger; window.__bgv = bgVideo; }
+```
+
+```css
+.mobile-poster { position: fixed; inset: 0; z-index: 0; background: center / cover no-repeat; opacity: 1; transition: opacity .6s ease; }
+body.video-ready .mobile-poster { opacity: 0; }
+body.video-failed .bg-video { display: none; }
+@media (max-width: 768px), (hover: none), (prefers-reduced-motion: reduce) {
+  .bg-video { display: none; }
+  body.video-ready .mobile-poster { opacity: 1; }
+}
+```
+
+The CSS media query and the JS `STATIC_HERO` string must match exactly. For a
+video over ~15 MB, stream the Blob with a progress ring instead of a bare
+`await res.blob()` so the page is usable while it downloads.
+
+### 5. Pinned impact statement (word-by-word reveal)
+
+```js
+function setupImpact() {
+  const section = document.querySelector("#impact");
+  const pin = section.querySelector(".impact__pin");
+  const words = [...section.querySelectorAll(".word")];
+  const render = (p) => words.forEach((w, i) => {
+    const start = (i / words.length) * 0.72;
+    const o = gsap.utils.clamp(0, 1, (p - start) / 0.12);
+    w.style.opacity = 0.12 + o * 0.88;
+    w.style.filter = `blur(${(1 - o) * 8}px)`;
+    w.style.transform = `translateY(${(1 - o) * 18}px)`;
+  });
+  render(0);
+  ScrollTrigger.create({ trigger: section, start: "top top",
+    end: () => "+=" + innerHeight * 1.7, pin, scrub: 1,
+    invalidateOnRefresh: true, onUpdate: (s) => render(s.progress) });
+}
+```
+
+**Pace text in scroll distance, not seconds.** Visitors flick, they don't
+drag. Every headline over the video should stay fully visible for roughly
+80–130vh of scroll with short eased ramps at the edges. Test by flicking
+(`window.scrollBy(0, 240)` a few times) — if a line can be skipped or never
+reaches full opacity, merge it into its neighbor.
+
+### 6. Pinned one-card-at-a-time gallery ("Made for …")
+
+```js
+function setupGallery() {
+  const slides = [...document.querySelectorAll("#workflow-track .workflow-card")];
+  const N = slides.length;
+  const render = (p) => {
+    const pos = p * (N - 1);
+    slides.forEach((el, i) => {
+      const d = pos - i, ad = Math.abs(d);
+      el.style.opacity = Math.max(0, 1 - ad / 0.6);
+      el.style.transform = `translate(${-d * 130}px, -50%) scale(${1 - Math.min(ad, 1) * 0.06})`;
+      el.style.filter = `blur(${Math.min(ad * 10, 14)}px)`;
+      el.style.zIndex = String(100 - Math.round(ad * 10));
+      el.style.pointerEvents = el.style.opacity > 0.6 ? "auto" : "none";
+    });
+  };
+  render(0);
+  galleryST = ScrollTrigger.create({ trigger: "#workflow", start: "top top",
+    end: () => "+=" + Math.max(1, N - 1) * innerHeight * 0.72, pin: ".workflow__pin",
+    scrub: 1, invalidateOnRefresh: true, onUpdate: (s) => render(s.progress) });
+}
+```
+
+```css
+.workflow .workflow-card { position: absolute; top: 50%; left: clamp(1.5rem, 6vw, 7rem); width: min(420px, 44vw); }
+```
+
+Make that selector more specific than `.glass` — `glass.css` may load later and
+set `position: relative`.
+
+### 7. Legibility over live footage
+
+Every text block over the video gets all three: the global `.bg-tint`, a local
+scrim behind the block that deepens while it is on screen, and the text-shadow
+token. Tune against the *busiest* frame the text sits over, not the average.
+
+```css
+.hero__copy, .impact__pin { text-shadow: var(--tshadow); }
+.hero__copy::before { content: ""; position: absolute; inset: -8% -6%; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse 74% 62% at 50% 50%, rgba(5,5,10,.62) 0%, rgba(5,5,10,.4) 46%, rgba(5,5,10,0) 76%); }
+.btn { text-shadow: none; }
+```
+
+Small labels over footage get a chip instead of a big scrim:
+`background: rgba(8,8,15,.55); backdrop-filter: blur(10px); border-radius: 10px`.
+
+### 8. Glass panels and buttons
+
+```css
+.glass { position: relative; overflow: hidden;
+  background: rgba(18,19,25,.46);
+  border: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+  backdrop-filter: blur(22px) saturate(1.18); -webkit-backdrop-filter: blur(22px) saturate(1.18);
+  box-shadow: 0 24px 80px rgba(0,0,0,.32); border-radius: 24px; }
+.glass::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,255,255,.08), transparent 38%, rgba(var(--accent-rgb), .05)); }
+.glass > * { position: relative; z-index: 2; }
+.glass-btn--primary { background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #fff 20%)); color: var(--bg); }
+@media (pointer: coarse) { .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; } }
+```
+
+For a light brand, invert: `rgba(255,255,255,.55)` background, dark text, and a
+lighter tint layer.
+
+### 9. Footer dissolve
+
+```css
+.footer { position: relative; margin-top: 30vh; padding: 16vh clamp(1.25rem,5vw,6rem) 8vh; background: var(--bg); }
+.footer::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 45vh;
+  background: linear-gradient(to bottom, transparent, var(--bg)); pointer-events: none; }
+```
+
+### 10. Entrances and living details
+
+- IntersectionObserver adds `.in`; children stagger in 60–150 ms apart. Prefix
+  start and end states with the container class (`.card .part`, `.card.in .part`)
+  so a later rule can't cancel them, and zero the stagger delays after the
+  entrance so hovers don't lag.
+- One living element per section at whisper level (a slow glow or drift, 4 s or
+  longer, negative `animation-delay` so it is mid-cycle at first paint). Pause
+  everything on hidden tabs: `body.paused *, body.paused *::before,
+  body.paused *::after { animation-play-state: paused !important }`.
+- Animate only `transform` and `opacity`. Never tween `filter` on large layers.
+- Reduced motion: show final states, kill transitions, never load the video.
+
+### 11. Self-test (before showing the viewer)
+
+1. `npm run build` passes; `npm run dev` serves; console has zero errors at
+   desktop and 375px widths.
+2. `window.__bgv.readyState === 4`; scrub at top, middle, bottom, then fast.
+3. Every button and link works; the form's success state is real.
+4. Hero text readable over the busiest frame; glass cards legible.
+5. At least one pinned section works and Lenis does not break it.
+6. Phone width: poster shows, no video request, cards stacked, nothing sideways.
+7. Rename `bg.mp4` temporarily: page still complete over the poster.
+8. Copy gate: `grep -nE "—|leverage|seamless|empower|unlock|robust|actionable|data-driven|solutions|elevate|delve" website/index.html` ? rewrite every hit.
+9. Fresh-eyes pass: does anything float unexplained, or read as filler?
+
+### 12. Going live (Hostinger)
+
+- Build with `npm run build -- --base=./` and deploy the **contents** of
+  `website/dist` (with `index.html` at the top level of the zip), never the
+  folder itself, or the live site shows a directory listing.
+- `og:url` and `og:image` need absolute URLs — patch them with the live domain
+  before the final build. Use the editor, not a shell one-liner (encoding
+  damage is a real failure).
+- Verify the live URL yourself: HTTPS 200, the video URL itself serves, console
+  clean, scrub works (the Blob loader is what makes it work on hosts without
+  Range support). A brand-new domain's certificate can take a few minutes.
+- Images upload large and clean (~1920px, one high-quality pass); hosts often
+  recompress.
+
+### 13. Stitching a journey (Format B) — seams that disappear
+
+Each segment starts from the exact last frame of the one before, so the join
+is invisible when the *motion* continues and the seam lands inside movement.
+
+1. Generate segment 1 and get it approved on its own.
+2. Grab its last frame at **full quality** (review-grade JPEGs bake compression
+   into every later segment):
+   ```bash
+   ffmpeg -y -sseof -0.1 -i assets/videos/BRAND-seg1.mp4 -update 1 -frames:v 1 -q:v 1 assets/review/seg1-last.png
+   ```
+3. Upload that PNG to Higgsfield so it can be a `start_image`: call the
+   media-upload tool (it returns a presigned PUT URL), then
+   `curl -X PUT --upload-file assets/review/seg1-last.png "<presigned-url>"`,
+   then the media-confirm tool. The confirmed media id is the next segment's
+   `start_image` (keep the three reference job IDs as `image_references`).
+4. Write segment 2's prompt so the motion *continues*: same heading, same
+   speed, same lighting, picking up exactly where segment 1 rested. If segment
+   1 ended near-dark or near-empty, say explicitly what grows out of that
+   frame. Middle segments end mid-motion; only the last one comes to rest.
+5. Gate each segment separately — a rejected segment is one cheap re-roll.
+6. Join the RAW segments with one encode so the joins cannot mismatch:
+   ```bash
+   ffmpeg -y -i seg1.mp4 -i seg2.mp4 -i seg3.mp4 \
+     -filter_complex "[0:v][1:v][2:v]concat=n=3:v=1:a=0[v]" -map "[v]" -an \
+     -c:v libx264 -preset slow -crf 18 -g 1 -keyint_min 1 -sc_threshold 0 \
+     -pix_fmt yuv420p -movflags +faststart website/public/bg.mp4
+   ```
+7. If a join still shows (texture re-imagined at a rest-to-rest seam), replace
+   the hard cut with a quarter-second crossfade — offset = length so far minus
+   the fade:
+   ```bash
+   ffmpeg -y -i seg1.mp4 -i seg2.mp4 \
+     -filter_complex "[0:v][1:v]xfade=transition=fade:duration=0.25:offset=6.75[v]" -map "[v]" -an \
+     -c:v libx264 -preset slow -crf 18 -g 1 -keyint_min 1 -sc_threshold 0 \
+     -pix_fmt yuv420p -movflags +faststart website/public/bg.mp4
+   ```
+   Verify by scrubbing back and forth across each join, not by playing it.
+
+Abstract worlds (light, particles, atmosphere) chain most reliably — nothing
+anatomical for the continuation to get wrong. A stitched hero of 20–30 s wants
+a taller hero pin (roughly 800–1000vh of scroll) so every beat gets room.
+
+### 14. Individual section clips (Format C)
+
+The hero keeps the fixed full-page film. Each chosen lower section gets its own
+short clip, pinned to that section and scrubbed by that section's own
+ScrollTrigger progress — never autoplaying.
+
+```html
+<section id="feature-1" class="feature feature--film">
+  <div class="feature__pin">
+    <video class="feature__film" muted playsinline preload="metadata" aria-hidden="true"></video>
+    <div class="feature__copy glass">…</div>
+  </div>
+</section>
+```
+
+```js
+function setupSectionFilm(sectionSel, src) {
+  const section = document.querySelector(sectionSel);
+  const video = section.querySelector(".feature__film");
+  let busy = false, pending = null, last = -1;
+  const seek = (t) => {
+    if (!video.duration || Math.abs(t - last) < 0.008) return;
+    if (busy) { pending = t; return; }
+    busy = true; last = t; video.currentTime = t;
+  };
+  video.addEventListener("seeked", () => { busy = false; if (pending !== null) { const t = pending; pending = null; seek(t); } });
+  video.addEventListener("error", () => { busy = false; pending = null; section.classList.add("film-failed"); });
+  if (!STATIC_HERO.matches) {
+    fetch(src).then(r => r.blob()).then(b => { video.src = URL.createObjectURL(b); video.load(); });
+  }
+  ScrollTrigger.create({ trigger: section, start: "top top", end: () => "+=" + innerHeight * 1.6,
+    pin: section.querySelector(".feature__pin"), scrub: 1, invalidateOnRefresh: true,
+    onUpdate: (s) => seek(s.progress * (video.duration - 0.05)) });
+}
+```
+
+Process every section clip with the same all-keyframe encode as the hero
+(`website/public/section-1.mp4` …) and give each a poster for phones. Keep
+the page-level background film scrubbing underneath; pause its scrub during
+these pins the same way §4 slows it during the gallery. Limit section films to
+two or three — every extra one is another download.
+
+### Gotchas
+
+1. Raw AI video scrubs badly ? always re-encode (all-keyframe, or `-g 8`).
+2. Scrubbing works locally but not live ? the host lacks Range support; the
+   Blob loader fixes it.
+3. Choppy at the top and bottom of the hero in Chrome ? un-gated seeks or
+   per-frame DOM writes; both patterns above fix it.
+4. Readability beats the video. Deepen the scrim, or move copy to the calm side.
+5. Pins shift later triggers ? `invalidateOnRefresh: true`, call
+   `ScrollTrigger.refresh()` after layout changes.
+6. `.glass { position: relative }` breaks absolutely positioned cards ?
+   out-specify it.
+7. Claude's built-in preview pane struggles with scroll-video pages ? the
+   browser at the localhost link is the true preview.
+8. Never open the build via `file://` — `fetch` is blocked, so the Blob loader
+   falls back to the poster on purpose.
+9. Keep motion slow — fast motion is unpleasant when scrubbed by hand.

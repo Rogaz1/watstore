@@ -32,6 +32,9 @@ function normalizeSlug(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+// Set by the homepage when a visitor types their business name before signing up.
+const PENDING_STORE_NAME_KEY = "floxto-pending-store-name";
+
 function cleanFileName(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
 }
@@ -92,6 +95,16 @@ export default function StoreSetupPage() {
         router.replace("/dashboard");
         return;
       }
+
+      try {
+        const pendingName = window.localStorage.getItem(PENDING_STORE_NAME_KEY);
+
+        if (pendingName) {
+          window.localStorage.removeItem(PENDING_STORE_NAME_KEY);
+          setBusinessName((current) => current || pendingName);
+          setSlug((current) => current || normalizeSlug(pendingName));
+        }
+      } catch {}
 
       setIsCheckingProfile(false);
     }

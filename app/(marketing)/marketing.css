@@ -1,0 +1,166 @@
+/* Motion and small details for the public website. Colours live in globals.css. */
+
+.mk {
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+}
+
+.mk ::selection {
+  background: #25d366;
+  color: #111110;
+}
+
+.mk :focus-visible {
+  outline: 2px solid #0a7a3c;
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.mk .mk-on-night :focus-visible,
+.mk-menu :focus-visible {
+  outline-color: #25d366;
+}
+
+/* For inputs whose wrapper already shows the focus ring. */
+.mk .mk-bare-focus:focus-visible {
+  outline: none;
+}
+
+/* Hide scrollbars on swipeable rows without disabling scroll. */
+.mk-rail {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mk-rail::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes mk-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mk-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mk-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes mk-new-order {
+  0% {
+    box-shadow: 0 0 0 0 rgb(37 211 102 / 0);
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  30% {
+    box-shadow: 0 0 0 3px rgb(37 211 102 / 0.55);
+    transform: none;
+    opacity: 1;
+  }
+  100% {
+    box-shadow: 0 0 0 3px rgb(37 211 102 / 0);
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes mk-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mk-accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes mk-accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+.mk-progress {
+  animation: mk-progress linear both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Page-load entrance for the first screen. */
+  .mk-enter {
+    animation: mk-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 90ms);
+  }
+
+  .mk-pop {
+    animation: mk-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 350ms;
+    transform-origin: left bottom;
+  }
+
+  .mk-new-order {
+    animation: mk-new-order 2.2s cubic-bezier(0.22, 1, 0.36, 1) 400ms both;
+  }
+
+  .mk-menu[data-state="open"] {
+    animation: mk-menu-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .mk-menu[data-state="open"] .mk-menu-item {
+    animation: mk-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .mk-accordion[data-state="open"] {
+    animation: mk-accordion-down 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .mk-accordion[data-state="closed"] {
+    animation: mk-accordion-up 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /*
+   * Sections ease in as they scroll into view. This only runs where the
+   * browser can drive it from scroll position, so content is never hidden
+   * waiting on JavaScript.
+   */
+  @supports (animation-timeline: view()) {
+    .mk-reveal {
+      animation: mk-rise linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 14%;
+    }
+  }
+}

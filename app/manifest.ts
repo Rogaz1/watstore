@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: APP_NAME,
     short_name: SHORT_NAME,
     description: "Simple. Fast. Professional.",
-    start_url: "/",
+    start_url: "/dashboard",
     scope: "/",
     display: "standalone",
     background_color: "#FFFFFF",

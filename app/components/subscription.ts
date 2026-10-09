@@ -5,7 +5,7 @@ import type { Locale } from "../i18n/messages";
 
 const TRIAL_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const PLATFORM_WHATSAPP_NUMBER = "233592514232";
+export const PLATFORM_WHATSAPP_NUMBER = "233592514232";
 
 export type SubscriptionAccess = {
   canAccess: boolean;

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -7,14 +8,25 @@ import { ServiceWorkerRegistration } from "./components/ServiceWorkerRegistratio
 import { getCanonicalSiteOrigin } from "./components/siteUrl";
 import "./globals.css";
 
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  style: ["italic"],
+  variable: "--font-fraunces",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(getCanonicalSiteOrigin()),
   applicationName: "Floxto",
   title: "Floxto",
   description: "Simple. Fast. Professional.",
-  alternates: {
-    canonical: "/",
-  },
   manifest: "/manifest.webmanifest",
   openGraph: {
     title: "Floxto",
@@ -65,7 +77,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${jakarta.variable} ${fraunces.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <body className="min-h-full flex flex-col">
         <Script id="floxto-theme" strategy="beforeInteractive">
           {`
@@ -73,10 +89,9 @@ export default function RootLayout({
               try {
                 var stored = window.localStorage.getItem("floxto-theme");
                 var pathname = window.location.pathname;
-                var isPublicStorefront = pathname === "/store" || pathname.indexOf("/store/") === 0;
-                var theme = isPublicStorefront
-                  ? "light"
-                  : stored === "dark" || stored === "light"
+                var appScreens = ["dashboard", "admin", "login", "signup", "forgot-password", "reset-password"];
+                var isAppScreen = appScreens.indexOf(pathname.split("/")[1]) !== -1;
+                var theme = isAppScreen && (stored === "dark" || stored === "light")
                   ? stored
                   : "light";
                 document.documentElement.classList.toggle("dark", theme === "dark");

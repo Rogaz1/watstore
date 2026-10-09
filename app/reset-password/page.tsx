@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
-import { FloxtoWordmark } from "../components/FloxtoBrand";
+import { AuthBrandHeader } from "../components/AuthBrandHeader";
+import { AuthFooter } from "../components/AuthFooter";
 import { getUserFacingError } from "../components/userFacingErrors";
 import { useI18n } from "../i18n/LanguageProvider";
 
@@ -26,19 +27,6 @@ function LockIcon() {
       <rect height="11" rx="2" width="18" x="3" y="11" />
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
-  );
-}
-
-function AuthBrandHeader() {
-  const { t } = useI18n();
-
-  return (
-    <div className="text-center">
-      <FloxtoWordmark />
-      <p className="mx-auto mt-1.5 max-w-full text-xs font-medium leading-5 text-[var(--c-text-2)]">
-        {t("app.tagline")}
-      </p>
-    </div>
   );
 }
 
@@ -259,6 +247,7 @@ export default function ResetPasswordPage() {
         <div className="mt-5 flex justify-center">
           <LanguageSwitcher compact />
         </div>
+        <AuthFooter />
       </section>
     </main>
   );

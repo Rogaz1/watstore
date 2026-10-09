@@ -6,7 +6,8 @@ import { FormEvent, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { InstallAppPrompt } from "./InstallAppPrompt";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { FloxtoWordmark } from "./FloxtoBrand";
+import { AuthBrandHeader } from "./AuthBrandHeader";
+import { AuthFooter } from "./AuthFooter";
 import { getPostAuthDestination } from "./merchantProfile";
 import { buildAbsoluteUrl } from "./siteUrl";
 import { getUserFacingError } from "./userFacingErrors";
@@ -51,19 +52,6 @@ function LockIcon() {
       <rect height="11" rx="2" width="18" x="3" y="11" />
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
-  );
-}
-
-function LoginBrandHeader() {
-  const { t } = useI18n();
-
-  return (
-    <div className="text-center">
-      <FloxtoWordmark />
-      <p className="mx-auto mt-1.5 max-w-full text-xs font-medium leading-5 text-[var(--c-text-2)]">
-        {t("app.tagline")}
-      </p>
-    </div>
   );
 }
 
@@ -124,11 +112,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   return (
     <main className="flex min-h-screen items-start justify-center bg-[var(--c-bg)] px-6 pb-12 pt-24 text-[var(--c-text)]">
       <section className="w-full" style={{ maxWidth: isSignup ? "20rem" : "18.75rem" }}>
-        {isSignup ? (
-          <LoginBrandHeader />
-        ) : (
-          <LoginBrandHeader />
-        )}
+        <AuthBrandHeader />
 
         <div className="mt-9 rounded-2xl border border-[var(--c-border-strong)] bg-[var(--c-surface)] p-6 shadow-sm">
           {isSignup ? (
@@ -211,6 +195,26 @@ export function AuthForm({ mode }: AuthFormProps) {
             </button>
           </form>
 
+          {isSignup ? (
+            <p className="mt-4 text-center text-xs leading-5 text-[#888888]">
+              {t("auth.agreePrefix")}{" "}
+              <Link
+                className="font-semibold text-[#555555] underline underline-offset-2"
+                href="/terms"
+              >
+                {t("auth.agreeTerms")}
+              </Link>{" "}
+              {t("auth.agreeAnd")}{" "}
+              <Link
+                className="font-semibold text-[#555555] underline underline-offset-2"
+                href="/privacy"
+              >
+                {t("auth.agreePrivacy")}
+              </Link>
+              .
+            </p>
+          ) : null}
+
           <p className="mt-6 text-center text-sm text-[#888888]">
             {isSignup ? t("auth.hasAccount") : t("auth.noAccount")}{" "}
             <Link
@@ -226,6 +230,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         <div className="mt-5 flex justify-center">
           <LanguageSwitcher compact />
         </div>
+        <AuthFooter />
       </section>
     </main>
   );

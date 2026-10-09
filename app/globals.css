@@ -1,5 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap");
 @import "tailwindcss";
+
+/* `dark:` follows the app's own theme toggle, not the phone's system setting. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   :root {
@@ -78,8 +80,27 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
+  --font-accent: var(--font-fraunces), Georgia, serif;
+}
+
+/* Marketing site palette. Used only by app/(marketing). */
+@theme {
+  --color-paper: #f6f4ee;
+  --color-paper-2: #edeae0;
+  --color-ink: #111110;
+  --color-ink-2: #3b3b37;
+  --color-ink-3: #6b6a63;
+  --color-line: #e2ded3;
+  --color-brand: #25d366;
+  --color-brand-deep: #0a7a3c;
+  --color-brand-tint: #e2f6e9;
+  --color-night: #0d110f;
+  --color-night-2: #161b18;
+  --color-night-line: #262d28;
+  --color-night-text: #f4f2ea;
+  --color-night-muted: #a2a89f;
 }
 
 .subscription-neutral-button {
@@ -97,7 +118,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
 html {

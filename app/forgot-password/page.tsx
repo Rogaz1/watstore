@@ -4,7 +4,8 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
-import { FloxtoWordmark } from "../components/FloxtoBrand";
+import { AuthBrandHeader } from "../components/AuthBrandHeader";
+import { AuthFooter } from "../components/AuthFooter";
 import { buildAbsoluteUrl } from "../components/siteUrl";
 import { getUserFacingError } from "../components/userFacingErrors";
 import { useI18n } from "../i18n/LanguageProvider";
@@ -42,19 +43,6 @@ function EnvelopeIcon() {
       <rect height="16" rx="2" width="20" x="2" y="4" />
       <path d="m22 7-10 6L2 7" />
     </svg>
-  );
-}
-
-function AuthBrandHeader() {
-  const { t } = useI18n();
-
-  return (
-    <div className="text-center">
-      <FloxtoWordmark />
-      <p className="mx-auto mt-1.5 max-w-full text-xs font-medium leading-5 text-[var(--c-text-2)]">
-        {t("app.tagline")}
-      </p>
-    </div>
   );
 }
 
@@ -172,6 +160,7 @@ export default function ForgotPasswordPage() {
             </form>
           )}
         </div>
+        <AuthFooter />
       </section>
     </main>
   );
